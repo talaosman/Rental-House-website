@@ -1,0 +1,382 @@
+/* General reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html,
+body {
+  width: 100%;
+  height: 100%;
+/* or #f9f9f9 if that's your theme */
+}
+
+body {
+  font-family: "Arial", sans-serif;
+  background-color: #f9f9f9;
+}
+
+/* Always visible top navbar */
+.navbar {
+  background-color: #333;
+  color: white;
+  padding: 10px 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1100;
+}
+
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: auto;
+  padding: 0 15px;
+}
+
+.logo-img {
+  height: 60px;
+  margin-top: 5px;
+}
+
+/* Common navbar links style */
+.navbar-links {
+  list-style: none;
+  align-items: center;
+  transition: left 0.3s ease;
+}
+
+/* Hide and show logic (mobile) */
+.navbar-links.hide {
+  left: -250px;
+}
+
+.navbar-links.show {
+  left: 0;
+}
+
+/* Profile icon */
+.profile-icon {
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+}
+
+.profile-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.profile-img:hover {
+  transform: scale(1.05);
+}
+
+/* Hide toggle button when menu is open */
+.hide-toggle {
+  display: none !important;
+}
+
+/* Desktop nav */
+@media (min-width: 768px) {
+  .navbar-links {
+    display: flex !important;
+    flex-direction: row;
+    position: static;
+    height: auto;
+    width: auto;
+    background: none;
+    padding: 0;
+  }
+
+  .navbar-item {
+    margin: 0 15px;
+    font-size: 16px;
+  }
+}
+
+/* Mobile nav */
+@media (max-width: 768px) {
+  .navbar {
+    height: 80px;
+  }
+
+  .navbar-links {
+    position: fixed;
+    top: 0;
+    left: -250px;
+    height: 100vh;
+    width: 250px;
+    flex-direction: column;
+    background-color: #333;
+    padding-top: 70px;
+    z-index: 1000;
+  }
+
+  .navbar-links.show {
+    left: 0;
+  }
+
+  .navbar-toggle {
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    z-index: 1001 !important;
+    margin-right: 300px !important;
+  }
+
+  .navbar-logo {
+    margin-top: -10px;
+  }
+
+  .logo-img {
+    height: 50px;
+    width: 50px;
+  }
+
+  .bar {
+    width: 25px;
+    height: 3px;
+    background-color: white;
+    margin: 4px 0;
+    border-radius: 3px;
+  }
+
+  .navbar-item {
+    margin: 20px 0;
+    font-size: 18px;
+    text-align: left;
+    padding-left: 20px;
+    color: white;
+    text-decoration: none;
+  }
+
+  .profile-icon {
+    margin-left: 2px;
+    z-index: 1001;
+  }
+
+  .profile-img {
+    width: 45px;
+    height: 45px;
+  }
+  .hide-on-menu {
+    display: none !important;
+  }
+}
+/* Hide top navbar when sidebar is open (mobile) */
+.navbar.hide {
+  display: none;
+}
+
+/* Sidebar styles */
+.sidebar-menu {
+  margin-top: -50px !important;
+  position: fixed;
+  top: 0;
+  left: -250px; /* hidden by default */
+  width: 250px;
+  height: 110vh;
+  background-color: #333;
+  color: white;
+  padding-top: 60px; /* spacing below top */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 1200;
+  transition: left 0.3s ease;
+  box-shadow: 3px 0 6px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-menu.open {
+  left: 0;
+}
+
+.sidebar-menu ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.sidebar-menu ul li {
+  margin: 20px 0;
+}
+
+.sidebar-menu ul li a {
+  color: white;
+  text-decoration: none;
+  padding-left: 20px;
+  display: block;
+  font-size: 18px;
+}
+
+.sidebar-menu ul li a:hover {
+  background-color: #555;
+}
+
+/* Logo at bottom of sidebar */
+.sidebar-logo-bottom {
+  padding: 15px 20px;
+  border-top: 1px solid #444;
+}
+
+.sidebar-logo-bottom .logo-img {
+  height: 50px;
+  width: 50px;
+  object-fit: contain;
+}
+
+/* Hide the top navbar links and profile on mobile (we moved them to sidebar) */
+@media (max-width: 768px) {
+  .navbar-links {
+    display: none;
+  }
+  .sidebar-menu {
+    margin-left: 0px;
+  }
+}
+
+@media (min-width: 769px) {
+  .sidebar-menu {
+    display: none;
+  }
+}
+/* Toggle button inside sidebar */
+.sidebar-toggle {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  padding: 15px 20px;
+  z-index: 1300;
+}
+
+.sidebar-toggle .bar {
+  width: 25px;
+  height: 3px;
+  background-color: white;
+  margin: 4px 0;
+  border-radius: 3px;
+}
+
+/* Sidebar links styling */
+.sidebar-links {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.sidebar-links li {
+  margin: 20px 0;
+}
+
+.sidebar-links li a {
+  color: white;
+  text-decoration: none;
+  padding-left: 20px;
+  font-size: 18px;
+}
+
+/* Bottom area */
+.sidebar-bottom {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-bottom: 20px;
+  gap: 10px;
+  margin-left: 50px;
+}
+
+.sidebar-logo-bottom {
+  border-top: 1px solid #444;
+  padding-top: 15px;
+}
+
+.sidebar-logo-bottom .logo-img {
+  height: 50px;
+  width: 50px;
+  object-fit: contain;
+}
+
+.sidebar-profile-icon {
+  padding-top: 5px;
+}
+
+.sidebar-profile-icon .profile-img {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.sidebar-profile-icon .profile-img:hover {
+  transform: scale(1.05);
+}
+@media (max-width: 400px){
+  .navbar-logo {
+    margin-left: -90px !important;
+  }
+  .profile-icon{
+    margin-left: -15px !important;
+    margin-top: 5px !important;
+  }
+}
+/* Add icons and transitions */
+.sidebar-links li a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  font-size: 18px;
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.sidebar-links li a:hover {
+  background-color: #444;
+  transform: translateX(5px);
+  border-left: 4px solid #ff6803;
+}
+
+/* Icon style inside each link */
+.sidebar-links li a i {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+/* Animate sidebar opening */
+.sidebar-menu {
+  transition: left 0.4s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.sidebar-menu.open {
+  left: 0;
+  opacity: 1;
+}
+
+@media (max-width: 500px) {
+.profile-icon{
+  display: none !important;
+}
+}
+/* Active tab styling */
+.navbar-item.active-tab,
+.sidebar-links li a.active-tab {
+  color: #ff6803 !important;
+  font-weight: bold;
+  border-bottom: 2px solid #ff6803;
+}
+
+.sidebar-links li a.active-tab {
+  background-color: #444;
+  border-left: 4px solid #ff6803;
+}

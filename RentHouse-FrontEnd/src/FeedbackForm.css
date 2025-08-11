@@ -1,0 +1,378 @@
+
+
+/* Form card styling */
+.feedback-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  animation: fadeIn 0.8s ease forwards;
+  width: 100%;
+  max-width: 500px;
+  margin-top: -100px !important;
+}
+
+/* Image styling */
+.feedback-image {
+  flex: 1;
+  max-width: 500px;
+  animation: slideIn 0.8s ease forwards;
+  margin-top: -70px !important;
+}
+
+.feedback-image img {
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+/* Title */
+.title {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #4a2fbd;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Form styling */
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.input-group {
+  position: relative;
+}
+
+.input-group input,
+.input-group textarea {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.input-group label {
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 1rem;
+  pointer-events: none;
+  transition: 0.3s ease all;
+  background: white;
+  padding: 0 6px;
+  opacity: 0; /* Initially hidden */
+}
+
+/* Show label when input is focused or has a value */
+.input-group input:focus + label,
+.input-group textarea:focus + label,
+.input-group input:valid + label,
+.input-group textarea:valid + label {
+  opacity: 1; /* Make label visible */
+  top: -10px;
+  font-size: 0.85rem;
+  color: #764ba2;
+}
+
+/* Submit button */
+.submit-btn {
+  background: #764ba2;
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 15px 0;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(118, 75, 162, 0.6);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  user-select: none;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #5a348a;
+  box-shadow: 0 8px 20px rgba(90, 52, 138, 0.8);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.submit-btn:disabled {
+  background: #b3a5ca;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Status message */
+.status-message {
+  margin-top: 20px;
+  font-weight: 600;
+  color: #4a2fbd;
+  animation: fadeIn 1s ease forwards;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Image hover effect */
+.feedback-image:hover img {
+  transform: scale(1.05);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .feedback-wrapper {
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .feedback-card {
+    max-width: 100%;
+  }
+
+  .feedback-image {
+    display: none;
+  }
+}
+.feedback-section {
+  background: linear-gradient(to right, #f4f0fb, #ffffff);
+  padding: 60px 20px;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.feedback-header {
+  text-align: center;
+  margin-bottom: 50px;
+  margin-top: 10px;
+}
+
+.feedback-header h1 {
+  font-size: 2.2rem;
+  color: #764ba2;
+  margin-bottom: 10px;
+}
+
+.feedback-header p {
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.feedback-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+  gap: 40px;
+ margin-top: 100px !important;
+}
+
+.feedback-card {
+  background: #fff;
+  padding: 30px;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  max-width: 500px;
+  flex: 1;
+}
+
+.feedback-contact {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  max-width: 400px;
+  flex: 1;
+}
+
+.feedback-contact h2 {
+  color: #4a2fbd;
+  font-size: 1.4rem;
+  margin-bottom: 20px;
+}
+
+.feedback-contact p {
+  font-size: 1rem;
+  color: #333;
+  margin: 8px 0;
+}
+
+.emergency-box {
+  background: #fff4f4;
+  border: 1px solid #ffcccc;
+  padding: 20px;
+  margin-top: 25px;
+  border-radius: 10px;
+}
+
+.emergency-box h3 {
+  color: #d70000;
+  margin-bottom: 10px;
+}
+
+.emergency-number {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #d70000;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .feedback-wrapper {
+    flex-direction: column;
+    align-items: center;
+    margin-top: -50px !important;
+  }
+
+  .feedback-card,
+  .feedback-contact {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+/* Loader for button */
+.loader {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #fff;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Label transition fix */
+.input-group textarea:focus + label,
+.input-group textarea:not(:placeholder-shown) + label {
+  opacity: 1;
+  top: -10px;
+  left: 10px;
+  font-size: 0.85rem;
+  background: white;
+  color: #764ba2;
+  padding: 0 4px;
+}
+
+/* Input group fixes */
+.input-group textarea {
+  min-height: 130px;
+  resize: vertical;
+  background: #fafafa;
+  transition: box-shadow 0.3s ease;
+}
+
+.input-group textarea:focus {
+  border-color: #764ba2;
+  box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+}
+
+/* Updated status message styles */
+.status-message {
+  margin-top: 15px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.status-message.success {
+  background: #e6fbe7;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.status-message.error {
+  background: #ffecec;
+  color: #d32f2f;
+  border: 1px solid #ef9a9a;
+}
+
+/* Responsive - Tablets and Below */
+@media (max-width: 768px) {
+  .feedback-wrapper {
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    padding: 20px 10px;
+  }
+
+  .feedback-card,
+  .feedback-contact {
+    width: 100%;
+    max-width: 100%;
+    margin-top: 0 !important;
+  }
+
+  .feedback-image {
+    display: none;
+  }
+
+  .submit-btn {
+    width: 100%;
+  }
+}
+
+/* Extra Small Screens */
+@media (max-width: 480px) {
+  .feedback-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .feedback-header p {
+    font-size: 1rem;
+  }
+
+  .input-group textarea {
+    min-height: 110px;
+    font-size: 0.95rem;
+  }
+
+  .submit-btn {
+    font-size: 1rem;
+    padding: 12px 0;
+  }
+
+  .status-message {
+    font-size: 0.9rem;
+  }
+
+  .emergency-number {
+    font-size: 1.1rem;
+  }
+}

@@ -1,0 +1,58 @@
+.edit-form-container {
+  max-width: 600px;
+  margin: 80px auto;
+  padding: 30px;
+  background-color: #ffffff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.form-title {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #333;
+  font-size: 1.8rem;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.edit-form input,
+.edit-form textarea {
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.edit-form textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.edit-form input:focus,
+.edit-form textarea:focus {
+  border-color: #ff6f00;
+  box-shadow: 0 0 5px rgba(255, 111, 0, 0.2);
+}
+
+.submit-btn {
+  padding: 12px;
+  border: none;
+  background-color: #ff6f00;
+  color: white;
+  font-size: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: #e65c00;
+}

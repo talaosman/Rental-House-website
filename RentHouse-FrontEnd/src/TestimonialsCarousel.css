@@ -1,0 +1,74 @@
+/* Container styling (kept as-is) */
+.testimonials-carousel {
+  padding: 40px;
+  background: #f9f9f9;
+  text-align: center;
+  animation: fadeIn 1s ease-out;
+}
+.testimonials-carousel h2 {
+  margin-bottom: 20px;
+  font-size: 2rem;
+  color: #333;
+  animation: slideIn 0.5s ease-out;
+}
+
+/* Updated testimonial-card layout */
+.testimonial-card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-height: 250px;
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;       /* center horizontally */
+}
+
+/* Center message vertically */
+.testimonial-text {
+  font-style: italic;
+  color: #555;
+  margin: 15px 0;
+  flex-grow: 1;              /* expand to fill space */
+  display: flex;
+  align-items: center;       /* vertical center */
+  justify-content: center;   /* horizontal center */
+  overflow: auto;
+}
+
+/* Username top, email under it */
+.testimonial-meta {
+  font-size: 0.9rem;
+  color: #777;
+  /* Center alignment for meta container */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.testimonial-meta strong {
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+
+.testimonial-meta span {
+  font-size: 0.9rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@media (max-width: 480px) {
+  .testimonials-carousel h2{
+    font-size: 25px !important;
+  }
+}

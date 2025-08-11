@@ -1,0 +1,124 @@
+.favorites-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  margin-top: 100px;
+}
+
+.no-favorites-container {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #555;
+  margin-top: 100px;
+}
+
+.no-favorites-container h2 {
+  font-size: 1.8rem;
+  margin-top: 1rem;
+  color: #333;
+}
+
+.no-favorites-container p {
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+
+.no-favorites-image {
+  width: 200px;
+  max-width: 90%;
+  margin-bottom: 1rem;
+  opacity: 0.9;
+}
+
+
+.favorites-title {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  color: #333;
+  font-weight: bold;
+}
+
+.favorites-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap:1.5 rem;
+}
+
+.favorite-card {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease;
+  background-color: #fff;
+  width: 100%;
+  max-width: 600px; /* was smaller, now larger */
+  margin-top:10px ;
+}
+
+
+
+.favorite-card:hover {
+  transform: translateY(-5px);
+}
+
+.favorite-image {
+  width: 100%;
+  height: 250px; /* was 180px */
+  object-fit: cover;
+}
+
+.favorite-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.favorite-content h3 {
+  margin-bottom: 0.7rem;
+  color: #222;
+  font-size: 1.3rem; /* larger */
+}
+
+.favorite-content .price {
+  margin-bottom: 0.7rem;
+  font-weight: bold;
+  color: #444;
+  font-size: 1.1rem;
+}
+
+
+.remove-btn {
+  margin-top: 20px;
+  margin-left: 35%; /* Align left */
+  border: none;
+  background-color: #ff6803;
+  color: white;
+  font-weight: bold;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 190px; /* Minimized width */
+  font-size: 14px; /* Smaller font */
+  padding: 6px 10px; /* Smaller padding */
+  text-align: center; /* Optional: aligns text to left inside button */
+}
+
+.remove-btn:hover {
+  background-color: #e73370;
+}
+
+.center-text {
+  text-align: center;
+  font-size: 1.1rem;
+  margin-top: 2rem;
+}
+
+.error-text {
+  color: red;
+}
