@@ -78,7 +78,7 @@ const EditHouseForm = () => {
         <input name="nbOfBedrooms" type="number" value={formData.nbOfBedrooms} onChange={handleChange} placeholder="Bedrooms" required />
         <input name="status" value={formData.status} onChange={handleChange} placeholder="Status" required />
         <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" required />
-
+{/* hjkjjjsdhs */}
         <hr />
         <h3>Owner Information</h3>
         <input name="ownerName" value={formData.ownerName} onChange={handleChange} placeholder="Owner Name" required />
