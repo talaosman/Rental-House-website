@@ -8,6 +8,36 @@ const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(false);
+  const [properties, setProperties] = useState(0);
+  const [users, setUsers] = useState(0);
+
+  useEffect(() => {
+  let pCounter = setInterval(() => {
+    setProperties((prev) => {
+      if (prev >= 5000) {
+        clearInterval(pCounter);
+        return 5000;
+      }
+      return prev + 50; // increment speed
+    });
+  }, 20); // slower so user sees it
+
+  let uCounter = setInterval(() => {
+    setUsers((prev) => {
+      if (prev >= 3200) {
+        clearInterval(uCounter);
+        return 3200;
+      }
+      return prev + 40;
+    });
+  }, 20);
+
+  return () => {
+    clearInterval(pCounter);
+    clearInterval(uCounter);
+  };
+}, []);
+
 
   const userId = localStorage.getItem("userId");
 
@@ -110,28 +140,28 @@ const HomePage = () => {
               ></iframe>
             </div>
           </div>
-          <div className="stats-container">
-            <div className="stat">
-              <h3>5,000+</h3>
-              <p>Properties Listed</p>
-            </div>
-            <div className="stat">
-              <h3>3,200+</h3>
-              <p>Satisfied Users</p>
-            </div>
-            <div className="stat">
-              <h3>24/7</h3>
-              <p>Support Available</p>
-            </div>
-          </div>
+           <div className="stats-container">
+      <div className="stat">
+        <h3>{properties.toLocaleString()}+</h3>
+        <p>Properties Listed</p>
+      </div>
+      <div className="stat">
+        <h3>{users.toLocaleString()}+</h3>
+        <p>Satisfied Users</p>
+      </div>
+      <div className="stat">
+        <h3>24/7</h3>
+        <p>Support Available</p>
+      </div>
+    </div>
         </div>
       </div>
 
 
-
+     <div className='testimonials'>
       {/* Testimonials */}
       <TestimonialsCarousel />
-
+     </div>
       {/* CTA Section */}
       {!isLogin && (<div className="cta fade-in">
         <h2>Ready to rent or list a property?</h2>

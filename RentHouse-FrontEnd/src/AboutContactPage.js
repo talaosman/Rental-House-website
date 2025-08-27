@@ -25,7 +25,7 @@ const AboutContactPage = () => {
     e.preventDefault();
     setIsLoading(true); // Start loading
     if (!isSigningIn) {
-       setShowModal(true); // Show modal for OTP
+      setShowModal(true); // Show modal for OTP
       // Sign up request
       API.post("/api/auth/signup", {
         username: name,
@@ -197,6 +197,38 @@ const AboutContactPage = () => {
                 : "Already have an account? Sign In"}
             </p>
           </form>
+          <div className="oauth-section">
+            <div className="oauth-divider">
+              <span>Or continue with</span>
+            </div>
+
+            <button
+              type="button"
+              className="oauth-btn google"
+              onClick={() => window.location.href = "http://localhost:5000/oauth2/authorization/google"}
+            >
+              <img
+                src="https://www.svgrepo.com/show/475656/google-color.svg"
+                alt="Google logo"
+                className="oauth-icon"
+              />
+              Continue with Google
+            </button>
+
+            <button
+              type="button"
+              className="oauth-btn github"
+              onClick={() => window.location.href = "http://localhost:5000/oauth2/authorization/github"}
+            >
+              <img
+                src="https://www.svgrepo.com/show/512317/github-142.svg"
+                alt="GitHub logo"
+                className="oauth-icon"
+              />
+              Continue with GitHub
+            </button>
+          </div>
+
           {showModal && (
             <div className="modal-overlay">
               <div className="modal-content">

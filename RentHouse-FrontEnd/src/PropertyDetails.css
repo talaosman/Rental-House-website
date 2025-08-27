@@ -72,6 +72,7 @@
   cursor: pointer;
   transition: background-color 0.3s ease;
   margin-left: 38% !important;
+  margin-top:15px !important;
 }
 .cta-button1 {
   display: inline-block;
@@ -239,6 +240,7 @@
   transform: translate(-50%, -50%);
   font-size: 1rem;
   font-weight: bold;
+  margin-top: 20px !important;
 }
 .edit-button {
   margin-top: 10px;
@@ -334,6 +336,10 @@
   background-color: #e5e7eb;
   font-weight: bold;
 }
+.submit-rating{
+ margin-left: 80% !important;
+ margin-top: 10px
+}
 
 
 @media (max-width: 768px) {
@@ -380,6 +386,11 @@
   .rent-button {
     margin-top: 40px !important;
   }
+  .submit-rating{
+    font-size: 12px !important;
+    width:120px !important;
+    margin-left: 65% !important;
+  }
 }
 
 @media (max-width: 500px) {
@@ -390,7 +401,7 @@
   .cta-button {
     font-size: 0.9rem !important;
     width: 250px;
-    margin-left: 50px !important;
+    margin-left: 45px !important;
   }
 }
 @media (max-width: 400px) {

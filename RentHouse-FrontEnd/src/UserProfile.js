@@ -16,12 +16,14 @@ const UserProfile = () => {
 
   const [isEditingImage, setIsEditingImage] = useState(false); // NEW: controls if user is changing profile image
   const [userData, setUserData] = useState({
+    userId: localStorage.getItem("userId") || "", // add this
     fullName: localStorage.getItem("username") || "",
     email: localStorage.getItem("email") || "",
     phoneNumber: localStorage.getItem("phoneNumber") || "",
     password: localStorage.getItem("password") || "",
     profileImage: localStorage.getItem("profileImage") || "",
   });
+
 
   // Handle input change for text fields
   const handleInputChange = (field, value) => {
@@ -54,6 +56,7 @@ const UserProfile = () => {
         },
         credentials: "include",
         body: JSON.stringify({
+          userId: userData.userId, // <-- add this
           username: userData.fullName,
           email: userData.email,
           password: userData.password,
@@ -153,19 +156,29 @@ const UserProfile = () => {
       </div>
     </div>
   );
+  const avatarUrl =
+    userData.profileImage && userData.profileImage !== "null"
+      ? userData.profileImage.startsWith("data:") || userData.profileImage.startsWith("http")
+        ? userData.profileImage
+        : `data:image/jpeg;base64,${userData.profileImage}`
+      : userData.fullName
+        ? `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.fullName)}&background=random`
+        : `https://ui-avatars.com/api/?name=User&background=random`;
 
   return (
     <section className="profile-page">
       <div className="profile-container">
         <header className="profile-header" style={{ position: "relative" }}>
           <img
-            src={userData.profileImage}
+            src={avatarUrl}
             alt="User Avatar"
             className="profile-image"
             style={{ cursor: "pointer" }}
             onClick={() => setIsEditingImage(true)}
             title="Click to change profile image"
           />
+
+
           {isEditingImage && (
             <div
               style={{

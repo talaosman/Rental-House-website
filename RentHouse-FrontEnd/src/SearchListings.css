@@ -323,4 +323,10 @@ button.delete-button:hover {
    background-color: white;
     box-shadow:none;
   }
+  .adminView-button{
+    font-size:15px;
+  }
+  .delete-button{
+    font-size:15px;
+  }
 }

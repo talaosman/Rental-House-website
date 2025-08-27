@@ -36,6 +36,11 @@ const PropertyDetailsPage = () => {
     { label: "Per Month", value: "perMonth", icon: <FaCalendarAlt /> },
   ];
   const [showDropdown, setShowDropdown] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [ratings, setRatings] = useState([]);
+  const [showThankYou, setShowThankYou] = useState(false);
+
 
   const navigate = useNavigate();
 
@@ -83,6 +88,7 @@ const PropertyDetailsPage = () => {
         setRentSuccess(true);
         setIsRented(true);
         setProperty((prev) => ({ ...prev, status: "rented" }));
+        setSkipCheckRented(true);
       } catch (err) {
         console.error("Rent failed:", err);
       }
@@ -137,6 +143,7 @@ const PropertyDetailsPage = () => {
           setRentSuccess(true);
           setIsRented(true);
           setProperty((prev) => ({ ...prev, status: "rented" }));
+          setSkipCheckRented(true);
         }
       } catch (err) {
         console.error("Stripe integrated payment failed:", err);
@@ -178,6 +185,41 @@ const PropertyDetailsPage = () => {
       }
     }
   }, [id, userId]);
+  const fetchRatings = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/ratings/house/${id}`);
+      const data = await res.json();
+      setRatings(data);
+    } catch (err) {
+      console.error("Error fetching ratings:", err);
+    }
+  };
+
+
+
+  const submitRating = async () => {
+    if (!userId) {
+      setModalMessage("You must be logged in to rate.");
+      setShowLoginModal(true);
+      return;
+    }
+    try {
+      await fetch(
+        `http://localhost:5000/api/ratings/add?userId=${userId}&houseId=${id}&stars=${rating}&comment=${comment}`,
+        { method: "POST" }
+      );
+      setRating(0);
+      setComment("");
+      fetchRatings(); // reload list
+      // Show thank-you animation
+      setShowThankYou(true);
+      setTimeout(() => setShowThankYou(false), 3000); // hide after 3s
+    } catch (err) {
+      console.error("Error submitting rating:", err);
+    }
+  };
+
+
 
   useEffect(() => {
     if (skipCheckRented) return; // skip if payment just succeeded
@@ -207,6 +249,7 @@ const PropertyDetailsPage = () => {
     };
 
     fetchProperty();
+    fetchRatings();
   }, [id]);
 
 
@@ -316,6 +359,7 @@ const PropertyDetailsPage = () => {
       setEndDate(""); // reset for perDay
     }
   };
+
 
 
   return (
@@ -538,14 +582,12 @@ const PropertyDetailsPage = () => {
             disabled={
               (rentType === "perDay" && (!startDate || !endDate)) ||
               (rentType === "perMonth" && !startDate) ||
-              isRented ||
-              rentSuccess
+              isRented
             }
-
-
           >
             {isRented ? "Unavailable" : "Confirm Rent"}
           </motion.button>
+
           {isProcessingPayment && (
             <p className="payment-message">
               Processing payment, please wait...
@@ -553,6 +595,60 @@ const PropertyDetailsPage = () => {
           )}
 
           {rentSuccess && <p className="success-message">✅ House rented successfully!</p>}
+
+          {rentSuccess && (
+            <div className="rating-box">
+              <h3>⭐ Rate Your Experience</h3>
+              <div className="stars">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <span
+                    key={s}
+                    style={{ cursor: "pointer", fontSize: "1.5rem", color: rating >= s ? "gold" : "gray" }}
+                    onClick={() => setRating(s)}
+                  >
+                    ★
+                  </span>
+                ))}
+              </div>
+              <textarea
+                placeholder="Write a comment..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+              />
+              <motion.button
+                className="submit-rating"
+                whileTap={{ scale: 0.95 }}
+                onClick={submitRating}
+              >
+                Submit Rating
+              </motion.button>
+
+              {/* Animated Thank-You Message */}
+              <AnimatePresence>
+                {showThankYou && (
+                  <motion.div
+                    className="thank-you-message"
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5 }}
+                    style={{
+                      background: "#d4edda",
+                      color: "#155724",
+                      padding: "10px",
+                      marginTop: "10px",
+                      borderRadius: "5px",
+                      fontWeight: "bold",
+                      textAlign: "center"
+                    }}
+                  >
+                    🎉 Thank you for your rating!
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
         </div>
       )}
 

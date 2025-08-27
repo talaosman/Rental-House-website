@@ -10,13 +10,13 @@ const PostListing = () => {
     pricePerDay: "",
     pricePerMonth: "",
     location: "",
-    image: "",
     contact: "",
     nbOfBedrooms: "",
     propertyType: "",
     ownerName: "",
     ownerEmail: "",
-    ownerPhone: ""
+    ownerPhone: "",
+    description: ""
   });
   const addListing = (newListing) => {
     const maxId = allListings.reduce(
@@ -37,69 +37,77 @@ const PostListing = () => {
       [e.target.name]: e.target.value,
     });
   };
+const toBase64 = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = error => reject(error);
+});
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (
+ if (
       !form.title ||
       !form.nbOfBedrooms ||
       !form.location ||
       !form.pricePerDay ||
       !form.pricePerMonth ||
+      !form.description ||
       !imageFile
     ) {
       alert("Please fill in all fields.");
       return;
     }
+  try {
+    const base64Image = await toBase64(imageFile);
 
-    try {
-      const formData = new FormData();
-      formData.append("title", form.title);
-      formData.append("pricePerDay", form.pricePerDay.toString());
-      formData.append("pricePerMonth", form.pricePerMonth.toString());
-      formData.append("location", form.location);
-      formData.append("ownerName", form.ownerName);
-      formData.append("ownerEmail", form.ownerEmail);
-      formData.append("ownerPhone", form.ownerPhone);
-      formData.append("nbOfBedrooms", form.nbOfBedrooms.toString());
-      formData.append("propertyType", form.propertyType);
-      formData.append("image", imageFile);
+    const payload = {
+      title: form.title,
+      pricePerDay: form.pricePerDay,
+      pricePerMonth: form.pricePerMonth,
+      location: form.location,
+      description: form.description,
+      ownerName: form.ownerName,
+      ownerEmail: form.ownerEmail,
+      ownerPhone: form.ownerPhone,
+      nbOfBedrooms: form.nbOfBedrooms,
+      propertyType: form.propertyType,
+      imageFilename: imageFile.name,
+      imageData: base64Image
+    };
 
-      const listingRes = await fetch("http://localhost:5000/api/houses", {
-        method: "POST",
-        body: formData, // no need to set Content-Type, browser sets multipart/form-data automatically
-      });
+    const listingRes = await fetch("http://localhost:5000/api/houses/uploadBase64", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-      if (!listingRes.ok) throw new Error("Listing upload failed");
+    if (!listingRes.ok) throw new Error("Listing upload failed");
 
-      const data = await listingRes.json();
+    const data = await listingRes.json();
+    setAllListings((prev) => [...prev, data]);
 
-      setAllListings((prev) => [...prev, data]);
+    // reset form
+    setForm({
+      title: "",
+      pricePerDay: "",
+      pricePerMonth: "",
+      location: "",
+      nbOfBedrooms: "",
+      propertyType: "",
+      ownerName: "",
+      ownerEmail: "",
+      ownerPhone: "",
+      description: ""
+    });
+    setImageFile(null);
 
-      // reset form
-      setForm({
-        title: "",
-        pricePerDay: "",
-        pricePerMonth: "",
-        location: "",
-        nbOfBedrooms: "",
-        propertyType: "",
-        image: "",
-        ownerName: "",
-        ownerEmail: "",
-        ownerPhone: ""
-      });
-      setImageFile(null);
-
-      alert("Listing added successfully!");
-    } catch (error) {
-      console.error(error);
-      alert(error.message || "Failed to upload listing");
-    }
-  };
-
-
+    alert("Listing added successfully!");
+  } catch (error) {
+    console.error(error);
+    alert(error.message || "Failed to upload listing");
+  }
+};
   useEffect(() => {
     console.log(allListings);
   }, [allListings]);
@@ -192,19 +200,19 @@ const PostListing = () => {
           />
         </div>
 
-        {/* Image URL */}
-        {/* <div className="form-group">
-          <label htmlFor="image">Image URL</label>
-          <input
-            id="image"
-            type="text"
-            name="image"
-            value={form.image}
-            onChange={handleChange}
-            placeholder="Enter image URL"
-            required
-          />
-        </div> */}
+      {/* Description */}
+<div className="form-group">
+  <label htmlFor="description">Description</label>
+  <textarea
+    id="description"
+    name="description"
+    value={form.description}
+    onChange={handleChange}
+    placeholder="Enter a detailed description"
+    required
+  />
+</div>
+
         <label htmlFor="image">Upload Image</label>
         <input
           id="image"

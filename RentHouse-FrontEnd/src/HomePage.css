@@ -119,6 +119,7 @@
   background-color: #fff;
   padding: 60px 20px;
   text-align: center;
+  margin-top: 20px !important;
 }
 
 .testimonials h2 {
@@ -200,6 +201,7 @@
   background-color: #fff;
   padding: 60px 20px;
   text-align: center;
+  margin-top: 25px !important;
 }
 
 .how-it-works h2 {
@@ -290,8 +292,9 @@
   background-color: #fff;
   text-align: center;
   max-width: 1300px !important;
-  padding: 60px 20px;
+  padding: 40px 20px;
   margin-top: 50px !important;
+  margin-bottom:10px;
 }
 .stats-container {
   margin-left: 20px !important;
@@ -390,7 +393,10 @@
     width: 40% !important;
     margin: 10px 0;
     font-size: 1rem;
+     background-color:white !important;
+    border:none !important;
   }
+ 
 
   .search-bar button {
     width: 30% !important;
@@ -398,15 +404,27 @@
   /* .home {
     margin-top: px !important;
   } */
+   .cta{
+    margin-bottom:100px !important;
+    margin-top:-20px !important;
+   }
+   .testimonials{
+    margin-bottom:60px !important;
+    margin-top:20px !important;
+    
+   }
+   .how-it-works{
+    margin-top:20px !important;
+   }
 }
 
 @media (max-width: 480px) {
   .hero h1 {
-    font-size: 1.8rem;
+    font-size: 1.9rem;
   }
 
   .hero p {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
   }
 
   .search-bar input {
@@ -418,6 +436,9 @@
   }
   .why-choose-us h2{
     font-size: 30px !important;
+  }
+  .stats-container{
+    margin-left:-10px !important;
   }
 }
 @media (max-width: 400px) {

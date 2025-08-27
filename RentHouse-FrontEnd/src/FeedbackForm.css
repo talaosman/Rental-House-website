@@ -164,6 +164,7 @@
   background: linear-gradient(to right, #f4f0fb, #ffffff);
   padding: 60px 20px;
   font-family: "Segoe UI", sans-serif;
+  margin-top:25px !important;
 }
 
 .feedback-header {

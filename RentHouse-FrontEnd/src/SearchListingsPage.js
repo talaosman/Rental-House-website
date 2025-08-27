@@ -155,14 +155,10 @@ const SearchListings = () => {
   const handleViewDetails = (id) => {
     navigate(`/property/${id}`);
   };
-  const propertyTypes = [];
-  for (let i = 0; i < allListings.length; i++) {
-    const type = allListings[i].propertyType;
-    // Add type if not already in propertyTypes
-    if (type && !propertyTypes.includes(type)) {
-      propertyTypes.push(type);
-    }
-  }
+  const propertyTypes = Array.from(
+  new Set(initialListings.map(listing => listing.propertyType).filter(Boolean))
+);
+
   useEffect(() => {
     const role = localStorage.getItem("userRole"); // assuming 'role' is stored as 'Admin', 'User', etc.
     setUserRole(role);
@@ -175,83 +171,83 @@ const SearchListings = () => {
 
       {/* Filters */}
       <div className="filters">
-       
-          <div className="filter-container">
-            <div className="filter-group">
-              <label>Location:</label>
-              <input
-                type="text"
-                name="location"
-                value={filters.location}
-                onChange={handleFilterChange}
-                placeholder="e.g. Downtown"
-              />
-            </div>
 
-            <div className="filter-group">
-              <label className='PriceFilter'>Price Mode:</label>
-              <select
-                name="priceMode"
-                value={filters.priceMode}
-                onChange={handleFilterChange}
-                className='PriceFilter'
-              >
-                <option value="perMonth">Per Month</option>
-                <option value="perDay">Per Day</option>
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label>Price Range ({filters.priceMode === "perDay" ? "/day" : "/month"}):</label>
-              <input
-                type="number"
-                name="minPrice"
-                value={filters.minPrice}
-                onChange={handleFilterChange}
-                placeholder="Min Price"
-              />
-              <input
-                type="number"
-                name="maxPrice"
-                value={filters.maxPrice}
-                onChange={handleFilterChange}
-                placeholder="Max Price"
-              />
-            </div>
-
-
-            <div className="filter-group">
-              <label>Bedrooms:</label>
-              <input
-                type="number"
-                name="bedrooms"
-                value={filters.bedrooms}
-                onChange={handleFilterChange}
-                placeholder="e.g. 2"
-              />
-            </div>
-
-            <div className="filter-group">
-              <label>Property Type:</label>
-              <select
-                name="propertyType"
-                value={filters.propertyType}
-                onChange={handleFilterChange}
-                className="property-type"
-              >
-                <option value="">Any</option>
-                {propertyTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button onClick={handleSearch} className="Sbtn">Search</button>
+        <div className="filter-container">
+          <div className="filter-group">
+            <label>Location:</label>
+            <input
+              type="text"
+              name="location"
+              value={filters.location}
+              onChange={handleFilterChange}
+              placeholder="e.g. Downtown"
+            />
           </div>
 
-       
-       
+          <div className="filter-group">
+            <label className='PriceFilter'>Price Mode:</label>
+            <select
+              name="priceMode"
+              value={filters.priceMode}
+              onChange={handleFilterChange}
+              className='PriceFilter'
+            >
+              <option value="perMonth">Per Month</option>
+              <option value="perDay">Per Day</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Price Range ({filters.priceMode === "perDay" ? "/day" : "/month"}):</label>
+            <input
+              type="number"
+              name="minPrice"
+              value={filters.minPrice}
+              onChange={handleFilterChange}
+              placeholder="Min Price"
+            />
+            <input
+              type="number"
+              name="maxPrice"
+              value={filters.maxPrice}
+              onChange={handleFilterChange}
+              placeholder="Max Price"
+            />
+          </div>
+
+
+          <div className="filter-group">
+            <label>Bedrooms:</label>
+            <input
+              type="number"
+              name="bedrooms"
+              value={filters.bedrooms}
+              onChange={handleFilterChange}
+              placeholder="e.g. 2"
+            />
+          </div>
+
+          <div className="filter-group">
+            <label>Property Type:</label>
+            <select
+              name="propertyType"
+              value={filters.propertyType}
+              onChange={handleFilterChange}
+              className="property-type"
+            >
+              <option value="">Any</option>
+              {propertyTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button onClick={handleSearch} className="Sbtn">Search</button>
+        </div>
+
+
+
       </div>
 
       {/* Listings Display */}
@@ -286,7 +282,7 @@ const SearchListings = () => {
                 </p>
                 <p>{listing.nbOfBedrooms} Bedrooms</p>
                 <div className="card-buttons">
-                  <button onClick={() => handleViewDetails(listing.id)}>
+                  <button className={userRole === "ADMIN" ? "adminView-button" : ""} onClick={() => handleViewDetails(listing.id)}>
                     View Details
                   </button>
                   {userRole === "ADMIN" && (

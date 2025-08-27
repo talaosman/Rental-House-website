@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
+import { FaStar } from "react-icons/fa"; // star icon
 import "./Navbar.css";
 
 const Navbar = () => {
@@ -64,7 +65,7 @@ const Navbar = () => {
               <img
                 src="/home.png"
                 alt="Logo"
-                className="logo-img"
+                className={!isMobileMenuOpen ? "logo-img2" : ""}
                 style={{ marginTop: "-1px" }}
               />
             </Link>
@@ -119,13 +120,23 @@ const Navbar = () => {
                 </Link>
               </li>
             )}
-             {userRole === "ADMIN" && (
+            {userRole === "ADMIN" && (
               <li>
                 <Link
                   to="/adminFeedback"
                   className={`navbar-item ${location.pathname === "/adminFeedback" ? "active-tab" : ""}`}
                 >
                   Feedback
+                </Link>
+              </li>
+            )}
+            {userRole === "ADMIN" && (
+              <li>
+                <Link
+                  to="/adminRating"
+                  className={`navbar-item ${location.pathname === "/adminRating" ? "active-tab" : ""}`}
+                >
+                  Ratings
                 </Link>
               </li>
             )}
@@ -212,13 +223,25 @@ const Navbar = () => {
               </Link>
             </li>
           )}
-            {userRole === "ADMIN" && (
+          {userRole === "ADMIN" && (
             <li>
               <Link to="/adminFeedback" className={location.pathname === "/adminFeedback" ? "active-tab" : ""} onClick={() => setIsMobileMenuOpen(false)}>
-                <i className="fas fa-plus-circle"></i>Feedback
+                <i className="fas fa-comment-dots"></i>Feedback
               </Link>
             </li>
           )}
+          {userRole === "ADMIN" && (
+            <li>
+              <Link
+                to="/adminRating"
+                className={`navbar-item ${location.pathname === "/adminRating" ? "active-tab" : ""}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <i className="fas fa-star"></i> Ratings
+              </Link>
+            </li>
+          )}
+
           {userRole !== "ADMIN" && (
             <li>
               <Link to="/aboutUs" className={location.pathname === "/aboutUs" ? "active-tab" : ""} onClick={() => setIsMobileMenuOpen(false)}>
@@ -239,7 +262,7 @@ const Navbar = () => {
         <div className="sidebar-bottom">
           <div className="sidebar-logo-bottom">
             <Link to="/">
-              <img src="/home.png" alt="Logo" className="logo-img" />
+              <img src="/home.png" alt="Logo" className={isLoggedIn ? "logo-img" : "logo-img1"} />
             </Link>
           </div>
           {isLoggedIn && (

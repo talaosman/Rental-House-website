@@ -22,6 +22,8 @@ import OtpVerificationPage from "./OtpVerificationPage";
 import AdminFeedbackPage from './AdminFeedbackPage.js';
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
+import OauthSuccess from './OauthSuccess.js'; // Import the OauthSuccess component
+import AdminRatingsDashboard from './AdminRatingsDashboard.js';
 
 const Eelement = document.getElementById('root');
 const rootEelement = createRoot(Eelement);
@@ -59,6 +61,8 @@ const App = () => {
         <Route path="/edit-house/:id" element={<EditHouseForm />} />
         <Route path="/verify-otp" element={<OtpVerificationPage />} />
         <Route path="/adminFeedback" element={<AdminFeedbackPage />} />
+         <Route path="/adminRating" element={<AdminRatingsDashboard />} />
+         <Route path="/oauth-success" element={<OauthSuccess />} />
       </Routes>
     </Router>
   );
