@@ -8,13 +8,24 @@ import com.example.renthousebackend.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
 import com.example.renthousebackend.payload.UserUpdateRequest;
+
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
+import java.util.UUID;
+
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -105,7 +116,7 @@ public class AuthController {
         response.put("username", user.getUsername());
         response.put("phoneNumber", user.getPhoneNumber());
         response.put("profileImage", user.getProfileImage());
-        
+
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -134,6 +145,79 @@ public class AuthController {
         response.put("profileImage", user.getProfileImage());
         // this will be "ADMIN" or "USER"
         return ResponseEntity.ok(response);
+    }
+
+    @RestController
+    @RequestMapping("/api/auth/oauth2")
+    public class OAuth2UserController {
+
+        private final UserRepository userRepo;
+        private final PasswordEncoder passwordEncoder; // make sure it's a bean
+
+        public OAuth2UserController(UserRepository userRepo, PasswordEncoder passwordEncoder) {
+            this.userRepo = userRepo;
+            this.passwordEncoder = passwordEncoder;
+        }
+
+        @GetMapping("/user")
+        public ResponseEntity<?> getOAuth2User(Authentication authentication) {
+            if (authentication == null) {
+                return ResponseEntity.status(401).body("Not authenticated");
+            }
+
+            Object principalObj = authentication.getPrincipal();
+            if (!(principalObj instanceof OAuth2User)) {
+                return ResponseEntity.status(401).body("Not an OAuth2 user");
+            }
+
+            OAuth2User oauthUser = (OAuth2User) principalObj;
+
+            String email = oauthUser.getAttribute("email");
+            if (email == null || email.isEmpty()) {
+                email = oauthUser.getAttribute("login") + "@github.local";
+            }
+
+            Optional<User> existingUser = userRepo.findByEmail(email);
+            User user;
+
+            if (existingUser.isPresent()) {
+                user = existingUser.get();
+            } else {
+                // Generate random password
+                String rawPassword = UUID.randomUUID().toString().substring(0, 8); // 8 chars
+                String encodedPassword = passwordEncoder.encode(rawPassword);
+
+                // Create new user
+                user = new User();
+                user.setEmail(email);
+                user.setUsername(oauthUser.getAttribute("name") != null ? oauthUser.getAttribute("name") : email);
+                user.setRole("USER");
+                user.setPassword(encodedPassword);
+
+                userRepo.save(user);
+
+                // ⚠️ Save the raw password temporarily to return once
+                Map<String, Object> response = new HashMap<>();
+                response.put("id", user.getId());
+                response.put("username", user.getUsername());
+                response.put("email", user.getEmail());
+                response.put("role", user.getRole());
+                response.put("profileImage", user.getProfileImage());
+                response.put("password", rawPassword); // return raw password for first-time login
+
+                return ResponseEntity.ok(response);
+            }
+
+            // Existing user → return profile (password not exposed again)
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", user.getId());
+            response.put("username", user.getUsername());
+            response.put("email", user.getEmail());
+            response.put("role", user.getRole());
+            response.put("profileImage", user.getProfileImage());
+            response.put("password", null); // don’t send password again
+            return ResponseEntity.ok(response);
+        }
     }
 
 }

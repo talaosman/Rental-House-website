@@ -1,6 +1,7 @@
 package com.example.renthousebackend.payload;
 
 public class UserUpdateRequest {
+    private long userId; // Added for user identification
     private String oldEmail;
     private String username;
     private String email;
@@ -54,4 +55,10 @@ public class UserUpdateRequest {
     public void setProfileImage(String profileImage) {
         this.profileImage = profileImage;
     }
+     public long getUserId() {
+        return userId;
+     }
+     public void setUserId(long userId) {
+        this.userId = userId;
+     }
 }

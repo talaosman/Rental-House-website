@@ -1,5 +1,6 @@
 package com.example.renthousebackend.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,7 +18,9 @@ public class User {
     private String password;
     private String phoneNumber;
     private String role;
-    private String profileImage; // add this
+    @Column(columnDefinition = "LONGTEXT")
+    private String profileImage;
+   
 
     public User() {
         // Default constructor
@@ -48,7 +51,7 @@ public class User {
         this.email = email;
     }
 
-    public String getPassword () {
+    public String getPassword() {
         return password;
     }
 
@@ -65,15 +68,17 @@ public class User {
     }
 
     public String getPhoneNumber() {
-        return  phoneNumber;
+        return phoneNumber;
     }
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
-     public String getProfileImage() {
+
+    public String getProfileImage() {
         return profileImage;
     }
+
     public void setProfileImage(String profileImage) {
         this.profileImage = profileImage;
     }

@@ -26,6 +26,10 @@ import com.example.renthousebackend.repository.OwnerRepository;
 import com.example.renthousebackend.service.FileService;
 import com.example.renthousebackend.service.HouseService;
 
+import java.util.Base64;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/api/houses")
 @CrossOrigin(origins = "http://localhost:3000") // your React frontend origin
@@ -49,6 +53,36 @@ public class HouseController {
     @GetMapping("/{id}")
     public House getHouseById(@PathVariable Long id) {
         return houseService.getHouseById(id);
+    }
+
+    @PostMapping("/uploadBase64")
+    public House uploadBase64(@RequestBody UploadBase64Request req) throws IOException {
+        Owner owner = new Owner();
+        owner.setName(req.ownerName);
+        owner.setEmail(req.ownerEmail);
+        owner.setPhone(req.ownerPhone);
+
+        House house = new House();
+        house.setTitle(req.title);
+        house.setPricePerDay(Double.parseDouble(req.pricePerDay));
+        house.setPricePerMonth(Double.parseDouble(req.pricePerMonth));
+        house.setLocation(req.location);
+        house.setNbOfBedrooms(Integer.parseInt(req.nbOfBedrooms));
+        house.setPropertyType(req.propertyType);
+        house.setDescription(req.description);
+
+        if (req.imageData != null && !req.imageData.isEmpty()) {
+            // Remove prefix like "data:image/png;base64,"
+            String base64Image = req.imageData.split(",")[1];
+            byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+
+            String savedFilename = fileService.saveFile(req.imageFilename, imageBytes);
+            house.setImage(savedFilename);
+        }
+
+        house.setOwner(owner);
+
+        return houseService.createHouseWithOwner(house);
     }
 
     @PostMapping(consumes = { "multipart/form-data" })
@@ -108,13 +142,13 @@ public class HouseController {
             @RequestBody Map<String, Object> houseData) {
 
         try {
-            // Extract and parse fields from the incoming JSON map
+            // Extract and parse fields
             String title = (String) houseData.get("title");
             String location = (String) houseData.get("location");
             String status = (String) houseData.get("status");
             String description = (String) houseData.get("description");
             String propertyType = (String) houseData.get("propertyType");
-            int nbOfBedrooms = (int) houseData.get("nbOfBedrooms");
+            int nbOfBedrooms = Integer.parseInt(houseData.get("nbOfBedrooms").toString());
 
             String ownerName = (String) houseData.get("ownerName");
             String ownerEmail = (String) houseData.get("ownerEmail");
@@ -128,6 +162,7 @@ public class HouseController {
                 return ResponseEntity.notFound().build();
             }
 
+            // Update normal fields
             existingHouse.setTitle(title);
             existingHouse.setLocation(location);
             existingHouse.setPricePerDay(pricePerDay);
@@ -137,9 +172,30 @@ public class HouseController {
             existingHouse.setStatus(status);
             existingHouse.setDescription(description);
 
-            Owner owner = ownerRepository.findByEmail(ownerEmail).orElse(null);
-            if (owner == null) {
+            // Handle image update (optional)
+            if (houseData.containsKey("imageData") && houseData.get("imageData") != null) {
+                String imageData = (String) houseData.get("imageData");
+                if (!imageData.isEmpty()) {
+                    String base64Image = imageData.contains(",") ? imageData.split(",")[1] : imageData;
+                    byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+                    String savedFilename = fileService.saveFile(
+                            houseData.get("imageFilename") != null ? (String) houseData.get("imageFilename")
+                                    : "house.png",
+                            imageBytes);
+                    existingHouse.setImage(savedFilename);
+                }
+            }
+
+            // Owner update
+            List<Owner> owners = ownerRepository.findByEmail(ownerEmail);
+
+            Owner owner;
+            if (owners.isEmpty()) {
+                // no owner yet → create new
                 owner = new Owner();
+            } else {
+                // pick first match (or add better logic: latest, matching phone, etc.)
+                owner = owners.get(0);
             }
             owner.setName(ownerName);
             owner.setEmail(ownerEmail);
@@ -176,4 +232,18 @@ public class HouseController {
         }
     }
 
+    public static class UploadBase64Request {
+        public String title;
+        public String pricePerDay;
+        public String pricePerMonth;
+        public String location;
+        public String nbOfBedrooms;
+        public String propertyType;
+        public String ownerName;
+        public String ownerEmail;
+        public String ownerPhone;
+        public String description;
+        public String imageFilename;
+        public String imageData; // Base64 string starting with "data:image/..."
+    }
 }
