@@ -21,7 +21,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.renthousebackend.entity.House;
+import com.example.renthousebackend.entity.Rent;
 import com.example.renthousebackend.repository.HouseRepository;
+import com.example.renthousebackend.repository.RentRepository;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -36,6 +38,9 @@ public class ChatController {
     @Autowired
     private HouseRepository houseRepository;
 
+    @Autowired
+    private RentRepository rentRepository;
+
     @PostMapping
     public Map<String, String> chat(@RequestBody Map<String, String> payload) {
         String userMessage = payload.get("message");
@@ -46,6 +51,54 @@ public class ChatController {
 
         String lowered = userMessage.toLowerCase();
         List<House> houses;
+
+        if (lowered.contains("my rented houses") || lowered.contains("what did i rent")) {
+            if (username == null) {
+                return Map.of("reply", "⚠️ Please log in to see your rented houses.");
+            }
+
+            try {
+                // Assume you pass userId in payload
+                Long userId = Long.parseLong(payload.get("userId"));
+                List<Rent> userRents = rentRepository.findByUserId(userId);
+
+                if (userRents.isEmpty()) {
+                    return Map.of("reply", "❌ You haven’t rented any houses yet.");
+                }
+
+                StringBuilder sb = new StringBuilder("📦 Here are your rented houses:\n\n");
+                for (Rent rent : userRents) {
+                    House h = rent.getHouse();
+                    sb.append("- ").append(h.getTitle())
+                            .append(" 📍 ").append(h.getLocation())
+                            .append(" (From ").append(rent.getStartDate())
+                            .append(" to ").append(rent.getEndDate()).append(")\n");
+                }
+
+                return Map.of("reply", sb.toString());
+            } catch (Exception e) {
+                return Map.of("reply", "❌ Could not fetch your rented houses. Error: " + e.getMessage());
+            }
+        }
+
+        // ✅ Check for recommendation request
+        if (lowered.contains("recommend") || lowered.contains("suggest")) {
+            List<Long> ids = houseRepository.findMostRentedHouseIds();
+            if (ids.isEmpty()) {
+                return Map.of("reply", "🤔 No recommendations available yet.");
+            }
+
+            Long topHouseId = ids.get(0); // most rented house
+            House recommended = houseRepository.findById(topHouseId).orElse(null);
+
+            if (recommended != null) {
+                String reply = "🔥 Our most recommended house is:\n\n- " +
+                        recommended.getTitle() + " 📍 in " + recommended.getLocation() +
+                        " 💰 $" + recommended.getPricePerMonth() + "/month or $" + recommended.getPricePerDay()
+                        + "/day\n";
+                return Map.of("reply", reply);
+            }
+        }
 
         // Step 1: Get all known locations
         List<String> allLocations = houseRepository.findDistinctLocations();

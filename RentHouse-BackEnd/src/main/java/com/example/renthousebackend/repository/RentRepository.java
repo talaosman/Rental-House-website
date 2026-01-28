@@ -10,6 +10,7 @@ import com.example.renthousebackend.entity.Rent;
 import com.example.renthousebackend.entity.User;
 
 public interface RentRepository extends JpaRepository<Rent, Long> {
+
     List<Rent> findByHouse(House house);
 
     List<Rent> findByUser(User user);
@@ -18,5 +19,9 @@ public interface RentRepository extends JpaRepository<Rent, Long> {
             House house, LocalDate endDate, LocalDate startDate);
 
     Rent findTopByHouseIdOrderByEndDateDesc(Long houseId);
-    int countByHouseId(Long houseId); 
+
+    int countByHouseId(Long houseId);
+
+    List<Rent> findByUserId(Long userId);
+    
 }
