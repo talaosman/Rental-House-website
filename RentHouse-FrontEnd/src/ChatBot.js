@@ -12,11 +12,12 @@ const ChatBot = () => {
     setChatHistory([...chatHistory, user]);
 
     const username = localStorage.getItem("username");
+     const userId = localStorage.getItem("userId");
     try {
       const response = await fetch('http://localhost:5000/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userMessage , username: username,  }),
+        body: JSON.stringify({ message: userMessage , username: username,userId: userId }),
       });
 
       const data = await response.json();
