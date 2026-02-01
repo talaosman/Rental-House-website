@@ -1,18 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import { FaStar } from "react-icons/fa"; // star icon
 import "./Navbar.css";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const [userRole, setUserRole] = useState(null);
 
   const handleMenuToggle = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
+
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -22,8 +32,8 @@ const Navbar = () => {
     };
 
     const handleClickOutside = (event) => {
-      const menu = document.querySelector(".sidebar-menu");
-      const toggle = document.querySelector(".navbar-toggle");
+      const menu = document.querySelector(".sidebar-menu-luxury");
+      const toggle = document.querySelector(".navbar-toggle-luxury");
       if (
         isMobileMenuOpen &&
         menu &&
@@ -51,32 +61,30 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Top Navbar: hide only when sidebar is open */}
-      <nav className={`navbar ${isMobileMenuOpen ? "hide" : ""}`}>
-        <div className="navbar-container">
-          <div className="navbar-toggle" onClick={handleMenuToggle}>
-            <span className="bar"></span>
-            <span className="bar"></span>
-            <span className="bar"></span>
+      {/* Top Navbar */}
+      <nav className={`navbar-luxury ${scrolled ? "scrolled" : ""} ${isMobileMenuOpen ? "hide" : ""}`}>
+        <div className="navbar-container-luxury">
+          {/* Mobile Menu Toggle */}
+          <div className="navbar-toggle-luxury" onClick={handleMenuToggle}>
+            <span className="bar-luxury"></span>
+            <span className="bar-luxury"></span>
+            <span className="bar-luxury"></span>
           </div>
 
-          <div className="navbar-logo">
+          {/* Logo */}
+          <div className="navbar-logo-luxury">
             <Link to="/">
-              <img
-                src="/home.png"
-                alt="Logo"
-                className={!isMobileMenuOpen ? "logo-img2" : ""}
-                style={{ marginTop: "-1px" }}
-              />
+              <img src="/home.png" alt="RentalHub" className="logo-img-luxury" />
             </Link>
           </div>
 
-          <ul className="navbar-links">
+          {/* Desktop Navigation Links */}
+          <ul className="navbar-links-luxury">
             {userRole !== "ADMIN" && (
               <li>
                 <Link
                   to="/"
-                  className={`navbar-item ${location.pathname === "/" ? "active-tab" : ""}`}
+                  className={`navbar-link ${location.pathname === "/" ? "active" : ""}`}
                 >
                   Home
                 </Link>
@@ -85,7 +93,7 @@ const Navbar = () => {
             <li>
               <Link
                 to="/search"
-                className={`navbar-item ${location.pathname === "/search" ? "active-tab" : ""}`}
+                className={`navbar-link ${location.pathname === "/search" ? "active" : ""}`}
               >
                 Search Listings
               </Link>
@@ -94,7 +102,7 @@ const Navbar = () => {
               <li>
                 <Link
                   to="/favorites"
-                  className={`navbar-item ${location.pathname === "/favorites" ? "active-tab" : ""}`}
+                  className={`navbar-link ${location.pathname === "/favorites" ? "active" : ""}`}
                 >
                   Favorites
                 </Link>
@@ -104,7 +112,7 @@ const Navbar = () => {
               <li>
                 <Link
                   to="/feedback"
-                  className={`navbar-item ${location.pathname === "/feedback" ? "active-tab" : ""}`}
+                  className={`navbar-link ${location.pathname === "/feedback" ? "active" : ""}`}
                 >
                   Feedback
                 </Link>
@@ -114,7 +122,7 @@ const Navbar = () => {
               <li>
                 <Link
                   to="/post"
-                  className={`navbar-item ${location.pathname === "/post" ? "active-tab" : ""}`}
+                  className={`navbar-link ${location.pathname === "/post" ? "active" : ""}`}
                 >
                   Post a Listing
                 </Link>
@@ -124,7 +132,7 @@ const Navbar = () => {
               <li>
                 <Link
                   to="/adminFeedback"
-                  className={`navbar-item ${location.pathname === "/adminFeedback" ? "active-tab" : ""}`}
+                  className={`navbar-link ${location.pathname === "/adminFeedback" ? "active" : ""}`}
                 >
                   Feedback
                 </Link>
@@ -134,7 +142,7 @@ const Navbar = () => {
               <li>
                 <Link
                   to="/adminRating"
-                  className={`navbar-item ${location.pathname === "/adminRating" ? "active-tab" : ""}`}
+                  className={`navbar-link ${location.pathname === "/adminRating" ? "active" : ""}`}
                 >
                   Ratings
                 </Link>
@@ -144,65 +152,84 @@ const Navbar = () => {
               <li>
                 <Link
                   to="/aboutUs"
-                  className={`navbar-item ${location.pathname === "/aboutUs" ? "active-tab" : ""}`}
+                  className={`navbar-link ${location.pathname === "/aboutUs" ? "active" : ""}`}
                 >
                   About Us
                 </Link>
               </li>
             )}
-            {!isLoggedIn && (
-              <li>
-                <Link
-                  to="/about"
-                  className={`navbar-item ${location.pathname === "/about" ? "active-tab" : ""}`}
-                >
-                  Sign Up / Sign In
-                </Link>
-              </li>
-            )}
           </ul>
 
-          {isLoggedIn && (
-            <div className="profile-icon">
-              <Link
-                to="/profile"
-                className="navbar-item"
-                style={{ marginTop: "-0.5px" }}
-              >
-                <img src="account.png" alt="Profile" className="profile-img" />
+          {/* Right Section - Login/Profile */}
+          <div className="navbar-right-luxury">
+            {!isLoggedIn ? (
+              <Link to="/about" className="btn-try-now">
+                Try Now
               </Link>
-            </div>
-          )}
+            ) : (
+              <Link to="/profile" className="profile-link-luxury">
+                <img src="account.png" alt="Profile" className="profile-img-luxury" />
+              </Link>
+            )}
+          </div>
         </div>
       </nav>
 
-      {/* Sidebar Menu */}
-      <aside className={`sidebar-menu ${isMobileMenuOpen ? "open" : ""}`}>
-        {/* Toggle at top */}
-        <div className="sidebar-toggle" onClick={handleMenuToggle}>
-          <span className="bar"></span>
-          <span className="bar"></span>
-          <span className="bar"></span>
+      {/* Sidebar Menu for Mobile */}
+      <aside className={`sidebar-menu-luxury ${isMobileMenuOpen ? "open" : ""}`}>
+        <div className="sidebar-header-luxury">
+          <div className="sidebar-logo-luxury">
+            <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>
+              <img src="/home.png" alt="RentalHub" className="logo-img-sidebar" />
+            </Link>
+          </div>
+          <div className="sidebar-close-luxury" onClick={handleMenuToggle}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </div>
         </div>
 
-        {/* Nav links */}
-        <ul className="sidebar-links">
+        <ul className="sidebar-links-luxury">
           {userRole !== "ADMIN" && (
             <li>
-              <Link to="/" className={`${location.pathname === "/" ? "active-tab" : ""}`} onClick={() => setIsMobileMenuOpen(false)}>
-                <i className="fas fa-home"></i> Home
+              <Link
+                to="/"
+                className={location.pathname === "/" ? "active" : ""}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                </svg>
+                <span>Home</span>
               </Link>
             </li>
           )}
           <li>
-            <Link to="/search" className={location.pathname === "/search" ? "active-tab" : ""} onClick={() => setIsMobileMenuOpen(false)}>
-              <i className="fas fa-search"></i> Search Listings
+            <Link
+              to="/search"
+              className={location.pathname === "/search" ? "active" : ""}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+              <span>Search Listings</span>
             </Link>
           </li>
           {isLoggedIn && userRole !== "ADMIN" && (
             <li>
-              <Link to="/favorites" className={location.pathname === "/favorites" ? "active-tab" : ""} onClick={() => setIsMobileMenuOpen(false)}>
-                <i className="fas fa-heart"></i> Favorites
+              <Link
+                to="/favorites"
+                className={location.pathname === "/favorites" ? "active" : ""}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                <span>Favorites</span>
               </Link>
             </li>
           )}
@@ -210,23 +237,43 @@ const Navbar = () => {
             <li>
               <Link
                 to="/feedback"
-                className={`navbar-item ${location.pathname === "/feedback" ? "active-tab" : ""}`}
+                className={location.pathname === "/feedback" ? "active" : ""}
+                onClick={() => setIsMobileMenuOpen(false)}
               >
-                <i className="fas fa-comment-dots"></i> Feedback
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>Feedback</span>
               </Link>
             </li>
           )}
           {userRole === "ADMIN" && (
             <li>
-              <Link to="/post" className={location.pathname === "/post" ? "active-tab" : ""} onClick={() => setIsMobileMenuOpen(false)}>
-                <i className="fas fa-plus-circle"></i> Post a Listing
+              <Link
+                to="/post"
+                className={location.pathname === "/post" ? "active" : ""}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="16"></line>
+                  <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                <span>Post a Listing</span>
               </Link>
             </li>
           )}
           {userRole === "ADMIN" && (
             <li>
-              <Link to="/adminFeedback" className={location.pathname === "/adminFeedback" ? "active-tab" : ""} onClick={() => setIsMobileMenuOpen(false)}>
-                <i className="fas fa-comment-dots"></i>Feedback
+              <Link
+                to="/adminFeedback"
+                className={location.pathname === "/adminFeedback" ? "active" : ""}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>Feedback</span>
               </Link>
             </li>
           )}
@@ -234,46 +281,51 @@ const Navbar = () => {
             <li>
               <Link
                 to="/adminRating"
-                className={`navbar-item ${location.pathname === "/adminRating" ? "active-tab" : ""}`}
+                className={location.pathname === "/adminRating" ? "active" : ""}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <i className="fas fa-star"></i> Ratings
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <span>Ratings</span>
               </Link>
             </li>
           )}
-
           {userRole !== "ADMIN" && (
             <li>
-              <Link to="/aboutUs" className={location.pathname === "/aboutUs" ? "active-tab" : ""} onClick={() => setIsMobileMenuOpen(false)}>
-                <i className="fas fa-info-circle"></i> About Us
-              </Link>
-            </li>
-          )}
-          {!isLoggedIn && (
-            <li>
-              <Link to="/about" className={location.pathname === "/about" ? "active-tab" : ""} onClick={() => setIsMobileMenuOpen(false)}>
-                <i className="fas fa-user-plus"></i> Sign Up / Sign In
+              <Link
+                to="/aboutUs"
+                className={location.pathname === "/aboutUs" ? "active" : ""}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>About Us</span>
               </Link>
             </li>
           )}
         </ul>
 
-        {/* Bottom section */}
-        <div className="sidebar-bottom">
-          <div className="sidebar-logo-bottom">
-            <Link to="/">
-              <img src="/home.png" alt="Logo" className={isLoggedIn ? "logo-img" : "logo-img1"} />
+        {/* Sidebar Footer */}
+        <div className="sidebar-footer-luxury">
+          {!isLoggedIn ? (
+            <Link to="/about" className="btn-sidebar-auth" onClick={() => setIsMobileMenuOpen(false)}>
+              Sign Up / Sign In
             </Link>
-          </div>
-          {isLoggedIn && (
-            <div className="sidebar-profile-icon">
-              <Link to="/profile">
-                <img src="account.png" alt="Profile" className="profile-img" />
-              </Link>
-            </div>
+          ) : (
+            <Link to="/profile" className="sidebar-profile" onClick={() => setIsMobileMenuOpen(false)}>
+              <img src="account.png" alt="Profile" className="profile-img-sidebar" />
+              <span>My Profile</span>
+            </Link>
           )}
         </div>
       </aside>
+
+      {/* Overlay for mobile menu */}
+      {isMobileMenuOpen && <div className="sidebar-overlay-luxury" onClick={handleMenuToggle}></div>}
     </>
   );
 };

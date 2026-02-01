@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./HomePage.css";
 import TestimonialsCarousel from "./TestimonialsCarousel";
-import ChatBot from "./ChatBot.js"; // Import the ChatBot component
+import ChatBot from "./ChatBot.js";
 
 const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -10,34 +10,35 @@ const HomePage = () => {
   const [isLogin, setIsLogin] = useState(false);
   const [properties, setProperties] = useState(0);
   const [users, setUsers] = useState(0);
+  const [featuredProperties, setFeaturedProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  let pCounter = setInterval(() => {
-    setProperties((prev) => {
-      if (prev >= 5000) {
-        clearInterval(pCounter);
-        return 5000;
-      }
-      return prev + 50; // increment speed
-    });
-  }, 20); // slower so user sees it
+    let pCounter = setInterval(() => {
+      setProperties((prev) => {
+        if (prev >= 5000) {
+          clearInterval(pCounter);
+          return 5000;
+        }
+        return prev + 50;
+      });
+    }, 20);
 
-  let uCounter = setInterval(() => {
-    setUsers((prev) => {
-      if (prev >= 3200) {
-        clearInterval(uCounter);
-        return 3200;
-      }
-      return prev + 40;
-    });
-  }, 20);
+    let uCounter = setInterval(() => {
+      setUsers((prev) => {
+        if (prev >= 3200) {
+          clearInterval(uCounter);
+          return 3200;
+        }
+        return prev + 40;
+      });
+    }, 20);
 
-  return () => {
-    clearInterval(pCounter);
-    clearInterval(uCounter);
-  };
-}, []);
-
+    return () => {
+      clearInterval(pCounter);
+      clearInterval(uCounter);
+    };
+  }, []);
 
   const userId = localStorage.getItem("userId");
 
@@ -46,128 +47,238 @@ const HomePage = () => {
       navigate(`/searchResult?query=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
+
   useEffect(() => {
     if (userId) {
-      setIsLogin(true); // user is logged in
+      setIsLogin(true);
     }
-  }, []);
-  // Simple animation on load
+  }, [userId]);
+
   useEffect(() => {
-    const elements = document.querySelectorAll(".fade-in");
+    const elements = document.querySelectorAll(".fade-in-up");
     elements.forEach((el, i) => {
-      setTimeout(() => el.classList.add("visible"), i * 300);
+      setTimeout(() => el.classList.add("visible"), i * 150);
     });
   }, []);
 
-  return (
-    <div className="home">
-      {/* Hero Section */}
-      <div className="hero fade-in">
-        <h1>Welcome to RentalHub</h1>
-        <p>Your go-to platform for finding and listing rental properties!</p>
+  // Fetch most rented properties from backend
+  useEffect(() => {
+    const fetchMostRentedProperties = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("http://localhost:5000/api/houses/most-rented");
+        if (response.ok) {
+          const data = await response.json();
+          setFeaturedProperties(data);
+        } else {
+          console.error("Failed to fetch most rented properties");
+          setFeaturedProperties([]);
+        }
+      } catch (error) {
+        console.error("Error fetching most rented properties:", error);
+        setFeaturedProperties([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Search for properties..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button onClick={handleSearch}>Search</button>
+    fetchMostRentedProperties();
+  }, []);
+
+  const handlePropertyClick = (propertyId) => {
+    navigate(`/property/${propertyId}`);
+  };
+
+  return (
+    <div className="home-luxury">
+      {/* Hero Section */}
+      <section className="hero-luxury fade-in-up">
+        <div className="hero-overlay"></div>
+        <div className="hero-content">
+          <h1 className="hero-title">Finding Your New Home Is Simple</h1>
+          <p className="hero-subtitle">
+            We provide high-quality rental listings to help you find the perfect home
+          </p>
+
+          {/* Simple Search Bar */}
+          <div className="search-bar-luxury">
+            <input
+              type="text"
+              placeholder="Search for properties..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              className="search-input-luxury"
+            />
+            <button onClick={handleSearch} className="search-button-luxury">
+              Search
+            </button>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Most Viewed Properties */}
+      <section className="properties-section fade-in-up">
+        <h2 className="section-title">Most Rented</h2>
+
+        {loading ? (
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Loading properties...</p>
+          </div>
+        ) : featuredProperties.length > 0 ? (
+          <div className="properties-grid">
+            {featuredProperties.map((property, index) => (
+              <div
+                key={property.id}
+                className="property-card"
+                style={{ animationDelay: `${index * 100}ms` }}
+                onClick={() => handlePropertyClick(property.id)}
+              >
+                <div className="property-image-container">
+                  <img
+                    src={
+                      property.image.startsWith("http")
+                        ? property.image
+                        : `http://localhost:5000/uploads/${property.image}`
+                    }
+                    alt={property.title}
+                    className="property-image"
+                    onError={(e) => {
+                      e.target.src = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop";
+                    }}
+                  />
+                  <div className="property-overlay">
+                    <button className="view-details-btn">View Details</button>
+                  </div>
+                </div>
+                <div className="property-info">
+                  <h3 className="property-name">{property.title}</h3>
+                  <p className="property-address">{property.location}</p>
+                  <div className="property-features">
+                    <span className="feature-item">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      </svg>
+                      {property.nbOfBedrooms} {property.nbOfBedrooms === 1 ? 'Bed' : 'Beds'}
+                    </span>
+                    <span className="feature-item">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                      </svg>
+                      {property.propertyType}
+                    </span>
+                  </div>
+                  <div className="property-price">
+                    ${property.pricePerMonth?.toLocaleString() || property.pricePerDay?.toLocaleString()}
+                    <span>/month</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="no-properties">
+            <p>No properties available at the moment.</p>
+          </div>
+        )}
+      </section>
 
       {/* Features Section */}
-      <div className="features fade-in">
-        <div className="feature-card">
-          <img src="find.png" alt="Find" className="feature-img" />
-          <h3>Find Properties</h3>
-          <p>Explore verified rentals by area, price, and amenities.</p>
-        </div>
-        <div className="feature-card">
-          <img src="list.png" alt="List" className="feature-img" />
-          <h3>Post a Listing</h3>
-          <p>Reach potential tenants fast with our listing tools.</p>
-        </div>
-        <div className="feature-card">
-          <img src="join.png" alt="Join" className="feature-img" />
-          <h3>Join the Community</h3>
-          <p>Sign up to get exclusive access to deals and alerts.</p>
-        </div>
-      </div>
+      <section className="features-luxury fade-in-up">
+        <div className="features-grid-luxury">
+          <div className="feature-card-luxury">
+            <div className="feature-icon-luxury">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </div>
+            <h3>Find Properties</h3>
+            <p>Explore verified rentals by area, price, and amenities with our advanced search.</p>
+          </div>
 
-      {/* How It Works Section */}
-      <div className="how-it-works fade-in">
-        <h2>How It Works</h2>
-        <div className="steps">
-          <div className="step">
-            <span>1</span>
-            <h4>Create an Account</h4>
-            <p>Sign up and personalize your rental preferences.</p>
+          <div className="feature-card-luxury">
+            <div className="feature-icon-luxury">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+            </div>
+            <h3>Post a Listing</h3>
+            <p>Reach potential tenants fast with our powerful listing tools and wide reach.</p>
           </div>
-          <div className="step">
-            <span>2</span>
-            <h4>Search or List</h4>
-            <p>Find a home or publish your property within minutes.</p>
-          </div>
-          <div className="step">
-            <span>3</span>
-            <h4>Connect</h4>
-            <p>Message landlords or tenants and finalize deals fast.</p>
+
+          <div className="feature-card-luxury">
+            <div className="feature-icon-luxury">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+            <h3>Join the Community</h3>
+            <p>Sign up to get exclusive access to deals, alerts, and our trusted network.</p>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Why Choose Us Section */}
-      <div className="why-choose-us fade-in">
-        <h2>Why Choose Us</h2>
-        <p className="why-choose-description">
-          We connect renters and landlords quickly, easily, and reliably across the region.
-        </p>
-        <div className="stats">
-          {/* Google Map Section */}
-          <div className="map-section">
-            <div className="map-container">
-              <iframe
-                src="https://www.google.com/maps/d/embed?mid=1Mv98OyCfsBetpF6IUarBm_Ks4FvFZp0&ehbc=2E312F"
-                width="640"
-                height="480"
-                title="Our Location"
-                style={{ border: 0 }}
-                allowFullScreen=""
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              ></iframe>
+      {/* Stats Section */}
+      <section className="stats-section-luxury fade-in-up">
+        <div className="stats-content">
+          <div className="map-wrapper">
+            <iframe
+              src="https://www.google.com/maps/d/embed?mid=1Mv98OyCfsBetpF6IUarBm_Ks4FvFZp0&ehbc=2E312F"
+              width="100%"
+              height="100%"
+              title="Our Location"
+              style={{ border: 0 }}
+              allowFullScreen=""
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            ></iframe>
+          </div>
+
+          <div className="stats-wrapper">
+            <div className="stat-card">
+              <h3 className="stat-number">{properties.toLocaleString()}+</h3>
+              <p className="stat-label">Properties Listed</p>
+            </div>
+            <div className="stat-card">
+              <h3 className="stat-number">{users.toLocaleString()}+</h3>
+              <p className="stat-label">Satisfied Users</p>
+            </div>
+            <div className="stat-card">
+              <h3 className="stat-number">24/7</h3>
+              <p className="stat-label">Support Available</p>
             </div>
           </div>
-           <div className="stats-container">
-      <div className="stat">
-        <h3>{properties.toLocaleString()}+</h3>
-        <p>Properties Listed</p>
-      </div>
-      <div className="stat">
-        <h3>{users.toLocaleString()}+</h3>
-        <p>Satisfied Users</p>
-      </div>
-      <div className="stat">
-        <h3>24/7</h3>
-        <p>Support Available</p>
-      </div>
-    </div>
         </div>
-      </div>
+      </section>
 
-
-     <div className='testimonials'>
       {/* Testimonials */}
-      <TestimonialsCarousel />
-     </div>
+      <section className="testimonials-luxury fade-in-up">
+        <TestimonialsCarousel />
+      </section>
+
       {/* CTA Section */}
-      {!isLogin && (<div className="cta fade-in">
-        <h2>Ready to rent or list a property?</h2>
-        <button onClick={() => navigate("/about")}>Get Started Now</button>
-      </div>)
-      }
+      {!isLogin && (
+        <section className="cta-luxury fade-in-up">
+          <div className="cta-content">
+            <h2>Ready to Find Your Dream Home?</h2>
+            <p>Join thousands of satisfied renters and landlords on RentalHub</p>
+            <button onClick={() => navigate("/about")} className="cta-button-luxury">
+              Get Started Now
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+          </div>
+        </section>
+      )}
+
       <ChatBot />
     </div>
   );
