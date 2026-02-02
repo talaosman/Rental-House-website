@@ -519,6 +519,11 @@
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: 'Inter', sans-serif;
+  text-decoration: none;
+}
+
+.cta-secondary-btn.cta-link {
+  text-decoration: none;
 }
 
 .cta-secondary-btn:hover {
