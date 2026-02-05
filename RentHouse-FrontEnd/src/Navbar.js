@@ -26,7 +26,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth > 768) {
+      if (window.innerWidth > 968) {
         setIsMobileMenuOpen(false);
       }
     };
@@ -62,7 +62,7 @@ const Navbar = () => {
   return (
     <>
       {/* Top Navbar */}
-      <nav className={`navbar-luxury ${scrolled ? "scrolled" : ""} ${isMobileMenuOpen ? "hide" : ""}`}>
+      <nav className={`navbar-luxury ${scrolled ? "scrolled" : ""}`}>
         <div className="navbar-container-luxury">
           {/* Mobile Menu Toggle */}
           <div className="navbar-toggle-luxury" onClick={handleMenuToggle}>
@@ -75,6 +75,7 @@ const Navbar = () => {
           <div className="navbar-logo-luxury">
             <Link to="/">
               <img src="/home.png" alt="RentalHub" className="logo-img-luxury" />
+              <span className="logo-text-luxury">RentalHub</span>
             </Link>
           </div>
 
@@ -86,7 +87,7 @@ const Navbar = () => {
                   to="/"
                   className={`navbar-link ${location.pathname === "/" ? "active" : ""}`}
                 >
-                  Home
+                  <span>Home</span>
                 </Link>
               </li>
             )}
@@ -95,7 +96,7 @@ const Navbar = () => {
                 to="/search"
                 className={`navbar-link ${location.pathname === "/search" ? "active" : ""}`}
               >
-                Search Listings
+                <span>Search Listings</span>
               </Link>
             </li>
             {isLoggedIn && userRole !== "ADMIN" && (
@@ -104,7 +105,7 @@ const Navbar = () => {
                   to="/favorites"
                   className={`navbar-link ${location.pathname === "/favorites" ? "active" : ""}`}
                 >
-                  Favorites
+                  <span>Favorites</span>
                 </Link>
               </li>
             )}
@@ -114,7 +115,7 @@ const Navbar = () => {
                   to="/feedback"
                   className={`navbar-link ${location.pathname === "/feedback" ? "active" : ""}`}
                 >
-                  Feedback
+                  <span>Feedback</span>
                 </Link>
               </li>
             )}
@@ -124,7 +125,7 @@ const Navbar = () => {
                   to="/post"
                   className={`navbar-link ${location.pathname === "/post" ? "active" : ""}`}
                 >
-                  Post a Listing
+                  <span>Post a Listing</span>
                 </Link>
               </li>
             )}
@@ -134,7 +135,7 @@ const Navbar = () => {
                   to="/adminFeedback"
                   className={`navbar-link ${location.pathname === "/adminFeedback" ? "active" : ""}`}
                 >
-                  Feedback
+                  <span>Feedback</span>
                 </Link>
               </li>
             )}
@@ -144,7 +145,7 @@ const Navbar = () => {
                   to="/adminRating"
                   className={`navbar-link ${location.pathname === "/adminRating" ? "active" : ""}`}
                 >
-                  Ratings
+                  <span>Ratings</span>
                 </Link>
               </li>
             )}
@@ -154,7 +155,7 @@ const Navbar = () => {
                   to="/aboutUs"
                   className={`navbar-link ${location.pathname === "/aboutUs" ? "active" : ""}`}
                 >
-                  About Us
+                  <span>About Us</span>
                 </Link>
               </li>
             )}
@@ -164,23 +165,31 @@ const Navbar = () => {
           <div className="navbar-right-luxury">
             {!isLoggedIn ? (
               <Link to="/about" className="btn-try-now">
-                Try Now
+                <span>Get Started</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
               </Link>
             ) : (
               <Link to="/profile" className="profile-link-luxury">
-                <img src="account.png" alt="Profile" className="profile-img-luxury" />
+                <div className="profile-avatar-luxury">
+                  <img src="account.png" alt="Profile" className="profile-img-luxury" />
+                  <span className="profile-status-luxury"></span>
+                </div>
               </Link>
             )}
           </div>
         </div>
       </nav>
 
-      {/* Sidebar Menu for Mobile */}
+      {/* Sidebar Menu for Mobile - SLIDES FROM LEFT */}
       <aside className={`sidebar-menu-luxury ${isMobileMenuOpen ? "open" : ""}`}>
         <div className="sidebar-header-luxury">
           <div className="sidebar-logo-luxury">
             <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>
               <img src="/home.png" alt="RentalHub" className="logo-img-sidebar" />
+              <span className="logo-text-sidebar">RentalHub</span>
             </Link>
           </div>
           <div className="sidebar-close-luxury" onClick={handleMenuToggle}>
@@ -313,12 +322,19 @@ const Navbar = () => {
         <div className="sidebar-footer-luxury">
           {!isLoggedIn ? (
             <Link to="/about" className="btn-sidebar-auth" onClick={() => setIsMobileMenuOpen(false)}>
-              Sign Up / Sign In
+              <span>Get Started</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
             </Link>
           ) : (
             <Link to="/profile" className="sidebar-profile" onClick={() => setIsMobileMenuOpen(false)}>
               <img src="account.png" alt="Profile" className="profile-img-sidebar" />
-              <span>My Profile</span>
+              <div className="sidebar-profile-info">
+                <span className="profile-name">My Profile</span>
+                <span className="profile-email">View Account</span>
+              </div>
             </Link>
           )}
         </div>
