@@ -81,7 +81,7 @@ public class ChatController {
             }
         }
 
-        // ✅ Check for recommendation request
+        //  Check for recommendation request
         if (lowered.contains("recommend") || lowered.contains("suggest")) {
             List<Long> ids = houseRepository.findMostRentedHouseIds();
             if (ids.isEmpty()) {
@@ -136,7 +136,7 @@ public class ChatController {
                         (matchedLocation != null ? " in " + matchedLocation : "") + " at the moment.");
             }
 
-            // 🧠 Check for 'cheapest' keyword
+            //  Check for 'cheapest' keyword
             if (lowered.contains("cheapest") || lowered.contains("affordable")) {
                 House cheapest = houses.stream()
                         .min(Comparator.comparingDouble(House::getPricePerMonth))
@@ -149,7 +149,7 @@ public class ChatController {
                 }
             }
 
-            // 🔍 Parse for "between X and Y dollars"
+            //  Parse for "between X and Y dollars"
             if (lowered.matches(".*\\bbetween \\$?(\\d+) and \\$?(\\d+).*")) {
                 Matcher matcher = Pattern.compile(".*\\bbetween \\$?(\\d+) and \\$?(\\d+).*").matcher(lowered);
                 if (matcher.find()) {
@@ -176,7 +176,7 @@ public class ChatController {
                 }
             }
 
-            // 🔍 Parse for "X bedrooms"
+            //  Parse for "X bedrooms"
             if (lowered.matches(".*\\b(\\d+) bedroom.*")) {
                 Matcher matcher = Pattern.compile(".*\\b(\\d+) bedroom.*").matcher(lowered);
                 if (matcher.find()) {
