@@ -93,6 +93,7 @@ const UserProfile = () => {
           },
           credentials: "include",
           body: JSON.stringify({
+             userId: userData.userId,  
             username: userData.fullName,
             email: userData.email,
             password: userData.password,
