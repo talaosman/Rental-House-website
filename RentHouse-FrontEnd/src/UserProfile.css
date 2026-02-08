@@ -1,176 +1,201 @@
+/* === PAGE === */
 .profile-page {
   display: flex;
   justify-content: center;
-  padding: 30px 20px;
-  background-color: #f9f9f9;
+  padding: 80px 20px 40px;
+  background: linear-gradient(
+    to bottom,
+    #f4f7fb 0%,
+    #eef2f7 100%
+  );
   min-height: 100vh;
   box-sizing: border-box;
-  margin-top:60px;
 }
 
+/* === CARD === */
 .profile-container {
   width: 100%;
-  max-width: 600px;
-  background: #fff;
-  border: 2px solid #007bff;
-  border-radius: 12px;
-  padding: 30px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
+  max-width: 680px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 36px 32px;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.6) inset;
   box-sizing: border-box;
 }
 
+/* === HEADER === */
 .profile-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 36px;
 }
 
 .profile-image {
-  width: 100px;
-  height: 100px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   object-fit: cover;
-  margin-bottom: 10px;
-  border: 3px solid #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 14px;
+  border: 4px solid #fff;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease;
+}
+
+.profile-image:hover {
+  transform: scale(1.04);
 }
 
 .profile-header h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 26px;
+  font-weight: 600;
+  color: #1f2937;
 }
 
 .username {
   font-size: 14px;
-  color: #777;
+  color: #6b7280;
+  margin-top: 4px;
 }
 
+/* === INFO SECTION === */
 .profile-info {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
 }
 
+/* === ROW === */
 .info-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .label {
   font-weight: 600;
-  color: #444;
-  min-width: 120px;
+  color: #374151;
+  min-width: 130px;
 }
 
+/* === VALUE === */
 .value {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-grow: 1;
   justify-content: space-between;
 }
 
+/* === INPUT === */
 input {
-  padding: 6px 10px;
-  font-size: 1em;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 15px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
   width: 100%;
-  /* max-width: 300px; */
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* === EDIT ICON === */
 .edit-btn {
-  background: none;
+  background: #f1f5f9;
   border: none;
-  color: #007bff;
+  color: #2563eb;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 16px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.2s, transform 0.2s;
+  width: 10% ;
 }
 
 .edit-btn:hover {
-  color: #0056b3;
+  background: #e0e7ff;
+  transform: translateY(-1px);
 }
 
-.logout-btn {
-  margin-top: 30px;
-  background-color: #e63946;
-  color: #fff;
-  padding: 12px 20px;
+/* === PASSWORD === */
+.password-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.toggle-password-btn {
+  background: #f1f5f9;
   border: none;
-  border-radius: 6px;
-  font-weight: bold;
+  padding: 8px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  color: #374151;
+}
+
+/* === LOGOUT === */
+.logout-btn {
+  margin-top: 36px;
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  color: #fff;
+  padding: 14px 22px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .logout-btn:hover {
-  background-color: #c62828;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(37, 99, 235, 0.3);
 }
+
+/* === IMAGE SAVE POPUP === */
+.save-image-btn,
+.cancel-image-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.save-image-btn {
+  background: #2563eb;
+  color: #fff;
+}
+
+.cancel-image-btn {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* === RESPONSIVE === */
 @media (max-width: 768px) {
   .info-row {
     flex-direction: column;
     align-items: flex-start;
-    width: 100%;
-  }
-
-  .label {
-    margin-bottom: 5px;
+    gap: 8px;
   }
 
   .value {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 100%;
-    gap: 10px;
-  }
-
-  .value input {
-    flex-grow: 1;
-    width: auto;
-  }
-
-  .edit-btn {
-    font-size: 18px;
-    margin-top: -40px;
-    margin-left: 200px !important;
-    padding: 6px;
-    align-self: center;
-  }
-}
-
-
-@media (max-width: 600px) {
-  .info-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-  }
-
-  .value {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  input {
     width: 100%;
   }
 }
+
 @media (max-width: 500px) {
-  .profile-container{
-    height: 700px !important;
+  .profile-container {
+    padding: 28px 20px;
   }
- .password-field input{
-  width: 200px !important;
- }
- .password-field{
-  display: flex;
-  flex-direction: row !important;
- }
- .toggle-password-btn{
-  height: 40px;
-  
- }
 }
