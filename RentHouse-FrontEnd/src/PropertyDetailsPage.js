@@ -58,9 +58,29 @@ const PropertyDetailsContent = () => {
   const [comment, setComment] = useState("");
   const [ratings, setRatings] = useState([]);
   const [showThankYou, setShowThankYou] = useState(false);
+  const [currentRent, setCurrentRent] = useState(null); // store current rent object
+
 
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId");
+  const [rents, setRents] = useState([]); // store all active rents
+
+  // Fetch all rents for this property
+  useEffect(() => {
+    const fetchRents = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/rents/house/${id}`);
+        const data = await res.json();
+        setRents(data);
+      } catch (err) {
+        console.error("Error fetching rents:", err);
+      }
+    };
+    fetchRents();
+  }, [id]);
+
+
+
 
   useEffect(() => {
     const role = localStorage.getItem("userRole");
@@ -71,14 +91,28 @@ const PropertyDetailsContent = () => {
     const checkIfRented = async () => {
       try {
         const res = await fetch(`http://localhost:5000/api/rents/is-rented/${id}`);
-        const data = await res.json();
-        setIsRented(data);
+        const data = await res.json(); // now returns rent object or null
+        setCurrentRent(data);
       } catch (err) {
         console.error("Error checking rent status", err);
       }
     };
     checkIfRented();
   }, [id]);
+  const isUnavailable =
+    property?.status === "rented" ||
+    (currentRent
+      ? new Date() >= new Date(currentRent.startDate) && new Date() <= new Date(currentRent.endDate)
+      : false);
+  const unavailableMessage = currentRent
+    ? currentRent.endDate
+      ? `Unavailable. Available after ${new Date(currentRent.endDate).toLocaleDateString()}`
+      : "Unavailable. End date unknown"
+    : property?.status === "rented"
+      ? "Currently rented"
+      : "";
+
+
 
   const handleRentHouse = async () => {
     const calculatedEndDate =
@@ -520,18 +554,24 @@ const PropertyDetailsContent = () => {
 
               {/* Actions */}
               <div className="booking-actions">
-                <button
-                  className="book-btn"
-                  onClick={handleRentHouse}
-                  disabled={
-                    (rentType === "perDay" && (!startDate || !endDate)) ||
-                    (rentType === "perMonth" && !startDate) ||
-                    isRented ||
-                    isProcessingPayment
-                  }
-                >
-                  {isProcessingPayment ? "Processing..." : isRented ? "Unavailable" : "Confirm Booking"}
-                </button>
+
+                <div title={isUnavailable ? unavailableMessage : ""}>
+                  <button
+                    className="book-btn"
+                    onClick={handleRentHouse}
+                    disabled={
+                      (rentType === "perDay" && (!startDate || !endDate)) ||
+                      (rentType === "perMonth" && !startDate) ||
+                      isUnavailable ||
+                      isProcessingPayment
+                    }
+                  >
+                    {isUnavailable ? "Unavailable" : isProcessingPayment ? "Processing..." : "Confirm Booking"}
+                  </button>
+                </div>
+
+
+
               </div>
               {/* Messages */}
               {rentSuccess && <div className="success-msg">✓ Booking confirmed!</div>}
