@@ -105,6 +105,13 @@ body {
   font-weight: 600;
   text-transform: uppercase;
 }
+.availability-msg {
+  font-size: 12px;
+  color: #6c757d;
+  margin-top: 2px;
+  font-weight: 400;
+}
+
 
 .status.available {
   background: #d4edda;

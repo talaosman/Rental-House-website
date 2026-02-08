@@ -441,6 +441,12 @@ const PropertyDetailsContent = () => {
                 <span>•</span>
                 <span className={`status ${property.status}`}>{property.status}</span>
               </div>
+              {/* Show availability message if rented */}
+              {isUnavailable && currentRent?.endDate && (
+                <div className="availability-msg">
+                  Available after {new Date(currentRent.endDate).toLocaleDateString()}
+                </div>
+              )}
             </div>
             <div className="property-pricing">
               <div className="price-day">${property.pricePerDay}/day</div>
