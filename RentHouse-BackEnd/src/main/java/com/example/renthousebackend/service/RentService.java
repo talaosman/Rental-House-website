@@ -24,7 +24,18 @@ public class RentService {
     @Autowired
     private UserRepository userRepository;
 
-    // Save new rent
+    // RentService.java
+    public Rent getCurrentRent(House house) {
+        LocalDate today = LocalDate.now();
+        return rentRepository.findFirstByHouseAndStartDateLessThanEqualAndEndDateGreaterThanEqual(house, today, today)
+                .orElse(null);
+    }
+
+    public Rent getLastRent(House house) {
+        return rentRepository.findTopByHouseIdOrderByEndDateDesc(house.getId());
+    }
+
+    
     public Rent rentHouse(Long userId, Long houseId, LocalDate startDate, LocalDate endDate) {
         House house = houseRepository.findById(houseId)
                 .orElseThrow(() -> new RuntimeException("House not found"));
@@ -57,7 +68,8 @@ public class RentService {
 
     // Check if house is rented in a specific range
     public boolean isHouseRentedDuring(House house, LocalDate startDate, LocalDate endDate) {
-        return rentRepository.existsByHouseAndStartDateLessThanEqualAndEndDateGreaterThanEqual(house, endDate, startDate);
+        return rentRepository.existsByHouseAndStartDateLessThanEqualAndEndDateGreaterThanEqual(house, endDate,
+                startDate);
     }
 
     // Get rents for house

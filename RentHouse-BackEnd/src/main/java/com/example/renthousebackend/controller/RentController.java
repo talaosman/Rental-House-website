@@ -28,20 +28,25 @@ public class RentController {
             @RequestParam Long userId,
             @RequestParam Long houseId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
-    ) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         return rentService.rentHouse(userId, houseId, startDate, endDate);
     }
 
     // GET: Check if house is rented today
+    // RentController.java
     @GetMapping("/is-rented/{houseId}")
-    public boolean isHouseCurrentlyRented(@PathVariable Long houseId) {
+    public Rent getCurrentRent(@PathVariable Long houseId) {
         House house = houseRepository.findById(houseId)
                 .orElseThrow(() -> new RuntimeException("House not found"));
-        return rentService.isHouseCurrentlyRented(house);
+
+        Rent currentRent = rentService.getCurrentRent(house);
+        if (currentRent != null)
+            return currentRent;
+
+        // fallback: return last rent using the service
+        return rentService.getLastRent(house);
     }
 
-    // GET: Rents for a specific house
     @GetMapping("/house/{houseId}")
     public List<Rent> getRentsByHouse(@PathVariable Long houseId) {
         return rentService.getRentsByHouse(houseId);
