@@ -122,14 +122,29 @@ public class HouseController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteHouse(@PathVariable Long id) {
+    public ResponseEntity<?> deleteHouse(
+            @PathVariable Long id,
+            @RequestParam(required = false, defaultValue = "false") boolean force) {
         try {
-            houseService.deleteHouse(id);
-            return ResponseEntity.ok().build();
-        } catch (DataIntegrityViolationException e) {
-            // Specific exception for FK violations
-            return ResponseEntity.status(409)
-                    .body("Cannot delete this house because it's referenced by other data (e.g., favorites).");
+            // Check if house exists first
+            House house = houseService.getHouseById(id);
+            if (house == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // If force is false and there are related records, return 409
+            if (!force) {
+                int relatedCount = houseService.countRelatedFavoritesAndRentals(id);
+                if (relatedCount > 0) {
+                    return ResponseEntity.status(409)
+                            .body("Cannot delete this house because it's referenced by other data (e.g., favorites).");
+                }
+            }
+
+            // Proceed with deletion (force or no related data)
+            houseService.deleteHouse(id, force);
+            return ResponseEntity.ok().body("House deleted successfully");
+
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Failed to delete house: " + e.getMessage());

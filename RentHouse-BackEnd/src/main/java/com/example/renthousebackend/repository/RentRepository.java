@@ -5,6 +5,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.renthousebackend.entity.House;
 import com.example.renthousebackend.entity.Rent;
@@ -24,6 +28,12 @@ public interface RentRepository extends JpaRepository<Rent, Long> {
     int countByHouseId(Long houseId);
 
     List<Rent> findByUserId(Long userId);
-    Optional<Rent> findFirstByHouseAndStartDateLessThanEqualAndEndDateGreaterThanEqual(House house, LocalDate start, LocalDate end);
 
+    Optional<Rent> findFirstByHouseAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+            House house, LocalDate start, LocalDate end);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Rent r WHERE r.house.id = :houseId")
+    void deleteByHouseId(@Param("houseId") Long houseId);
 }
