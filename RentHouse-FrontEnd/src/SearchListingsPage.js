@@ -36,30 +36,57 @@ const SearchListings = () => {
     setSearchQuery(query);
   }, [location.search]);
 
-  const handleDelete = async (id) => {
-    try {
-      const res = await API.get(`/api/houses/${id}/related-count`);
-      const relatedCount = res.data.count || 0;
+ const handleDelete = async (id) => {
+  try {
+    // First, check if there are related records
+    const res = await API.get(`/api/houses/${id}/related-count`);
+    const relatedCount = res.data.count || 0;
 
-      let confirmMessage = "Are you sure you want to delete this property?";
-      if (relatedCount > 0) {
-        confirmMessage = `⚠️ This property is currently saved as a favorite or rented by ${relatedCount} user${relatedCount > 1 ? 's' : ''}.\n` +
-          `Deleting it will remove all related records.\n\nAre you sure you want to delete this property?`;
-      }
+    let confirmMessage = "Are you sure you want to delete this property?";
+    
+    if (relatedCount > 0) {
+      confirmMessage = `⚠️ WARNING: This property has ${relatedCount} related record${relatedCount > 1 ? 's' : ''}.\n\n` +
+        `Deleting this property will permanently remove:\n` +
+        `• The property listing\n` +
+        `• All user favorites for this property\n` +
+        `• All rental history for this property\n` +
+        `• All visit requests for this property\n\n` +
+        `This action CANNOT be undone!\n\n` +
+        `Do you want to proceed with permanent deletion?`;
+    }
 
-      if (!window.confirm(confirmMessage)) return;
+    // Show confirmation dialog
+    if (!window.confirm(confirmMessage)) {
+      return; // User cancelled
+    }
 
-      await API.delete(`/api/houses/${id}`);
+    // Determine delete URL based on related count
+    const deleteUrl = relatedCount > 0 
+      ? `/api/houses/${id}?force=true` 
+      : `/api/houses/${id}`;
+    
+    // Make the delete request
+    await API.delete(deleteUrl);
 
-      setAllListings((prev) => prev.filter((house) => house.id !== id));
-      setInitialListings((prev) => prev.filter((house) => house.id !== id));
+    // Show success message
+    alert("✅ Property deleted successfully!");
 
-    } catch (err) {
-      console.error("Failed to delete house:", err);
+    // Remove from UI
+    setAllListings((prev) => prev.filter((house) => house.id !== id));
+    setInitialListings((prev) => prev.filter((house) => house.id !== id));
+
+  } catch (err) {
+    console.error("Failed to delete house:", err);
+    
+    if (err.response && err.response.status === 409) {
+      alert(`❌ ${err.response.data}`);
+    } else if (err.response && err.response.data) {
+      alert(`❌ ${err.response.data}`);
+    } else {
       alert("❌ Failed to delete house due to server error.");
     }
-  };
-
+  }
+};
   useEffect(() => {
     API.get("/api/houses")
       .then((res) => {
@@ -331,7 +358,9 @@ const SearchListings = () => {
                       )}
                     </div>
 
-                    <div className="card-actions">
+                    
+                  </div>
+                  <div className="card-actions">
                       <button 
                         className="view-details-btn"
                         onClick={() => handleViewDetails(listing.id)}
@@ -351,7 +380,6 @@ const SearchListings = () => {
                         </button>
                       )}
                     </div>
-                  </div>
                 </div>
               </div>
             ))

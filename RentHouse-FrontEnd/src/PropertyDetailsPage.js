@@ -625,12 +625,6 @@ const PropertyDetailsContent = () => {
             </button>
           )}
 
-          {/* Visit Button for Non-Admin */}
-          {userRole !== "ADMIN" && !userId && (
-            <button className="visit-btn-main" onClick={handleVisitRequest}>
-              Schedule a Visit
-            </button>
-          )}
         </div>
       </div>
 
