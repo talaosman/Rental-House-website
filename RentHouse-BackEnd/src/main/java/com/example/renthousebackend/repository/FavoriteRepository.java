@@ -20,9 +20,13 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     List<Favorite> findAllByUser(User user);
 
     int countByPropertyId(Long propertyId);
+    
+    List<Favorite> findByUserId(Long userId);
+    List<Favorite> findByPropertyId(Long propertyId);
 
     @Modifying
     @Transactional
     @Query("DELETE FROM Favorite f WHERE f.property.id = :houseId")
     void deleteByPropertyId(@Param("houseId") Long houseId);
+
 }

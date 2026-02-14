@@ -21,6 +21,8 @@ public interface HouseRepository extends JpaRepository<House, Long> {
 
     List<House> findByStatusAndLocationContainingIgnoreCase(String status, String location);
 
+    List<House> findTop10ByStatusOrderByCreatedAtDesc(String status);
+
     @Query("SELECT r.house.id FROM Rent r GROUP BY r.house.id ORDER BY COUNT(r.id) DESC")
     List<Long> findMostRentedHouseIds();
 

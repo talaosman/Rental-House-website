@@ -88,10 +88,11 @@ public class StripeController {
                 requestDTO.getCustomerEmail(),
                 requestDTO.getCustomerName());
 
-        Long amount = requestDTO.getItems().get(0).getPrice(); // in cents
+        Long amount = requestDTO.getItems().get(0).getPrice(); // already in cents
 
         if (amount == null || amount < 50) {
-            throw new IllegalArgumentException("Amount must be at least $0.50 USD");
+            // Update this message to be clearer
+            throw new IllegalArgumentException("Amount must be at least 50 cents (provided: " + amount + " cents)");
         }
 
         PaymentIntentCreateParams createParams = PaymentIntentCreateParams.builder()
@@ -102,7 +103,7 @@ public class StripeController {
 
         PaymentIntent intent = PaymentIntent.create(createParams);
 
-        return intent.getClientSecret(); // This must be a string like pi_xxx_secret_yyy
+        return intent.getClientSecret();
     }
 
     private long calculateOrderAmount(List<RequestDTO.Item> items) {
