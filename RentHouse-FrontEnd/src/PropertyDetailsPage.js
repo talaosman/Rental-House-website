@@ -6,9 +6,32 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { FaCalendarDay, FaCalendarAlt, FaHeart, FaRegHeart } from "react-icons/fa";
 
-const stripePromise = loadStripe("pk_test_51RoNCB2Ylq8U0YVR6yVwbqvqm4Dy3QO8SPHEHSgoCPvHhbxYsufl6cDwR1buRjDZdobHLSNHf4HCee7f4aXNTvwp00qdh8ZSXK");
 
-// Stripe CardElement styling options
+const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY ||
+  "pk_test_51RoNCB2Ylq8U0YVR6yVwbqvqm4Dy3QO8SPHEHSgoCPvHhbxYsufl6cDwR1buRjDZdobHLSNHf4HCee7f4aXNTvwp00qdh8ZSXK";
+
+
+const validateStripeKey = (key) => {
+  if (!key) {
+    console.error('❌ Stripe key is missing!');
+    return false;
+  }
+  if (!key.startsWith('pk_test_') && !key.startsWith('pk_live_')) {
+    console.error('❌ Invalid Stripe key format! Must start with pk_test_ or pk_live_');
+    console.error('Current key:', key.substring(0, 15) + '...');
+    return false;
+  }
+  if (key.length < 50) {
+    console.error('❌ Stripe key appears too short (likely invalid)');
+    return false;
+  }
+  console.log('✅ Stripe key validated:', key.substring(0, 15) + '...');
+  return true;
+};
+
+const isKeyValid = validateStripeKey(STRIPE_KEY);
+const stripePromise = isKeyValid ? loadStripe(STRIPE_KEY) : null;
+
 const CARD_ELEMENT_OPTIONS = {
   style: {
     base: {
@@ -48,8 +71,12 @@ const PropertyDetailsContent = () => {
   const [skipCheckRented, setSkipCheckRented] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [cardError, setCardError] = useState("");
+  const [stripeReady, setStripeReady] = useState(false);
+  const [stripeLoadError, setStripeLoadError] = useState(false);
+
   const stripe = useStripe();
   const elements = useElements();
+
   const rentOptions = [
     { label: "Daily", value: "perDay", icon: <FaCalendarDay /> },
     { label: "Monthly", value: "perMonth", icon: <FaCalendarAlt /> },
@@ -58,12 +85,42 @@ const PropertyDetailsContent = () => {
   const [comment, setComment] = useState("");
   const [ratings, setRatings] = useState([]);
   const [showThankYou, setShowThankYou] = useState(false);
-  const [currentRent, setCurrentRent] = useState(null); // store current rent object
-
+  const [currentRent, setCurrentRent] = useState(null);
+  const [isAvailable, setIsAvailable] = useState(true);
 
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId");
-  const [rents, setRents] = useState([]); // store all active rents
+  const [rents, setRents] = useState([]);
+
+  // Monitor Stripe.js loading with timeout
+  useEffect(() => {
+    let timeout;
+
+    if (!isKeyValid) {
+      setStripeLoadError(true);
+      setCardError("Invalid Stripe configuration. Please contact support.");
+      return;
+    }
+
+    if (stripe && elements) {
+      console.log("✅ Stripe.js loaded successfully");
+      setStripeReady(true);
+      setStripeLoadError(false);
+    } else {
+      console.log("⏳ Waiting for Stripe.js to load...");
+
+      // Set a timeout to detect if Stripe fails to load
+      timeout = setTimeout(() => {
+        if (!stripe || !elements) {
+          console.error("❌ Stripe.js failed to load within 10 seconds");
+          setStripeLoadError(true);
+          setCardError("Payment system failed to load. Please check your internet connection or try again later.");
+        }
+      }, 10000); // 10 second timeout
+    }
+
+    return () => clearTimeout(timeout);
+  }, [stripe, elements]);
 
   // Fetch all rents for this property
   useEffect(() => {
@@ -79,9 +136,6 @@ const PropertyDetailsContent = () => {
     fetchRents();
   }, [id]);
 
-
-
-
   useEffect(() => {
     const role = localStorage.getItem("userRole");
     setUserRole(role);
@@ -91,30 +145,59 @@ const PropertyDetailsContent = () => {
     const checkIfRented = async () => {
       try {
         const res = await fetch(`http://localhost:5000/api/rents/is-rented/${id}`);
-        const data = await res.json(); // now returns rent object or null
-        setCurrentRent(data);
+
+        if (!res.ok) {
+          console.error("Failed to fetch rent status");
+          setCurrentRent(null);
+          setIsAvailable(true);
+          return;
+        }
+
+        const data = await res.json();
+
+        if (data.available === true) {
+          setIsAvailable(true);
+          setCurrentRent(null);
+          console.log("✅ Property is available for rent");
+        } else if (data.startDate && data.endDate) {
+          const now = new Date();
+          const start = new Date(data.startDate);
+          const end = new Date(data.endDate);
+
+          if (now >= start && now <= end) {
+            setCurrentRent(data);
+            setIsAvailable(false);
+            console.log("🔒 Property is currently rented until:", data.endDate);
+          } else {
+            setCurrentRent(null);
+            setIsAvailable(true);
+            console.log("✅ Property rent has ended, now available");
+          }
+        } else {
+          setIsAvailable(true);
+          setCurrentRent(null);
+        }
       } catch (err) {
-        console.error("Error checking rent status", err);
+        console.error("Error checking rent status:", err);
+        setCurrentRent(null);
+        setIsAvailable(true);
       }
     };
+
     checkIfRented();
   }, [id]);
-  const isUnavailable =
-    property?.status === "rented" ||
-    (currentRent
-      ? new Date() >= new Date(currentRent.startDate) && new Date() <= new Date(currentRent.endDate)
-      : false);
-  const unavailableMessage = currentRent
-    ? currentRent.endDate
-      ? `Unavailable. Available after ${new Date(currentRent.endDate).toLocaleDateString()}`
-      : "Unavailable. End date unknown"
+
+  const isUnavailable = !isAvailable && currentRent != null;
+
+  const unavailableMessage = isUnavailable && currentRent?.endDate
+    ? `Unavailable until ${new Date(currentRent.endDate).toLocaleDateString()}`
     : property?.status === "rented"
       ? "Currently rented"
       : "";
 
-
-
   const handleRentHouse = async () => {
+    console.log("🔵 handleRentHouse called, paymentMethod:", paymentMethod);
+
     const calculatedEndDate =
       rentType === "perMonth"
         ? new Date(new Date(startDate).getTime() + 29 * 24 * 60 * 60 * 1000)
@@ -126,6 +209,8 @@ const PropertyDetailsContent = () => {
       rentType === "perMonth"
         ? property.pricePerMonth
         : calculateTotalRent();
+
+    console.log("💰 Total amount:", totalAmount, "Start:", startDate, "End:", calculatedEndDate);
 
     if (paymentMethod === "cash") {
       try {
@@ -142,77 +227,238 @@ const PropertyDetailsContent = () => {
         setSkipCheckRented(true);
       } catch (err) {
         console.error("Rent failed:", err);
+        alert("Failed to complete rental. Please try again.");
       }
     } else if (paymentMethod === "credit") {
+      console.log("💳 Starting credit card payment flow");
+
+      // Clear any previous errors
+      setCardError("");
+
       try {
         setIsProcessingPayment(true);
-        setCardError("");
+        console.log("🔄 Processing payment state set to true");
 
-        if (totalAmount < 50) {
-          alert("Credit card payments must be at least $0.50. Please pay in cash or increase the rental duration.");
+        // Step 1: Check if Stripe failed to load
+        if (stripeLoadError) {
+          const msg = "Payment system is not available. Please try cash payment or refresh the page.";
+          setCardError(msg);
+          alert(msg);
           setIsProcessingPayment(false);
           return;
         }
 
+        // Step 2: Amount validation
+        if (totalAmount < 0.50) {
+          const msg = "Credit card payments must be at least $0.50. Please pay in cash or increase the rental duration.";
+          setCardError(msg);
+          alert(msg);
+          setIsProcessingPayment(false);
+          return;
+        }
+
+        console.log("💰 Total amount validated:", totalAmount);
+
+        // Step 3: Validate Stripe is loaded 
         if (!stripe || !elements) {
-          console.error("Stripe.js has not yet loaded.");
-          setCardError("Payment system is still loading. Please try again.");
+          const msg = "Payment system is still loading. Please wait a moment and try again.";
+          console.error("❌ Stripe not ready:", {
+            stripe: !!stripe,
+            elements: !!elements,
+            stripeReady,
+            stripeLoadError
+          });
+          setCardError(msg);
+          alert(msg);
           setIsProcessingPayment(false);
           return;
         }
 
+        console.log("✅ Stripe initialized - both stripe and elements are available");
+
+        // Step 4: Get card element
         const cardElement = elements.getElement(CardElement);
         if (!cardElement) {
-          setCardError("Card information is missing. Please refresh and try again.");
+          const msg = "Card information is missing. Please refresh the page.";
+          console.error("❌ CardElement not found");
+          setCardError(msg);
+          alert(msg);
           setIsProcessingPayment(false);
           return;
         }
 
+        console.log("✅ CardElement found");
+
+
+        console.log("🔍 Checking if card details are entered...");
+
+        // Store dates for success callback
         localStorage.setItem("stripeStartDate", startDate);
         localStorage.setItem("stripeEndDate", calculatedEndDate);
 
+        // Step 6: Create payment intent from backend
+        console.log("📡 Creating payment intent from backend...");
+
         const res = await fetch("http://localhost:5000/api/stripe/checkout/integrated", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
-            customerEmail: localStorage.getItem("email"),
-            customerName: localStorage.getItem("username"),
-            items: [{ price: totalAmount }],
+            customerEmail: localStorage.getItem("email") || "guest@example.com",
+            customerName: localStorage.getItem("username") || "Guest",
+            items: [{ price: Math.round(totalAmount * 100) }], // Convert to cents
           }),
         });
 
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("❌ Backend error:", res.status, errorText);
+          throw new Error(`Server error (${res.status}): ${errorText}`);
+        }
+
         const clientSecret = await res.text();
 
-        const result = await stripe.confirmCardPayment(clientSecret, {
-          payment_method: {
-            card: cardElement,
-            billing_details: {
-              name: localStorage.getItem("username"),
-              email: localStorage.getItem("email"),
-            },
-          },
+        if (!clientSecret || clientSecret.length < 10) {
+          console.error("❌ Invalid client secret received:", clientSecret);
+          throw new Error("Invalid payment session. Please try again.");
+        }
+
+        console.log("✅ Client secret received:", clientSecret.substring(0, 20) + "...");
+
+        // Step 7: Confirm payment with Stripe
+        console.log("💳 About to call stripe.confirmCardPayment...");
+        console.log("📋 Payment details:", {
+          clientSecret: clientSecret.substring(0, 20) + "...",
+          hasCardElement: !!cardElement,
+          customerName: localStorage.getItem("username") || "Guest",
+          customerEmail: localStorage.getItem("email") || "guest@example.com",
         });
 
-        if (result.error) {
-          console.error("Stripe payment failed:", result.error.message);
-          setCardError(result.error.message);
-        } else if (result.paymentIntent.status === "succeeded") {
-          await fetch(
-            `http://localhost:5000/api/rents/rent?userId=${userId}&houseId=${id}&startDate=${startDate}&endDate=${calculatedEndDate}`,
-            {
-              method: "POST",
-            }
-          );
-          setRentSuccess(true);
-          setIsRented(true);
-          setProperty((prev) => ({ ...prev, status: "rented" }));
-          setSkipCheckRented(true);
-          setCardError("");
+        let result;
+        try {
+          result = await stripe.confirmCardPayment(clientSecret, {
+            payment_method: {
+              card: cardElement,
+              billing_details: {
+                name: localStorage.getItem("username") || "Guest",
+                email: localStorage.getItem("email") || "guest@example.com",
+              },
+            },
+          });
+
+          console.log("✅ stripe.confirmCardPayment completed");
+          console.log("📊 Result:", result);
+
+        } catch (stripeError) {
+          console.error("❌ Stripe SDK error during confirmCardPayment:", stripeError);
+          console.error("Error details:", {
+            message: stripeError.message,
+            type: stripeError.type,
+            code: stripeError.code,
+            stack: stripeError.stack
+          });
+
+          // Handle the specific CORS/network error
+          if (stripeError.message && (
+            stripeError.message.includes('Failed to fetch') ||
+            stripeError.message.includes('NetworkError') ||
+            stripeError.message.includes('Load failed')
+          )) {
+            throw new Error("Network error communicating with payment provider. Please check:\n" +
+              "1. Your internet connection\n" +
+              "2. Disable browser extensions (ad blockers, privacy tools)\n" +
+              "3. Try a different browser\n" +
+              "4. Check if your firewall/antivirus is blocking the request\n" +
+              "5. Contact support if issue persists");
+          }
+
+          throw stripeError;
         }
+
+        if (result.error) {
+          console.error("❌ Stripe payment failed:", result.error);
+
+          let userMessage = result.error.message;
+
+          // Map common error codes to user-friendly messages
+          const errorMessages = {
+            'card_declined': "Your card was declined. Please try a different payment method.",
+            'incorrect_cvc': "The security code (CVC) is incorrect. Please check and try again.",
+            'expired_card': "Your card has expired. Please use a different card.",
+            'processing_error': "An error occurred while processing your card. Please try again.",
+            'insufficient_funds': "Insufficient funds. Please use a different card.",
+            'invalid_expiry_year': "Invalid expiration year. Please check your card details.",
+            'invalid_expiry_month': "Invalid expiration month. Please check your card details.",
+            'incomplete_number': "The card number is incomplete. Please enter the full card number.",
+            'incomplete_cvc': "The security code is incomplete. Please enter the CVC.",
+            'incomplete_expiry': "The expiration date is incomplete. Please enter the full date.",
+          };
+
+          if (errorMessages[result.error.code]) {
+            userMessage = errorMessages[result.error.code];
+          }
+
+          setCardError(userMessage);
+          alert("Payment failed: " + userMessage);
+
+        } else if (result.paymentIntent && result.paymentIntent.status === "succeeded") {
+          console.log("✅ Payment succeeded! PaymentIntent ID:", result.paymentIntent.id);
+
+          // Step 8: Save the rent in database
+          console.log("💾 Saving rental to database...");
+
+          const rentRes = await fetch(
+            `http://localhost:5000/api/rents/rent?userId=${userId}&houseId=${id}&startDate=${startDate}&endDate=${calculatedEndDate}`,
+            { method: "POST" }
+          );
+
+          if (!rentRes.ok) {
+            console.error("❌ Failed to save rent after payment");
+            alert("Payment succeeded but failed to save rental. Please contact support with payment ID: " + result.paymentIntent.id);
+          } else {
+            console.log("✅ Rental saved successfully");
+
+            // Update UI
+            setRentSuccess(true);
+            setIsRented(true);
+            setIsAvailable(false);
+            setProperty((prev) => ({ ...prev, status: "rented" }));
+            setCardError("");
+
+            // Clear the card input
+            cardElement.clear();
+
+
+          }
+
+          // Clean up localStorage
+          localStorage.removeItem("stripeStartDate");
+          localStorage.removeItem("stripeEndDate");
+        }
+
       } catch (err) {
-        console.error("Stripe integrated payment failed:", err);
-        setCardError("Payment failed. Please try again.");
+        console.error("❌ Payment error:", err);
+        console.error("Error stack:", err.stack);
+
+        let errorMsg = err.message || "Payment failed. Please try again.";
+
+        // Special handling for network errors
+        if (errorMsg.includes('Failed to fetch') ||
+          errorMsg.includes('Network error') ||
+          errorMsg.includes('Load failed')) {
+          errorMsg = "Cannot reach payment provider. This may be caused by:\n" +
+            "• Ad blocker or browser extension\n" +
+            "• Network firewall\n" +
+            "• Poor internet connection\n\n" +
+            "Try: Disable extensions, use a different browser, or contact support.";
+        }
+
+        setCardError(errorMsg);
+        alert("Payment error:\n\n" + errorMsg);
+
       } finally {
+        console.log("🔄 Setting isProcessingPayment to false");
         setIsProcessingPayment(false);
       }
     }
@@ -279,21 +525,6 @@ const PropertyDetailsContent = () => {
       console.error("Error submitting rating:", err);
     }
   };
-
-  useEffect(() => {
-    if (skipCheckRented) return;
-
-    const checkIfRented = async () => {
-      try {
-        const res = await fetch(`http://localhost:5000/api/rents/is-rented/${id}`);
-        const data = await res.json();
-        setIsRented(data);
-      } catch (err) {
-        console.error("Error checking rent status", err);
-      }
-    };
-    checkIfRented();
-  }, [id, skipCheckRented]);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -410,7 +641,6 @@ const PropertyDetailsContent = () => {
   return (
     <div className="property-page">
       <div className="property-container">
-        {/* Image Section */}
         <div className="image-section">
           <img
             src={
@@ -428,9 +658,7 @@ const PropertyDetailsContent = () => {
           )}
         </div>
 
-        {/* Content */}
         <div className="property-content">
-          {/* Header */}
           <div className="property-header">
             <div>
               <h1 className="property-location">{property.location}</h1>
@@ -439,9 +667,10 @@ const PropertyDetailsContent = () => {
                 <span>•</span>
                 <span>{property.nbOfBedrooms} Bedrooms</span>
                 <span>•</span>
-                <span className={`status ${property.status}`}>{property.status}</span>
+                <span className={`status ${isAvailable ? 'available' : 'rented'}`}>
+                  {isAvailable ? 'Available' : 'Rented'}
+                </span>
               </div>
-              {/* Show availability message if rented */}
               {isUnavailable && currentRent?.endDate && (
                 <div className="availability-msg">
                   Available after {new Date(currentRent.endDate).toLocaleDateString()}
@@ -454,13 +683,11 @@ const PropertyDetailsContent = () => {
             </div>
           </div>
 
-          {/* Description */}
           <div className="section">
             <h2>About</h2>
             <p>{property.description || "A beautiful, spacious property in a prime location with all modern amenities."}</p>
           </div>
 
-          {/* Owner Info */}
           <div className="section owner-section">
             <h2>Owner Contact</h2>
             <div className="owner-details">
@@ -470,7 +697,6 @@ const PropertyDetailsContent = () => {
             </div>
           </div>
 
-          {/* Reviews */}
           {ratings.length > 0 && (
             <div className="section">
               <h2>Reviews</h2>
@@ -487,12 +713,10 @@ const PropertyDetailsContent = () => {
             </div>
           )}
 
-          {/* Booking Section */}
           {userId && userRole !== "ADMIN" && (
             <div className="section booking-section">
               <h2>Book Your Stay</h2>
 
-              {/* Rent Type */}
               <div className="rent-type">
                 {rentOptions.map((option) => (
                   <button
@@ -505,7 +729,6 @@ const PropertyDetailsContent = () => {
                 ))}
               </div>
 
-              {/* Dates */}
               <div className="dates">
                 <div className="date-field">
                   <label>Start Date</label>
@@ -519,7 +742,6 @@ const PropertyDetailsContent = () => {
                 )}
               </div>
 
-              {/* Total */}
               {((rentType === "perDay" && startDate && endDate) || (rentType === "perMonth" && startDate)) && (
                 <div className="total-price">
                   <span>Total</span>
@@ -527,7 +749,6 @@ const PropertyDetailsContent = () => {
                 </div>
               )}
 
-              {/* Payment */}
               <div className="payment-methods">
                 <button
                   className={`payment-btn ${paymentMethod === "cash" ? 'active' : ''}`}
@@ -538,29 +759,53 @@ const PropertyDetailsContent = () => {
                 <button
                   className={`payment-btn ${paymentMethod === "credit" ? 'active' : ''}`}
                   onClick={() => setPaymentMethod("credit")}
+                  disabled={!stripeReady && !stripeLoadError}
+                  title={!stripeReady && !stripeLoadError ? "Loading payment system..." : stripeLoadError ? "Payment system unavailable" : ""}
                 >
-                  💳 Card
+                  💳 Card {!stripeReady && !stripeLoadError && "(Loading...)"}
                 </button>
               </div>
 
-              {/* Card Element - Only show when credit is selected */}
               {paymentMethod === "credit" && (
                 <div className="card-details">
                   <label>Card Information</label>
+
+                
+                  <div style={{
+                    padding: '12px',
+                    backgroundColor: '#fff3cd',
+                    color: '#856404',
+                    borderRadius: '4px',
+                    marginBottom: '12px',
+                    fontSize: '14px',
+                    border: '1px solid #ffc107'
+                  }}>
+                    ⚠️ <strong>Payment Issues?</strong> Disable ad blockers or privacy extensions (like uBlock Origin, Privacy Badger, AdBlock) for this site.
+                  </div>
+
+                  {!stripeReady && !stripeLoadError && (
+                    <div style={{ padding: '10px', backgroundColor: '#fff3cd', color: '#856404', borderRadius: '4px', marginBottom: '10px' }}>
+                      ⏳ Loading Stripe... Please wait a moment.
+                    </div>
+                  )}
+                  {stripeLoadError && (
+                    <div style={{ padding: '10px', backgroundColor: '#ffebee', color: '#c62828', borderRadius: '4px', marginBottom: '10px' }}>
+                      ❌ Payment system failed to load. Please use cash payment or refresh the page.
+                    </div>
+                  )}
                   <div className="card-element-wrapper">
                     <CardElement options={CARD_ELEMENT_OPTIONS} />
                   </div>
                   {cardError && (
-                    <div style={{ color: '#e74c3c', fontSize: '14px', marginTop: '8px' }}>
-                      {cardError}
+                    <div style={{ color: '#e74c3c', fontSize: '14px', marginTop: '8px', padding: '8px', backgroundColor: '#ffebee', borderRadius: '4px', whiteSpace: 'pre-line' }}>
+                      ⚠️ {cardError}
                     </div>
                   )}
+
                 </div>
               )}
 
-              {/* Actions */}
               <div className="booking-actions">
-
                 <div title={isUnavailable ? unavailableMessage : ""}>
                   <button
                     className="book-btn"
@@ -569,21 +814,24 @@ const PropertyDetailsContent = () => {
                       (rentType === "perDay" && (!startDate || !endDate)) ||
                       (rentType === "perMonth" && !startDate) ||
                       isUnavailable ||
-                      isProcessingPayment
+                      isProcessingPayment ||
+                      (paymentMethod === "credit" && (!stripeReady || stripeLoadError))
                     }
                   >
-                    {isUnavailable ? "Unavailable" : isProcessingPayment ? "Processing..." : "Confirm Booking"}
+                    {isUnavailable
+                      ? "Unavailable"
+                      : isProcessingPayment
+                        ? "Processing..."
+                        : (paymentMethod === "credit" && !stripeReady)
+                          ? "Loading..."
+                          : "Confirm Booking"}
                   </button>
                 </div>
-
-
-
               </div>
-              {/* Messages */}
+
               {rentSuccess && <div className="success-msg">✓ Booking confirmed!</div>}
               {showFavoriteMessage && <div className="success-msg">♥ Added to favorites!</div>}
 
-              {/* Rating */}
               {rentSuccess && (
                 <div className="rating-form">
                   <h3>Rate this property</h3>
@@ -616,19 +864,14 @@ const PropertyDetailsContent = () => {
             </button>
           </div>
 
-
-
-          {/* Admin Edit */}
           {userRole === "ADMIN" && (
             <button className="edit-btn" onClick={() => navigate(`/edit-house/${property.id}`)}>
               ✏️ Edit Property
             </button>
           )}
-
         </div>
       </div>
 
-      {/* Modal */}
       {showLoginModal && (
         <div className="modal" onClick={() => setShowLoginModal(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
@@ -646,6 +889,17 @@ const PropertyDetailsContent = () => {
 };
 
 const PropertyDetailsPage = () => {
+  // Show error if Stripe key validation failed
+  if (!isKeyValid || !stripePromise) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        <h2 style={{ color: '#e74c3c' }}>⚠️ Payment System Configuration Error</h2>
+        <p>The Stripe payment key is invalid or missing.</p>
+        <p>Cash payments are still available. Contact the administrator to fix payment setup.</p>
+      </div>
+    );
+  }
+
   return (
     <Elements stripe={stripePromise}>
       <PropertyDetailsContent />
