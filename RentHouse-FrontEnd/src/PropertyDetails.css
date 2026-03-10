@@ -96,6 +96,7 @@ body {
   gap: 12px;
   font-size: 15px;
   color: #666;
+  flex-direction: row;
 }
 
 .status {
@@ -621,8 +622,197 @@ body {
 .modal-buttons button:last-child:hover {
   background: #bdc3c7;
 }
+.location-section {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px 24px;
+  border: 1px solid #e9ecef;
+}
 
-/* Responsive */
+.location-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #212529;
+  margin-bottom: 8px;
+}
+
+.section-icon {
+  color: #e74c3c;
+  font-size: 18px;
+}
+
+.location-address {
+  color: #495057;
+  font-size: 15px;
+  margin-bottom: 16px;
+}
+
+/* Maps button wrapper */
+.maps-btn-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+/* Google Maps button */
+.google-maps-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #4285F4;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(66, 133, 244, 0.35);
+}
+
+.google-maps-btn:hover {
+  background: #3367d6;
+  box-shadow: 0 4px 14px rgba(66, 133, 244, 0.45);
+  transform: translateY(-1px);
+}
+
+.google-maps-btn:active {
+  transform: translateY(0);
+}
+
+.maps-icon {
+  font-size: 17px;
+}
+
+/* Coordinates badge shown under button */
+.coords-badge {
+  font-size: 12px;
+  color: #6c757d;
+  font-family: monospace;
+}
+
+.coords-badge.no-coords {
+  color: #e67e22;
+}
+
+/* ─── PostListing.css additions ─── */
+
+/* Side-by-side lat/lng inputs */
+.coords-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.coords-hint {
+  font-size: 13px;
+  color: #6c757d;
+  margin-top: -8px;
+  margin-bottom: 16px;
+}
+
+.coords-hint a {
+  color: #4285F4;
+  text-decoration: none;
+}
+
+.label-hint {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: normal;
+}
+
+/* Geocode status messages */
+.geocode-status {
+  margin-top: 6px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.geocode-status.loading {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.geocode-status.found {
+  background: #d4edda;
+  color: #155724;
+}
+
+.geocode-status.not-found {
+  background: #fff3cd;
+  color: #856404;
+}
+
+/* ─── EditHouseForm.css additions ─── */
+
+.coords-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.coords-hint {
+  font-size: 13px;
+  color: #6c757d;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.coords-hint a {
+  color: #4285F4;
+  text-decoration: none;
+}
+
+/* Geocode inline status under the location input */
+.geocode-status {
+  display: block;
+  margin-top: 5px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 13px;
+}
+
+.geocode-status.loading { background: #fff3cd; color: #856404; }
+.geocode-status.found   { background: #d4edda; color: #155724; }
+.geocode-status.not-found { background: #fff3cd; color: #856404; }
+
+/* Image preview after file selection */
+.image-preview {
+  display: block;
+  margin-top: 10px;
+  max-width: 200px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+/* ─── Two-button Maps row ─── */
+.maps-buttons-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.google-maps-btn.view-btn {
+  background: #34a853;   /* Google Maps green for "view" */
+}
+
+.google-maps-btn.view-btn:hover {
+  background: #2d9147;
+}
+
+.google-maps-btn.directions-btn {
+  background: #4285F4;   /* Google blue for "directions" */
+}
+
+.google-maps-btn.directions-btn:hover {
+  background: #3367d6;
+}
 @media (max-width: 768px) {
   .property-page {
     padding: 80px 10px 40px;

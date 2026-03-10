@@ -91,6 +91,53 @@ button[type="submit"]:active {
   font-size: 12px;
   margin-top: 5px;
 }
+.coords-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.coords-hint {
+  font-size: 13px;
+  color: #6c757d;
+  margin-top: -8px;
+  margin-bottom: 16px;
+}
+
+.coords-hint a {
+  color: #4285F4;
+  text-decoration: none;
+}
+
+.label-hint {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: normal;
+}
+
+/* Geocode status messages */
+.geocode-status {
+  margin-top: 6px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.geocode-status.loading {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.geocode-status.found {
+  background: #d4edda;
+  color: #155724;
+}
+
+.geocode-status.not-found {
+  background: #fff3cd;
+  color: #856404;
+}
+
 
 /* Responsive Padding for Smaller Screens */
 /* @media (max-width: 768px) {

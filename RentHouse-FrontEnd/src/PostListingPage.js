@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAppState } from "./listingContext.js";
 import "./PostListing.css";
 
 const PostListing = () => {
   const { allListings, setAllListings } = useAppState();
   const [imageFile, setImageFile] = useState(null);
+  const [geocodeStatus, setGeocodeStatus] = useState(""); // "loading" | "found" | "not_found" | ""
+  const geocodeTimer = useRef(null);
+
   const [form, setForm] = useState({
     title: "",
     pricePerDay: "",
@@ -16,37 +19,81 @@ const PostListing = () => {
     ownerName: "",
     ownerEmail: "",
     ownerPhone: "",
-    description: ""
+    description: "",
+    latitude: "",
+    longitude: "",
   });
-  const addListing = (newListing) => {
-    const maxId = allListings.reduce(
-      (max, listing) => Math.max(max, listing.id),
-      0
-    );
-    const newId = maxId + 1;
 
-    setAllListings((prevListings) => [
-      ...prevListings,
-      { ...newListing, id: newId },
-    ]);
+  const addListing = (newListing) => {
+    const maxId = allListings.reduce((max, listing) => Math.max(max, listing.id), 0);
+    setAllListings((prev) => [...prev, { ...newListing, id: maxId + 1 }]);
   };
 
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
-const toBase64 = (file) => new Promise((resolve, reject) => {
-  const reader = new FileReader();
-  reader.readAsDataURL(file);
-  reader.onload = () => resolve(reader.result);
-  reader.onerror = error => reject(error);
-});
-const handleSubmit = async (e) => {
-  e.preventDefault();
 
- if (
+  // ─── Auto-geocode location as user types ──────────────────────────────────
+  const geocodeLocation = async (locationText) => {
+    if (!locationText || locationText.trim().length < 5) {
+      setGeocodeStatus("");
+      setForm((prev) => ({ ...prev, latitude: "", longitude: "" }));
+      return;
+    }
+
+    setGeocodeStatus("loading");
+
+    try {
+      const encoded = encodeURIComponent(locationText.trim());
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encoded}&format=json&limit=1`,
+        { headers: { "Accept-Language": "en" } }
+      );
+      const data = await res.json();
+
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        setForm((prev) => ({
+          ...prev,
+          latitude: parseFloat(lat).toFixed(6),
+          longitude: parseFloat(lon).toFixed(6),
+        }));
+        setGeocodeStatus("found");
+      } else {
+        setGeocodeStatus("not_found");
+        setForm((prev) => ({ ...prev, latitude: "", longitude: "" }));
+      }
+    } catch (err) {
+      console.error("Geocoding error:", err);
+      setGeocodeStatus("not_found");
+    }
+  };
+
+  // Debounce geocoding to avoid spamming the API
+  const handleLocationChange = (e) => {
+    const value = e.target.value;
+    setForm((prev) => ({ ...prev, location: value }));
+
+    clearTimeout(geocodeTimer.current);
+    geocodeTimer.current = setTimeout(() => {
+      geocodeLocation(value);
+    }, 800);
+  };
+
+  useEffect(() => () => clearTimeout(geocodeTimer.current), []);
+
+  const toBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (
       !form.title ||
       !form.nbOfBedrooms ||
       !form.location ||
@@ -58,56 +105,71 @@ const handleSubmit = async (e) => {
       alert("Please fill in all fields.");
       return;
     }
-  try {
-    const base64Image = await toBase64(imageFile);
 
-    const payload = {
-      title: form.title,
-      pricePerDay: form.pricePerDay,
-      pricePerMonth: form.pricePerMonth,
-      location: form.location,
-      description: form.description,
-      ownerName: form.ownerName,
-      ownerEmail: form.ownerEmail,
-      ownerPhone: form.ownerPhone,
-      nbOfBedrooms: form.nbOfBedrooms,
-      propertyType: form.propertyType,
-      imageFilename: imageFile.name,
-      imageData: base64Image
-    };
+    if (!form.latitude || !form.longitude) {
+      alert(
+        "Could not find GPS coordinates for this location.\n\n" +
+        "Please enter a more specific address (e.g. '123 Main St, Seattle, WA') " +
+        "or manually enter latitude and longitude."
+      );
+      return;
+    }
 
-    const listingRes = await fetch("http://localhost:5000/api/houses/uploadBase64", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const base64Image = await toBase64(imageFile);
 
-    if (!listingRes.ok) throw new Error("Listing upload failed");
+      const payload = {
+        title: form.title,
+        pricePerDay: form.pricePerDay,
+        pricePerMonth: form.pricePerMonth,
+        location: form.location,
+        description: form.description,
+        ownerName: form.ownerName,
+        ownerEmail: form.ownerEmail,
+        ownerPhone: form.ownerPhone,
+        nbOfBedrooms: form.nbOfBedrooms,
+        propertyType: form.propertyType,
+        imageFilename: imageFile.name,
+        imageData: base64Image,
+        latitude: parseFloat(form.latitude),   // ✅ new
+        longitude: parseFloat(form.longitude), // ✅ new
+      };
 
-    const data = await listingRes.json();
-    setAllListings((prev) => [...prev, data]);
+      const listingRes = await fetch("http://localhost:5000/api/houses/uploadBase64", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    // reset form
-    setForm({
-      title: "",
-      pricePerDay: "",
-      pricePerMonth: "",
-      location: "",
-      nbOfBedrooms: "",
-      propertyType: "",
-      ownerName: "",
-      ownerEmail: "",
-      ownerPhone: "",
-      description: ""
-    });
-    setImageFile(null);
+      if (!listingRes.ok) throw new Error("Listing upload failed");
 
-    alert("Listing added successfully!");
-  } catch (error) {
-    console.error(error);
-    alert(error.message || "Failed to upload listing");
-  }
-};
+      const data = await listingRes.json();
+      setAllListings((prev) => [...prev, data]);
+
+      setForm({
+        title: "",
+        pricePerDay: "",
+        pricePerMonth: "",
+        location: "",
+        nbOfBedrooms: "",
+        propertyType: "",
+        ownerName: "",
+        ownerEmail: "",
+        ownerPhone: "",
+        description: "",
+        latitude: "",
+        longitude: "",
+      });
+      setImageFile(null);
+      setGeocodeStatus("");
+
+      alert("Listing added successfully!");
+    } catch (error) {
+      console.error(error);
+      alert(error.message || "Failed to upload listing");
+    }
+  };
+
   useEffect(() => {
     console.log(allListings);
   }, [allListings]);
@@ -145,7 +207,7 @@ const handleSubmit = async (e) => {
           />
         </div>
 
-        {/* Number of Bedrooms */}
+        {/* Bedrooms */}
         <div className="form-group">
           <label htmlFor="nbOfBedrooms">Number of Bedrooms</label>
           <input
@@ -159,21 +221,76 @@ const handleSubmit = async (e) => {
           />
         </div>
 
-        {/* Location */}
+        {/* Location with auto-geocode */}
         <div className="form-group">
-          <label htmlFor="location">Location</label>
+          <label htmlFor="location">
+            Address / Location
+            <span className="label-hint"> — enter a full street address for best accuracy</span>
+          </label>
           <input
             id="location"
             type="text"
             name="location"
             value={form.location}
-            onChange={handleChange}
-            placeholder="Enter property location"
+            onChange={handleLocationChange}
+            placeholder="e.g. 450 Pine St, Seattle, WA 98101"
             required
           />
+
+          {/* Geocode feedback */}
+          {geocodeStatus === "loading" && (
+            <div className="geocode-status loading">
+              📍 Looking up coordinates...
+            </div>
+          )}
+          {geocodeStatus === "found" && form.latitude && (
+            <div className="geocode-status found">
+              ✅ Location found — {form.latitude}, {form.longitude}
+            </div>
+          )}
+          {geocodeStatus === "not_found" && (
+            <div className="geocode-status not-found">
+              ⚠️ Address not recognized. Enter coordinates manually below.
+            </div>
+          )}
         </div>
 
-        {/* Price */}
+        {/* Manual lat/lng override */}
+        <div className="form-group coords-row">
+          <div>
+            <label htmlFor="latitude">Latitude</label>
+            <input
+              id="latitude"
+              type="number"
+              step="0.000001"
+              name="latitude"
+              value={form.latitude}
+              onChange={handleChange}
+              placeholder="e.g. 47.608013"
+            />
+          </div>
+          <div>
+            <label htmlFor="longitude">Longitude</label>
+            <input
+              id="longitude"
+              type="number"
+              step="0.000001"
+              name="longitude"
+              value={form.longitude}
+              onChange={handleChange}
+              placeholder="e.g. -122.335167"
+            />
+          </div>
+        </div>
+        <p className="coords-hint">
+          💡 Tip: To get exact coordinates, right-click any spot on{" "}
+          <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer">
+            Google Maps
+          </a>{" "}
+          → click the coordinates shown at the top to copy them.
+        </p>
+
+        {/* Prices */}
         <div className="form-group">
           <label htmlFor="pricePerDay">Price per Day</label>
           <input
@@ -200,19 +317,20 @@ const handleSubmit = async (e) => {
           />
         </div>
 
-      {/* Description */}
-<div className="form-group">
-  <label htmlFor="description">Description</label>
-  <textarea
-    id="description"
-    name="description"
-    value={form.description}
-    onChange={handleChange}
-    placeholder="Enter a detailed description"
-    required
-  />
-</div>
+        {/* Description */}
+        <div className="form-group">
+          <label htmlFor="description">Description</label>
+          <textarea
+            id="description"
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            placeholder="Enter a detailed description"
+            required
+          />
+        </div>
 
+        {/* Image */}
         <label htmlFor="image">Upload Image</label>
         <input
           id="image"
@@ -222,8 +340,7 @@ const handleSubmit = async (e) => {
           required
         />
 
-        {/* Contact */}
-        {/* Owner Name */}
+        {/* Owner info */}
         <div className="form-group">
           <label htmlFor="ownerName">Owner Name</label>
           <input
@@ -237,7 +354,6 @@ const handleSubmit = async (e) => {
           />
         </div>
 
-        {/* Owner Email */}
         <div className="form-group">
           <label htmlFor="ownerEmail">Owner Email</label>
           <input
@@ -251,7 +367,6 @@ const handleSubmit = async (e) => {
           />
         </div>
 
-        {/* Owner Phone */}
         <div className="form-group">
           <label htmlFor="ownerPhone">Owner Phone</label>
           <input
@@ -265,8 +380,6 @@ const handleSubmit = async (e) => {
           />
         </div>
 
-
-        {/* Submit Button */}
         <button type="submit" className="submit-button">
           Post Listing
         </button>

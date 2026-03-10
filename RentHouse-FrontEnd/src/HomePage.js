@@ -16,28 +16,17 @@ const HomePage = () => {
   useEffect(() => {
     let pCounter = setInterval(() => {
       setProperties((prev) => {
-        if (prev >= 5000) {
-          clearInterval(pCounter);
-          return 5000;
-        }
+        if (prev >= 5000) { clearInterval(pCounter); return 5000; }
         return prev + 50;
       });
     }, 20);
-
     let uCounter = setInterval(() => {
       setUsers((prev) => {
-        if (prev >= 3200) {
-          clearInterval(uCounter);
-          return 3200;
-        }
+        if (prev >= 3200) { clearInterval(uCounter); return 3200; }
         return prev + 40;
       });
     }, 20);
-
-    return () => {
-      clearInterval(pCounter);
-      clearInterval(uCounter);
-    };
+    return () => { clearInterval(pCounter); clearInterval(uCounter); };
   }, []);
 
   const userId = localStorage.getItem("userId");
@@ -49,9 +38,7 @@ const HomePage = () => {
   };
 
   useEffect(() => {
-    if (userId) {
-      setIsLogin(true);
-    }
+    if (userId) setIsLogin(true);
   }, [userId]);
 
   useEffect(() => {
@@ -61,7 +48,6 @@ const HomePage = () => {
     });
   }, []);
 
-  // Fetch most rented properties from backend
   useEffect(() => {
     const fetchMostRentedProperties = async () => {
       try {
@@ -71,7 +57,6 @@ const HomePage = () => {
           const data = await response.json();
           setFeaturedProperties(data);
         } else {
-          console.error("Failed to fetch most rented properties");
           setFeaturedProperties([]);
         }
       } catch (error) {
@@ -81,7 +66,6 @@ const HomePage = () => {
         setLoading(false);
       }
     };
-
     fetchMostRentedProperties();
   }, []);
 
@@ -91,7 +75,8 @@ const HomePage = () => {
 
   return (
     <div className="home-luxury">
-      {/* Hero Section */}
+
+      {/* Hero */}
       <section className="hero-luxury fade-in-up">
         <div className="hero-overlay"></div>
         <div className="hero-content">
@@ -99,8 +84,6 @@ const HomePage = () => {
           <p className="hero-subtitle">
             We provide high-quality rental listings to help you find the perfect home
           </p>
-
-          {/* Simple Search Bar */}
           <div className="search-bar-luxury">
             <input
               type="text"
@@ -117,7 +100,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Most Viewed Properties */}
+      {/* Most Rented */}
       <section className="properties-section fade-in-up">
         <h2 className="section-title">Most Rented</h2>
 
@@ -135,6 +118,7 @@ const HomePage = () => {
                 style={{ animationDelay: `${index * 100}ms` }}
                 onClick={() => handlePropertyClick(property.id)}
               >
+                {/* Image */}
                 <div className="property-image-container">
                   <img
                     src={
@@ -152,27 +136,47 @@ const HomePage = () => {
                     <button className="view-details-btn">View Details</button>
                   </div>
                 </div>
-                <div className="property-info">
-                  <h3 className="property-name">{property.title}</h3>
-                  <p className="property-address">{property.location}</p>
+
+              
+                <div className="property-infoHome">
+
+              
+                  <h3 className="property-name">
+                    {property.title}
+                  </h3>
+
+                  {/* Address on its own line */}
+                  <p className="property-address">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    {property.location}
+                  </p>
+
+                  {/* Features on their own line */}
                   <div className="property-features">
                     <span className="feature-item">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
                       </svg>
                       {property.nbOfBedrooms} {property.nbOfBedrooms === 1 ? 'Bed' : 'Beds'}
                     </span>
                     <span className="feature-item">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                       </svg>
                       {property.propertyType}
                     </span>
                   </div>
-                  <div className="property-price">
+
+                  {/* Price on its own line */}
+                  <p className="property-price">
                     ${property.pricePerMonth?.toLocaleString() || property.pricePerDay?.toLocaleString()}
                     <span>/month</span>
-                  </div>
+                  </p>
+
                 </div>
               </div>
             ))}
@@ -184,7 +188,7 @@ const HomePage = () => {
         )}
       </section>
 
-      {/* Features Section */}
+    
       <section className="features-luxury fade-in-up">
         <div className="features-grid-luxury">
           <div className="feature-card-luxury">
@@ -197,7 +201,6 @@ const HomePage = () => {
             <h3>Find Properties</h3>
             <p>Explore verified rentals by area, price, and amenities with our advanced search.</p>
           </div>
-
           <div className="feature-card-luxury">
             <div className="feature-icon-luxury">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -208,7 +211,6 @@ const HomePage = () => {
             <h3>Post a Listing</h3>
             <p>Reach potential tenants fast with our powerful listing tools and wide reach.</p>
           </div>
-
           <div className="feature-card-luxury">
             <div className="feature-icon-luxury">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -224,14 +226,13 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Stats */}
       <section className="stats-section-luxury fade-in-up">
         <div className="stats-content">
           <div className="map-wrapper">
             <iframe
               src="https://www.google.com/maps/d/embed?mid=1Mv98OyCfsBetpF6IUarBm_Ks4FvFZp0&ehbc=2E312F"
-              width="100%"
-              height="100%"
+              width="100%" height="100%"
               title="Our Location"
               style={{ border: 0 }}
               allowFullScreen=""
@@ -239,7 +240,6 @@ const HomePage = () => {
               referrerPolicy="no-referrer-when-downgrade"
             ></iframe>
           </div>
-
           <div className="stats-wrapper">
             <div className="stat-card">
               <h3 className="stat-number">{properties.toLocaleString()}+</h3>
@@ -262,7 +262,7 @@ const HomePage = () => {
         <TestimonialsCarousel />
       </section>
 
-      {/* CTA Section */}
+      {/* CTA */}
       {!isLogin && (
         <section className="cta-luxury fade-in-up">
           <div className="cta-content">
