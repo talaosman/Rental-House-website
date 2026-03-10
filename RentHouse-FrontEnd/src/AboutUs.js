@@ -179,7 +179,7 @@ const AboutPage = () => {
               </div>
             </div>
             <div className="team-info">
-              <h4>Sarah Elia</h4>
+              <h4>Tala Osman</h4>
               <p className="team-role">CEO & Co-Founder</p>
               <p className="team-bio">
                 Visionary leader with 10+ years in real estate technology
@@ -208,7 +208,7 @@ const AboutPage = () => {
               </div>
             </div>
             <div className="team-info">
-              <h4>Omar Nasser</h4>
+              <h4>Ali Ibrahim</h4>
               <p className="team-role">Chief Technology Officer</p>
               <p className="team-bio">
                 Tech innovator building scalable solutions for modern living
@@ -237,7 +237,7 @@ const AboutPage = () => {
               </div>
             </div>
             <div className="team-info">
-              <h4>Layal M.</h4>
+              <h4>Yasmina BouSaid</h4>
               <p className="team-role">Head of User Experience</p>
               <p className="team-bio">
                 Design expert creating intuitive, beautiful interfaces
