@@ -32,7 +32,11 @@ public class House {
     private Double pricePerDay;
     private Double pricePerMonth;
 
-    private LocalDateTime createdAt; // ✅ required for the query to work
+    
+    private Double latitude;
+    private Double longitude;
+
+    private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "property", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Favorite> favorites;
@@ -44,103 +48,47 @@ public class House {
     @JoinColumn(name = "owner_id")
     private Owner owner;
 
-    public House() {
-        // Default constructor
-    }
+    public House() {}
 
-    public Double getPricePerDay() {
-        return pricePerDay;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setPricePerDay(Double pricePerDay) {
-        this.pricePerDay = pricePerDay;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public Double getPricePerMonth() {
-        return pricePerMonth;
-    }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 
-    public void setPricePerMonth(Double pricePerMonth) {
-        this.pricePerMonth = pricePerMonth;
-    }
+    public String getImage() { return image; }
+    public void setImage(String image) { this.image = image; }
 
-    public Long getId() {
-        return id;
-    }
+    public int getNbOfBedrooms() { return nbOfBedrooms; }
+    public void setNbOfBedrooms(int nbOfBedrooms) { this.nbOfBedrooms = nbOfBedrooms; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getPropertyType() { return propertyType; }
+    public void setPropertyType(String propertyType) { this.propertyType = propertyType; }
 
-    public String getTitle() {
-        return title;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public String getLocation() {
-        return location;
-    }
+    public Double getPricePerDay() { return pricePerDay; }
+    public void setPricePerDay(Double pricePerDay) { this.pricePerDay = pricePerDay; }
 
-    public void setLocation(String location) {
-        this.location = location;
-    }
+    public Double getPricePerMonth() { return pricePerMonth; }
+    public void setPricePerMonth(Double pricePerMonth) { this.pricePerMonth = pricePerMonth; }
 
-    public String getImage() {
-        return image;
-    }
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
 
-    public void setImage(String image) {
-        this.image = image;
-    }
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 
-    public int getNbOfBedrooms() {
-        return nbOfBedrooms;
-    }
+    public Owner getOwner() { return owner; }
+    public void setOwner(Owner owner) { this.owner = owner; }
 
-    public void setNbOfBedrooms(int nbOfBedrooms) {
-        this.nbOfBedrooms = nbOfBedrooms;
-    }
-
-    public String getPropertyType() {
-        return propertyType;
-    }
-
-    public void setPropertyType(String propertyType) {
-        this.propertyType = propertyType;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Owner getOwner() {
-        return owner;
-    }
-
-    public void setOwner(Owner owner) {
-        this.owner = owner;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

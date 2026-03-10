@@ -17,13 +17,13 @@ public class Owner {
     private String email;
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore // ⛔ Prevent infinite loop
+    @JsonIgnore 
     private List<House> houses;
 
     public Owner() {
     }
 
-    // Getters and Setters
+    
 
     public Long getId() {
         return id;

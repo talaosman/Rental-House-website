@@ -33,7 +33,7 @@ public class VisitRequestController {
     private EmailService emailService;
 
     @Autowired
-    private VisitRequestService visitRequestService;// Inject EmailService
+    private VisitRequestService visitRequestService;
 
     @PostMapping("/request")
     public ResponseEntity<?> createVisit(
@@ -68,13 +68,12 @@ public class VisitRequestController {
                 .visitTime(visitTime)
                 .house(house)
                 .user(user)
-                .accepted(null) // pending
+                .accepted(null) 
                 .build();
 
         VisitRequest savedRequest = visitRequestRepository.save(visitRequest);
 
-        // Send email notification to owner
-        // Send email notification to owner with Accept/Reject buttons
+
         String ownerEmail = house.getOwner().getEmail();
         String subject = "New Visit Request for Your Property";
         String acceptUrl = "http://localhost:5000/api/visits/respond-html/" + savedRequest.getId() + "?accepted=true";
@@ -106,13 +105,12 @@ public class VisitRequestController {
                 visitTime,
                 acceptUrl,
                 rejectUrl);
-        // Make sure EmailService supports HTML content
+       
         emailService.sendHtmlEmail(ownerEmail, subject, body);
 
         return ResponseEntity.ok(savedRequest);
     }
 
-    // For landlord to fetch all visit requests for their properties
     @GetMapping("/owner/{ownerId}")
     public ResponseEntity<List<VisitRequest>> getVisitsForOwner(@PathVariable Long ownerId) {
         return ResponseEntity.ok(visitRequestRepository.findByHouseOwnerId(ownerId));
@@ -131,7 +129,7 @@ public class VisitRequestController {
         visitRequest.setAccepted(accepted);
         visitRequestRepository.save(visitRequest);
 
-        // Notify visitor by email
+      
         String visitorEmail = visitRequest.getVisitorEmail();
         String visitorName = visitRequest.getVisitorName();
         String subject;
@@ -177,7 +175,7 @@ public class VisitRequestController {
         visitRequest.setAccepted(accepted);
         visitRequestRepository.save(visitRequest);
 
-        // Notify visitor
+      
         String visitorEmail = visitRequest.getVisitorEmail();
         String visitorName = visitRequest.getVisitorName();
         String subject;
@@ -206,7 +204,7 @@ public class VisitRequestController {
         String confirmationHtml = "<html><head><title>Response Submitted</title></head><body style='font-family:sans-serif;text-align:center;margin-top:100px;'>"
                 + "<h2>Visit request has been " + (accepted ? "accepted" : "rejected") + ".</h2>"
                 + "<p>You can now close this tab.</p>"
-                + "<script>setTimeout(() => window.close(), 0.0001);</script>" // optional auto-close
+                + "<script>setTimeout(() => window.close(), 0.0001);</script>"
                 + "</body></html>";
 
         return ResponseEntity.ok().header("Content-Type", "text/html").body(confirmationHtml);

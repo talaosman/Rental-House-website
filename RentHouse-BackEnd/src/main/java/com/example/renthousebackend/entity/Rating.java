@@ -11,7 +11,7 @@ public class Rating {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int stars; // 1–5
+    private int stars;
     private String comment;
 
     @ManyToOne

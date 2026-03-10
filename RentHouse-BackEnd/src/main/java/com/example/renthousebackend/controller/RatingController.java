@@ -29,7 +29,6 @@ public class RatingController {
         rating.setStars(stars);
         rating.setComment(comment);
 
-        // only attach IDs without loading whole object
         rating.setUser(new com.example.renthousebackend.entity.User());
         rating.getUser().setId(userId);
 

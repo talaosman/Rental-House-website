@@ -59,13 +59,12 @@ public class ChatController {
                 userId = Long.parseLong(payload.get("userId"));
             }
         } catch (Exception e) {
-            // userId remains null
+           
         }
 
         String lowered = userMessage.toLowerCase();
         List<House> houses;
 
-        // ========== PERSONALIZED RECOMMENDATIONS ==========
         if (lowered.contains("recommend") || lowered.contains("suggest") || lowered.contains("for me")) {
             if (userId == null) {
                 return Map.of("reply", "⚠️ Please log in to get personalized recommendations!");
@@ -73,7 +72,7 @@ public class ChatController {
             return getPersonalizedRecommendations(userId, username);
         }
 
-        // ========== MY RENTED HOUSES ==========
+
         if (lowered.contains("my rented houses") || lowered.contains("what did i rent") 
                 || lowered.contains("rental history") || lowered.contains("my rentals") || lowered.contains("rent history")) {
             if (userId == null) {
@@ -82,7 +81,6 @@ public class ChatController {
             return getUserRentalHistory(userId);
         }
 
-        // ========== MY FAVORITES ==========
         if (lowered.contains("my favorites") || lowered.contains("my favourite") 
                 || lowered.contains("saved houses")) {
             if (userId == null) {
@@ -91,7 +89,7 @@ public class ChatController {
             return getUserFavorites(userId);
         }
 
-        // ========== SIMILAR HOUSES ==========
+       
         if (lowered.contains("similar") || lowered.contains("like this")) {
             if (userId == null) {
                 return Map.of("reply", "⚠️ Please log in to get similar house suggestions!");
@@ -99,27 +97,25 @@ public class ChatController {
             return getSimilarHouses(userId);
         }
 
-        // ========== TRENDING/POPULAR HOUSES ==========
+     
         if (lowered.contains("trending") || lowered.contains("popular") || lowered.contains("most rented")) {
             return getTrendingHouses();
         }
 
-        // ========== NEW LISTINGS ==========
+       
         if (lowered.contains("new") || lowered.contains("latest") || lowered.contains("recent")) {
             return getNewListings(userId);
         }
 
-        // ========== PRICE COMPARISON ==========
         if (lowered.contains("compare prices") || lowered.contains("price comparison")) {
             return getPriceComparison();
         }
 
-        // ========== BUDGET CALCULATOR ==========
+       
         if (lowered.matches(".*\\bbudget\\b.*") && lowered.matches(".*\\$?(\\d+).*")) {
             return calculateBudgetOptions(userMessage);
         }
 
-        // ========== LOCATION DETECTION ==========
         List<String> allLocations = houseRepository.findDistinctLocations();
         String matchedLocation = null;
 
@@ -135,7 +131,7 @@ public class ChatController {
             return Map.of("reply", "❌ Sorry, there are no available houses in " + locationGuess + ".");
         }
 
-        // ========== HOUSE QUERY HANDLING ==========
+       
         boolean isHouseQuery = lowered.contains("available houses") ||
                 lowered.contains("rent") || lowered.contains("apartment") || lowered.contains("house");
         
@@ -151,36 +147,33 @@ public class ChatController {
                         (matchedLocation != null ? " in " + matchedLocation : "") + " at the moment.");
             }
 
-            // ========== CHEAPEST FILTER ==========
+            
             if (lowered.contains("cheapest") || lowered.contains("affordable")) {
                 return getCheapestHouse(houses, matchedLocation);
             }
 
-            // ========== PRICE RANGE FILTER ==========
+         
             if (lowered.matches(".*\\bbetween \\$?(\\d+) and \\$?(\\d+).*")) {
                 return filterByPriceRange(houses, lowered);
             }
 
-            // ========== BEDROOM FILTER ==========
             if (lowered.matches(".*\\b(\\d+) bedroom.*")) {
                 return filterByBedrooms(houses, lowered);
             }
 
-            // ========== PROPERTY TYPE FILTER ==========
             if (lowered.contains("apartment") || lowered.contains("villa") || 
                 lowered.contains("studio") || lowered.contains("condo")) {
                 return filterByPropertyType(houses, lowered);
             }
 
-            // Default response
+           
             return getDefaultHouseList(houses, matchedLocation, username);
         }
 
-        // ========== GEMINI AI FALLBACK ==========
         return sendToGemini(userMessage, username, userId);
     }
 
-    // ========== PERSONALIZED RECOMMENDATIONS ==========
+  
     private Map<String, String> getPersonalizedRecommendations(Long userId, String username) {
     try {
         List<Rent> userRents = rentRepository.findByUserId(userId);
@@ -192,7 +185,7 @@ public class ChatController {
         double totalPrice = 0;
         int priceCount = 0;
 
-        // Analyze rental history
+       
         for (Rent rent : userRents) {
             House house = rent.getHouse();
             locationPreferences.merge(house.getLocation(), 2, Integer::sum);
@@ -202,7 +195,7 @@ public class ChatController {
             priceCount++;
         }
 
-        // Analyze favorites
+    
         for (Favorite fav : userFavorites) {
             House house = fav.getProperty();
             locationPreferences.merge(house.getLocation(), 1, Integer::sum);
@@ -218,12 +211,12 @@ public class ChatController {
 
         final double avgPriceRange = totalPrice / priceCount;
 
-        // Get preferred values
+      
         String preferredLocation = getTopPreference(locationPreferences);
         String preferredPropertyType = getTopPreference(propertyTypePreferences);
         Integer preferredBedrooms = getTopPreferenceInt(bedroomPreferences);
 
-        // Find matching houses
+        
         List<House> recommendations = houseRepository.findByStatus("available").stream()
                 .filter(h -> !userRents.stream().anyMatch(r -> r.getHouse().getId().equals(h.getId())))
                 .sorted((h1, h2) -> {
@@ -264,7 +257,7 @@ public class ChatController {
 }
 
 
-    // ========== HELPER METHODS ==========
+
     private int calculateMatchScore(House house, String prefLocation, String prefType, 
                                     Integer prefBedrooms, double avgPrice) {
         int score = 0;

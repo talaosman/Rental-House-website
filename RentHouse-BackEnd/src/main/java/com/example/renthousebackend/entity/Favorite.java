@@ -13,7 +13,7 @@ public class Favorite {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER) // ← EAGER solves the lazy problem for now
+    @ManyToOne(fetch = FetchType.EAGER) 
     @JoinColumn(name = "user_id")
     @JsonIgnore
     private User user;
@@ -24,7 +24,6 @@ public class Favorite {
     
     
 
-    // constructors
     public Favorite() {
     }
 
@@ -32,8 +31,6 @@ public class Favorite {
         this.user = user;
         this.property = property;
     }
-
-    // getters and setters
 
     public Long getId() {
         return id;

@@ -24,7 +24,7 @@ public class VisitRequest {
 
     private String visitorName;
     private String visitorEmail;
-    private Boolean accepted; // null = pending, true/false afterwards
+    private Boolean accepted;
 
     private LocalDate visitDate;
     private LocalTime visitTime;
@@ -35,10 +35,10 @@ public class VisitRequest {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user; // the user who requested the visit
+    private User user; 
 
     @Column(name = "status")
-    private String status; // "PENDING", "ACCEPTED", or "REJECTED"
+    private String status; 
 
     @Column(name = "responded")
     private boolean responded = false;

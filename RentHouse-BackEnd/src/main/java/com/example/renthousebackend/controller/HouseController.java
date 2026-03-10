@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,12 +26,10 @@ import com.example.renthousebackend.service.FileService;
 import com.example.renthousebackend.service.HouseService;
 
 import java.util.Base64;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/houses")
-@CrossOrigin(origins = "http://localhost:3000") // your React frontend origin
+@CrossOrigin(origins = "http://localhost:3000")
 public class HouseController {
 
     private final HouseService houseService;
@@ -71,19 +68,20 @@ public class HouseController {
         house.setPropertyType(req.propertyType);
         house.setDescription(req.description);
 
+        house.setLatitude(req.latitude);
+        house.setLongitude(req.longitude);
+
         if (req.imageData != null && !req.imageData.isEmpty()) {
-            // Remove prefix like "data:image/png;base64,"
             String base64Image = req.imageData.split(",")[1];
             byte[] imageBytes = Base64.getDecoder().decode(base64Image);
-
             String savedFilename = fileService.saveFile(req.imageFilename, imageBytes);
             house.setImage(savedFilename);
         }
 
         house.setOwner(owner);
-
         return houseService.createHouseWithOwner(house);
     }
+
 
     @PostMapping(consumes = { "multipart/form-data" })
     public House createHouse(
@@ -96,6 +94,8 @@ public class HouseController {
             @RequestParam String ownerName,
             @RequestParam String ownerEmail,
             @RequestParam String ownerPhone,
+            @RequestParam(required = false) Double latitude,  
+            @RequestParam(required = false) Double longitude, 
             @RequestPart(required = false) MultipartFile image) throws IOException {
 
         Owner owner = new Owner();
@@ -111,37 +111,36 @@ public class HouseController {
         house.setNbOfBedrooms(Integer.parseInt(nbOfBedrooms));
         house.setPropertyType(propertyType);
 
+     
+        house.setLatitude(latitude);
+        house.setLongitude(longitude);
+
         if (image != null && !image.isEmpty()) {
             String savedFilename = fileService.saveFile(image);
             house.setImage(savedFilename);
         }
 
-        house.setOwner(owner); // set the owner
-
-        return houseService.createHouseWithOwner(house); // save both
+        house.setOwner(owner);
+        return houseService.createHouseWithOwner(house);
     }
 
+   
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteHouse(
             @PathVariable Long id,
             @RequestParam(required = false, defaultValue = "false") boolean force) {
         try {
-            // Check if house exists first
             House house = houseService.getHouseById(id);
-            if (house == null) {
-                return ResponseEntity.notFound().build();
-            }
+            if (house == null) return ResponseEntity.notFound().build();
 
-            // If force is false and there are related records, return 409
             if (!force) {
                 int relatedCount = houseService.countRelatedFavoritesAndRentals(id);
                 if (relatedCount > 0) {
                     return ResponseEntity.status(409)
-                            .body("Cannot delete this house because it's referenced by other data (e.g., favorites).");
+                            .body("Cannot delete this house because it's referenced by other data.");
                 }
             }
 
-            // Proceed with deletion (force or no related data)
             houseService.deleteHouse(id, force);
             return ResponseEntity.ok().body("House deleted successfully");
 
@@ -157,27 +156,33 @@ public class HouseController {
             @RequestBody Map<String, Object> houseData) {
 
         try {
-            // Extract and parse fields
-            String title = (String) houseData.get("title");
-            String location = (String) houseData.get("location");
-            String status = (String) houseData.get("status");
-            String description = (String) houseData.get("description");
+            String title        = (String) houseData.get("title");
+            String location     = (String) houseData.get("location");
+            String status       = (String) houseData.get("status");
+            String description  = (String) houseData.get("description");
             String propertyType = (String) houseData.get("propertyType");
-            int nbOfBedrooms = Integer.parseInt(houseData.get("nbOfBedrooms").toString());
+            int nbOfBedrooms    = Integer.parseInt(houseData.get("nbOfBedrooms").toString());
 
-            String ownerName = (String) houseData.get("ownerName");
+            String ownerName  = (String) houseData.get("ownerName");
             String ownerEmail = (String) houseData.get("ownerEmail");
             String ownerPhone = (String) houseData.get("ownerPhone");
 
-            Double pricePerDay = Double.parseDouble(houseData.get("pricePerDay").toString());
+            Double pricePerDay   = Double.parseDouble(houseData.get("pricePerDay").toString());
             Double pricePerMonth = Double.parseDouble(houseData.get("pricePerMonth").toString());
 
-            House existingHouse = houseService.getHouseById(id);
-            if (existingHouse == null) {
-                return ResponseEntity.notFound().build();
+          
+            Double latitude  = null;
+            Double longitude = null;
+            if (houseData.get("latitude") != null && !houseData.get("latitude").toString().isBlank()) {
+                latitude = Double.parseDouble(houseData.get("latitude").toString());
+            }
+            if (houseData.get("longitude") != null && !houseData.get("longitude").toString().isBlank()) {
+                longitude = Double.parseDouble(houseData.get("longitude").toString());
             }
 
-            // Update normal fields
+            House existingHouse = houseService.getHouseById(id);
+            if (existingHouse == null) return ResponseEntity.notFound().build();
+
             existingHouse.setTitle(title);
             existingHouse.setLocation(location);
             existingHouse.setPricePerDay(pricePerDay);
@@ -187,43 +192,39 @@ public class HouseController {
             existingHouse.setStatus(status);
             existingHouse.setDescription(description);
 
-            // Handle image update (optional)
+           
+            existingHouse.setLatitude(latitude);
+            existingHouse.setLongitude(longitude);
+
+           
             if (houseData.containsKey("imageData") && houseData.get("imageData") != null) {
                 String imageData = (String) houseData.get("imageData");
                 if (!imageData.isEmpty()) {
                     String base64Image = imageData.contains(",") ? imageData.split(",")[1] : imageData;
                     byte[] imageBytes = Base64.getDecoder().decode(base64Image);
                     String savedFilename = fileService.saveFile(
-                            houseData.get("imageFilename") != null ? (String) houseData.get("imageFilename")
+                            houseData.get("imageFilename") != null
+                                    ? (String) houseData.get("imageFilename")
                                     : "house.png",
                             imageBytes);
                     existingHouse.setImage(savedFilename);
                 }
             }
 
-            // Owner update
+            
             List<Owner> owners = ownerRepository.findByEmail(ownerEmail);
-
-            Owner owner;
-            if (owners.isEmpty()) {
-                // no owner yet → create new
-                owner = new Owner();
-            } else {
-                // pick first match (or add better logic: latest, matching phone, etc.)
-                owner = owners.get(0);
-            }
+            Owner owner = owners.isEmpty() ? new Owner() : owners.get(0);
             owner.setName(ownerName);
             owner.setEmail(ownerEmail);
             owner.setPhone(ownerPhone);
             owner = ownerRepository.save(owner);
-
             existingHouse.setOwner(owner);
 
             House updated = houseService.updateHouse(existingHouse);
             return ResponseEntity.ok(updated);
 
         } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body("Invalid number format for pricePerDay or pricePerMonth.");
+            return ResponseEntity.badRequest().body("Invalid number format.");
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error updating house: " + e.getMessage());
@@ -247,6 +248,7 @@ public class HouseController {
         }
     }
 
+   
     public static class UploadBase64Request {
         public String title;
         public String pricePerDay;
@@ -259,6 +261,8 @@ public class HouseController {
         public String ownerPhone;
         public String description;
         public String imageFilename;
-        public String imageData; // Base64 string starting with "data:image/..."
+        public String imageData;
+        public Double latitude;  
+        public Double longitude;  
     }
 }

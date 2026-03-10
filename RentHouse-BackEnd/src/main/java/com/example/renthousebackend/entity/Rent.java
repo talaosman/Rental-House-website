@@ -22,10 +22,10 @@ public class Rent {
     private User user;
 
     public Rent() {
-        // Default constructor
+        
     }
 
-    // Getters and Setters
+ 
 
     public Long getId() {
         return id;

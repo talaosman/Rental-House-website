@@ -25,7 +25,7 @@ public class RentController {
     @Autowired
     private HouseRepository houseRepository;
 
-    // POST: Rent a house
+    
     @PostMapping("/rent")
     public Rent rentHouse(
             @RequestParam Long userId,
@@ -42,32 +42,30 @@ public class RentController {
      */
     @GetMapping("/is-rented/{houseId}")
     public ResponseEntity<Object> getCurrentRent(@PathVariable Long houseId) {
-        // Verify house exists
+   
         House house = houseRepository.findById(houseId)
                 .orElseThrow(() -> new RuntimeException("House not found"));
 
-        // Get current active rent
+        
         Rent currentRent = rentService.getCurrentRent(house);
         
         if (currentRent != null) {
-            // House is currently rented - return the rent object
+          
             return ResponseEntity.ok(currentRent);
         }
         
-        // House is NOT currently rented
-        // Check if there was a past rent (for "available after" message)
+    
         Rent lastRent = rentService.getLastRent(house);
         
         if (lastRent != null && lastRent.getEndDate() != null) {
-            // There was a past rent, but it's expired
-            // Still return it so frontend can show "available after" message
+      
             Map<String, Object> response = new HashMap<>();
             response.put("available", true);
             response.put("lastRent", lastRent);
             return ResponseEntity.ok(response);
         }
         
-        // House has never been rented or no rent data
+    
         Map<String, Object> response = new HashMap<>();
         response.put("available", true);
         response.put("message", "This property is available for rent");

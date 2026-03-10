@@ -29,7 +29,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:3000") // Allow frontend access from React
+@CrossOrigin(origins = "http://localhost:3000") 
 public class AuthController {
 
     @Autowired
@@ -40,7 +40,7 @@ public class AuthController {
     @Autowired
     private EmailService emailService;
 
-    // In-memory OTP storage (for demo)
+    
     private Map<String, String> otpStore = new ConcurrentHashMap<>();
 
     @PostMapping("/send-otp")
@@ -66,7 +66,7 @@ public class AuthController {
 
         String expected = otpStore.get(email);
         if (expected != null && expected.equals(code)) {
-            otpStore.remove(email); // clear OTP
+            otpStore.remove(email); 
 
             Optional<User> userOpt = userRepo.findByEmail(email);
             if (userOpt.isPresent()) {
@@ -81,7 +81,7 @@ public class AuthController {
                 response.put("phoneNumber", user.getPhoneNumber());
                 response.put("profileImage", user.getProfileImage());
 
-                return ResponseEntity.ok(response); // ✅ return user data
+                return ResponseEntity.ok(response);
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found after OTP verification");
             }
@@ -97,10 +97,10 @@ public class AuthController {
                     .body("User already exists");
         }
 
-        // Encode password before saving
+       
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        // Default role to USER if not set
+       
         if (user.getRole() == null || user.getRole().isEmpty()) {
             user.setRole("USER");
         }
@@ -133,7 +133,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
 
-        // ✅ Return role and any other user info
+      
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Sign in successful");
         response.put("id", user.getId());
@@ -143,7 +143,7 @@ public class AuthController {
         response.put("username", user.getUsername());
         response.put("phoneNumber", user.getPhoneNumber());
         response.put("profileImage", user.getProfileImage());
-        // this will be "ADMIN" or "USER"
+       
         return ResponseEntity.ok(response);
     }
 
@@ -152,7 +152,7 @@ public class AuthController {
     public class OAuth2UserController {
 
         private final UserRepository userRepo;
-        private final PasswordEncoder passwordEncoder; // make sure it's a bean
+        private final PasswordEncoder passwordEncoder; 
 
         public OAuth2UserController(UserRepository userRepo, PasswordEncoder passwordEncoder) {
             this.userRepo = userRepo;
@@ -183,11 +183,11 @@ public class AuthController {
             if (existingUser.isPresent()) {
                 user = existingUser.get();
             } else {
-                // Generate random password
-                String rawPassword = UUID.randomUUID().toString().substring(0, 8); // 8 chars
+             
+                String rawPassword = UUID.randomUUID().toString().substring(0, 8); 
                 String encodedPassword = passwordEncoder.encode(rawPassword);
 
-                // Create new user
+                
                 user = new User();
                 user.setEmail(email);
                 user.setUsername(oauthUser.getAttribute("name") != null ? oauthUser.getAttribute("name") : email);
@@ -196,26 +196,25 @@ public class AuthController {
 
                 userRepo.save(user);
 
-                // ⚠️ Save the raw password temporarily to return once
                 Map<String, Object> response = new HashMap<>();
                 response.put("id", user.getId());
                 response.put("username", user.getUsername());
                 response.put("email", user.getEmail());
                 response.put("role", user.getRole());
                 response.put("profileImage", user.getProfileImage());
-                response.put("password", rawPassword); // return raw password for first-time login
+                response.put("password", rawPassword);
 
                 return ResponseEntity.ok(response);
             }
 
-            // Existing user → return profile (password not exposed again)
+          
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
             response.put("username", user.getUsername());
             response.put("email", user.getEmail());
             response.put("role", user.getRole());
             response.put("profileImage", user.getProfileImage());
-            response.put("password", null); // don’t send password again
+            response.put("password", null); 
             return ResponseEntity.ok(response);
         }
     }

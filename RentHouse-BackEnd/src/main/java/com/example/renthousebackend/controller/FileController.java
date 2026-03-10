@@ -21,7 +21,7 @@ public class FileController {
             String savedFilename = fileService.saveFile(image);
             return ResponseEntity.ok(savedFilename);
         } catch (Exception e) {
-            e.printStackTrace(); // ✅ this should print to the console
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed: " + e.getMessage());
         }
     }

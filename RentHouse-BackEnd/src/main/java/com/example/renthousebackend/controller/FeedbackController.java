@@ -24,7 +24,7 @@ public class FeedbackController {
 
     @PostMapping
     public ResponseEntity<Feedback> submitFeedback(@RequestBody Feedback feedback) {
-        System.out.println(feedback); // Log the received feedback
+        System.out.println(feedback); 
         Feedback saved = feedbackRepository.save(feedback);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }

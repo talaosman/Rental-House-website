@@ -23,10 +23,10 @@ public class User {
    
 
     public User() {
-        // Default constructor
+      
     }
 
-    // Getters and Setters
+
     public Long getId() {
         return id;
     }

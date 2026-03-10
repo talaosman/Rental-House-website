@@ -23,7 +23,7 @@ public class UserController {
     @PutMapping("/update")
     public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest request) {
         try {
-            // Use userId from the request (works for both manual and OAuth users)
+           
             Optional<User> userOpt = userRepo.findById(request.getUserId());
             if (userOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
