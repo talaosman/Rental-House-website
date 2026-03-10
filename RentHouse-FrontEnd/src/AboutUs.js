@@ -160,7 +160,7 @@ const AboutPage = () => {
         <div className="team-grid">
           <div className="team-card-luxury">
             <div className="team-image-wrapper">
-              <img src="team1.jpg" alt="Sarah Elia" className="team-image" />
+              <img src="team1.jpg" alt="Tala Osman" className="team-image" />
               <div className="team-overlay">
                 <div className="team-social">
                   <a href="#" className="social-link" aria-label="LinkedIn">
@@ -189,7 +189,7 @@ const AboutPage = () => {
 
           <div className="team-card-luxury">
             <div className="team-image-wrapper">
-              <img src="team2.jpg" alt="Omar Nasser" className="team-image" />
+              <img src="team2.jpg" alt="Ali Ibrahim" className="team-image" />
               <div className="team-overlay">
                 <div className="team-social">
                   <a href="#" className="social-link" aria-label="LinkedIn">
@@ -218,7 +218,7 @@ const AboutPage = () => {
 
           <div className="team-card-luxury">
             <div className="team-image-wrapper">
-              <img src="team3.jpg" alt="Layal M." className="team-image" />
+              <img src="team3.jpg" alt="Yasmina BouSaid" className="team-image" />
               <div className="team-overlay">
                 <div className="team-social">
                   <a href="#" className="social-link" aria-label="LinkedIn">
