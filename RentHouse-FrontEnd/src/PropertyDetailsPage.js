@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppState } from "./listingContext.js";
 import "./PropertyDetails.css";
@@ -34,23 +34,41 @@ const CARD_ELEMENT_OPTIONS = {
   hidePostalCode: true,
 };
 
-// ─── Google Maps Button ───────────────────────────────────────────────────────
-const GoogleMapsButton = ({ latitude, longitude, location }) => {
 
+const parseSpringDate = (raw) => {
+  if (!raw) return null;
+  if (Array.isArray(raw)) {
+    
+    const [y, m, d] = raw;
+    return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+
+  return String(raw).slice(0, 10);
+};
+
+
+const todayStr = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+};
+
+const isActiveLease = (startRaw, endRaw) => {
+  const today = todayStr();
+  const start = parseSpringDate(startRaw);
+  const end = parseSpringDate(endRaw);
+  if (!start || !end) return false;
+  return today >= start && today <= end;
+};
+
+
+const GoogleMapsButton = ({ latitude, longitude, location }) => {
   const handleViewOnMap = () => {
     let url;
     if (latitude && longitude) {
-      const lat = parseFloat(latitude);
-      const lng = parseFloat(longitude);
-      // Opens Google Maps centred on exact coordinates with a pin —
-      // no "origin" needed so Lebanon as current location never interferes.
-      // Format:  /maps/search/?api=1&query=LAT,LNG
-      url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+      url = `https://www.google.com/maps/search/?api=1&query=${parseFloat(latitude)},${parseFloat(longitude)}`;
     } else if (location) {
       url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
-    } else {
-      return;
-    }
+    } else return;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
@@ -60,43 +78,32 @@ const GoogleMapsButton = ({ latitude, longitude, location }) => {
       destination = `${parseFloat(latitude)},${parseFloat(longitude)}`;
     } else if (location) {
       destination = encodeURIComponent(location);
-    } else {
-      return;
-    }
-    // Opens the Google Maps app / website asking the user to choose their
-    // own starting point — avoids the "from Lebanon" routing error entirely.
-    const url = `https://www.google.com/maps/dir//${destination}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+    } else return;
+    window.open(`https://www.google.com/maps/dir//${destination}`, "_blank", "noopener,noreferrer");
   };
 
   if (!latitude && !longitude && !location) return null;
-  const hasCoords = latitude && longitude;
 
   return (
     <div className="maps-btn-wrapper">
       <div className="maps-buttons-row">
-        <button className="google-maps-btn view-btn" onClick={handleViewOnMap} title="See the property on the map">
-          <FaMapMarkerAlt className="maps-icon" />
-          View on Map
+        <button className="google-maps-btn view-btn" onClick={handleViewOnMap}>
+          <FaMapMarkerAlt className="maps-icon" /> View on Map
         </button>
-        <button className="google-maps-btn directions-btn" onClick={handleGetDirections} title="Get directions to this property">
-          <FaDirections className="maps-icon" />
-          Get Directions
+        <button className="google-maps-btn directions-btn" onClick={handleGetDirections}>
+          <FaDirections className="maps-icon" /> Get Directions
         </button>
       </div>
-      {hasCoords ? (
-        <span className="coords-badge">
-          📍 {parseFloat(latitude).toFixed(5)}, {parseFloat(longitude).toFixed(5)}
-        </span>
+      {latitude && longitude ? (
+        <span className="coords-badge">📍 {parseFloat(latitude).toFixed(5)}, {parseFloat(longitude).toFixed(5)}</span>
       ) : (
-        <span className="coords-badge no-coords">
-          ⚠️ Approximate — no GPS coordinates saved for this listing
-        </span>
+        <span className="coords-badge no-coords">⚠️ Approximate — no GPS coordinates saved for this listing</span>
       )}
     </div>
   );
 };
 
+// ─── Main component ───────────────────────────────────────────────────────────
 const PropertyDetailsContent = () => {
   const { allListings } = useAppState();
   const { id } = useParams();
@@ -113,30 +120,28 @@ const PropertyDetailsContent = () => {
   const [rentSuccess, setRentSuccess] = useState(false);
   const [rentType, setRentType] = useState("perDay");
   const [paymentMethod, setPaymentMethod] = useState("cash");
-  const [skipCheckRented, setSkipCheckRented] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [cardError, setCardError] = useState("");
   const [stripeReady, setStripeReady] = useState(false);
   const [stripeLoadError, setStripeLoadError] = useState(false);
-
-  const stripe = useStripe();
-  const elements = useElements();
-
-  const rentOptions = [
-    { label: "Daily", value: "perDay", icon: <FaCalendarDay /> },
-    { label: "Monthly", value: "perMonth", icon: <FaCalendarAlt /> },
-  ];
-
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [ratings, setRatings] = useState([]);
   const [showThankYou, setShowThankYou] = useState(false);
   const [currentRent, setCurrentRent] = useState(null);
   const [isAvailable, setIsAvailable] = useState(true);
+  const [rents, setRents] = useState([]);
 
+  const stripe = useStripe();
+  const elements = useElements();
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId");
-  const [rents, setRents] = useState([]);
+
+  const rentOptions = [
+    { label: "Daily", value: "perDay", icon: <FaCalendarDay /> },
+    { label: "Monthly", value: "perMonth", icon: <FaCalendarAlt /> },
+  ];
+
 
   useEffect(() => {
     let timeout;
@@ -150,6 +155,54 @@ const PropertyDetailsContent = () => {
     return () => clearTimeout(timeout);
   }, [stripe, elements]);
 
+  useEffect(() => { setUserRole(localStorage.getItem("userRole")); }, []);
+
+  
+  const refetchRentStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/rents/is-rented/${id}`);
+      if (!res.ok) { setCurrentRent(null); setIsAvailable(true); return; }
+      const data = await res.json();
+
+      
+      if (data.available === true) {
+        setIsAvailable(true);
+        setCurrentRent(null);
+        return;
+      }
+
+     
+      const startRaw = data.startDate;
+      const endRaw   = data.endDate;
+
+      if (startRaw && endRaw) {
+        if (isActiveLease(startRaw, endRaw)) {
+        
+          setCurrentRent({
+            ...data,
+            startDate: parseSpringDate(startRaw),
+            endDate:   parseSpringDate(endRaw),
+          });
+          setIsAvailable(false);
+        } else {
+      
+          setCurrentRent(null);
+          setIsAvailable(true);
+        }
+      } else {
+  
+        setCurrentRent(null);
+        setIsAvailable(true);
+      }
+    } catch (err) {
+      console.error("refetchRentStatus error:", err);
+      setCurrentRent(null);
+      setIsAvailable(true);
+    }
+  }, [id]);
+
+  useEffect(() => { refetchRentStatus(); }, [refetchRentStatus]);
+
   useEffect(() => {
     const fetchRents = async () => {
       try {
@@ -160,29 +213,12 @@ const PropertyDetailsContent = () => {
     fetchRents();
   }, [id]);
 
-  useEffect(() => { setUserRole(localStorage.getItem("userRole")); }, []);
-
-  useEffect(() => {
-    const checkIfRented = async () => {
-      try {
-        const res = await fetch(`http://localhost:5000/api/rents/is-rented/${id}`);
-        if (!res.ok) { setCurrentRent(null); setIsAvailable(true); return; }
-        const data = await res.json();
-        if (data.available === true) { setIsAvailable(true); setCurrentRent(null); }
-        else if (data.startDate && data.endDate) {
-          const now = new Date(), start = new Date(data.startDate), end = new Date(data.endDate);
-          if (now >= start && now <= end) { setCurrentRent(data); setIsAvailable(false); }
-          else { setCurrentRent(null); setIsAvailable(true); }
-        } else { setIsAvailable(true); setCurrentRent(null); }
-      } catch { setCurrentRent(null); setIsAvailable(true); }
-    };
-    checkIfRented();
-  }, [id]);
-
+  
   const isUnavailable = !isAvailable && currentRent != null;
   const unavailableMessage = isUnavailable && currentRent?.endDate
-    ? `Unavailable until ${new Date(currentRent.endDate).toLocaleDateString()}`
-    : property?.status === "rented" ? "Currently rented" : "";
+    ? `Unavailable until ${new Date(currentRent.endDate + "T12:00:00").toLocaleDateString()}`
+    : "Currently rented";
+
 
   const handleRentHouse = async () => {
     const calculatedEndDate = rentType === "perMonth"
@@ -196,11 +232,21 @@ const PropertyDetailsContent = () => {
           `http://localhost:5000/api/rents/rent?userId=${userId}&houseId=${id}&startDate=${startDate}&endDate=${calculatedEndDate}`,
           { method: "POST" }
         );
-        if (!res.ok) throw new Error("Renting failed");
-        setRentSuccess(true); setIsRented(true);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || "Renting failed");
+        }
+        setRentSuccess(true);
+        setIsRented(true);
+       
+        setIsAvailable(false);
+        setCurrentRent({ startDate, endDate: calculatedEndDate });
         setProperty((prev) => ({ ...prev, status: "rented" }));
-        setSkipCheckRented(true);
-      } catch { alert("Failed to complete rental. Please try again."); }
+        await refetchRentStatus();
+      } catch (err) {
+        alert(err.message || "Failed to complete rental. Please try again.");
+      }
+
     } else if (paymentMethod === "credit") {
       setCardError("");
       try {
@@ -257,11 +303,17 @@ const PropertyDetailsContent = () => {
           if (!rentRes.ok) {
             alert("Payment succeeded but save failed. Contact support. ID: " + result.paymentIntent.id);
           } else {
-            setRentSuccess(true); setIsRented(true); setIsAvailable(false);
+            setRentSuccess(true);
+            setIsRented(true);
+            setIsAvailable(false);
+            setCurrentRent({ startDate, endDate: calculatedEndDate });
             setProperty((prev) => ({ ...prev, status: "rented" }));
-            setCardError(""); cardElement.clear();
+            setCardError("");
+            cardElement.clear();
+            await refetchRentStatus();
           }
-          localStorage.removeItem("stripeStartDate"); localStorage.removeItem("stripeEndDate");
+          localStorage.removeItem("stripeStartDate");
+          localStorage.removeItem("stripeEndDate");
         }
       } catch (err) {
         setCardError(err.message || "Payment failed.");
@@ -281,14 +333,19 @@ const PropertyDetailsContent = () => {
           try {
             await fetch(`http://localhost:5000/api/rents/rent?userId=${userId}&houseId=${id}&startDate=${savedStart}&endDate=${savedEnd}`, { method: "POST" });
             setRentSuccess(true); setIsRented(true);
+            setIsAvailable(false);
+            setCurrentRent({ startDate: savedStart, endDate: savedEnd });
             setProperty((prev) => ({ ...prev, status: "rented" }));
-            localStorage.removeItem("stripeStartDate"); localStorage.removeItem("stripeEndDate");
+            localStorage.removeItem("stripeStartDate");
+            localStorage.removeItem("stripeEndDate");
             window.history.replaceState({}, document.title, window.location.pathname);
+            await refetchRentStatus();
           } catch { console.error("Error saving rent after Stripe payment"); }
         })();
       }
     }
-  }, [id, userId]);
+  }, [id, userId, refetchRentStatus]);
+
 
   const fetchRatings = async () => {
     try {
@@ -400,7 +457,7 @@ const PropertyDetailsContent = () => {
               </div>
               {isUnavailable && currentRent?.endDate && (
                 <div className="availability-msg">
-                  Available after {new Date(currentRent.endDate).toLocaleDateString()}
+                  Available after {new Date(currentRent.endDate + "T12:00:00").toLocaleDateString()}
                 </div>
               )}
             </div>
@@ -413,11 +470,7 @@ const PropertyDetailsContent = () => {
           <div className="section location-section">
             <h2><FaMapMarkerAlt className="section-icon" /> Location</h2>
             <p className="location-address">{property.location}</p>
-            <GoogleMapsButton
-              latitude={property.latitude}
-              longitude={property.longitude}
-              location={property.location}
-            />
+            <GoogleMapsButton latitude={property.latitude} longitude={property.longitude} location={property.location} />
           </div>
 
           <div className="section">
