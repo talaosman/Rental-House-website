@@ -25,50 +25,53 @@ public class RentController {
     @Autowired
     private HouseRepository houseRepository;
 
-    
     @PostMapping("/rent")
-    public Rent rentHouse(
+    public ResponseEntity<?> rentHouse(
             @RequestParam Long userId,
             @RequestParam Long houseId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return rentService.rentHouse(userId, houseId, startDate, endDate);
+        try {
+            Rent rent = rentService.rentHouse(userId, houseId, startDate, endDate);
+            return ResponseEntity.ok(rent);
+        } catch (RuntimeException e) {
+          
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(409).body(error);
+        }
     }
 
-    /**
-     * GET: Check if house is currently rented
-     * Returns a JSON object with rent details or { "available": true } if not rented
-     * This ensures proper JSON response instead of empty body
-     */
     @GetMapping("/is-rented/{houseId}")
     public ResponseEntity<Object> getCurrentRent(@PathVariable Long houseId) {
-   
         House house = houseRepository.findById(houseId)
                 .orElseThrow(() -> new RuntimeException("House not found"));
 
-        
         Rent currentRent = rentService.getCurrentRent(house);
-        
+
         if (currentRent != null) {
-          
+           
+            if (!"rented".equals(house.getStatus())) {
+                house.setStatus("rented");
+                houseRepository.save(house);
+            }
             return ResponseEntity.ok(currentRent);
         }
-        
+
     
-        Rent lastRent = rentService.getLastRent(house);
-        
-        if (lastRent != null && lastRent.getEndDate() != null) {
-      
-            Map<String, Object> response = new HashMap<>();
-            response.put("available", true);
-            response.put("lastRent", lastRent);
-            return ResponseEntity.ok(response);
+        if (!"available".equals(house.getStatus())) {
+            house.setStatus("available");
+            houseRepository.save(house);
         }
-        
-    
+
+        Rent lastRent = rentService.getLastRent(house);
         Map<String, Object> response = new HashMap<>();
         response.put("available", true);
-        response.put("message", "This property is available for rent");
+        if (lastRent != null && lastRent.getEndDate() != null) {
+            response.put("lastRent", lastRent);
+        } else {
+            response.put("message", "This property is available for rent");
+        }
         return ResponseEntity.ok(response);
     }
 
