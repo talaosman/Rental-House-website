@@ -25,5 +25,7 @@ public interface HouseRepository extends JpaRepository<House, Long> {
 
     @Query("SELECT r.house.id FROM Rent r GROUP BY r.house.id ORDER BY COUNT(r.id) DESC")
     List<Long> findMostRentedHouseIds();
+    
+    long countByStatus(String status);
 
 }
