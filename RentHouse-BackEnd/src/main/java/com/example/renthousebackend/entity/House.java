@@ -4,14 +4,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 
 @Entity
 public class House {
@@ -32,9 +33,11 @@ public class House {
     private Double pricePerDay;
     private Double pricePerMonth;
 
-    
     private Double latitude;
     private Double longitude;
+
+    @Column(name = "virtual_tour_url", length = 1024)
+    private String virtualTourUrl;
 
     private LocalDateTime createdAt;
 
@@ -48,47 +51,126 @@ public class House {
     @JoinColumn(name = "owner_id")
     private Owner owner;
 
-    public House() {}
+    public House() {
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
+    public String getTitle() {
+        return title;
+    }
 
-    public String getImage() { return image; }
-    public void setImage(String image) { this.image = image; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public int getNbOfBedrooms() { return nbOfBedrooms; }
-    public void setNbOfBedrooms(int nbOfBedrooms) { this.nbOfBedrooms = nbOfBedrooms; }
+    public String getLocation() {
+        return location;
+    }
 
-    public String getPropertyType() { return propertyType; }
-    public void setPropertyType(String propertyType) { this.propertyType = propertyType; }
+    public void setLocation(String location) {
+        this.location = location;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getImage() {
+        return image;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setImage(String image) {
+        this.image = image;
+    }
 
-    public Double getPricePerDay() { return pricePerDay; }
-    public void setPricePerDay(Double pricePerDay) { this.pricePerDay = pricePerDay; }
+    public int getNbOfBedrooms() {
+        return nbOfBedrooms;
+    }
 
-    public Double getPricePerMonth() { return pricePerMonth; }
-    public void setPricePerMonth(Double pricePerMonth) { this.pricePerMonth = pricePerMonth; }
+    public void setNbOfBedrooms(int nbOfBedrooms) {
+        this.nbOfBedrooms = nbOfBedrooms;
+    }
 
-    public Double getLatitude() { return latitude; }
-    public void setLatitude(Double latitude) { this.latitude = latitude; }
+    public String getPropertyType() {
+        return propertyType;
+    }
 
-    public Double getLongitude() { return longitude; }
-    public void setLongitude(Double longitude) { this.longitude = longitude; }
+    public void setPropertyType(String propertyType) {
+        this.propertyType = propertyType;
+    }
 
-    public Owner getOwner() { return owner; }
-    public void setOwner(Owner owner) { this.owner = owner; }
+    public String getStatus() {
+        return status;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Double getPricePerDay() {
+        return pricePerDay;
+    }
+
+    public void setPricePerDay(Double pricePerDay) {
+        this.pricePerDay = pricePerDay;
+    }
+
+    public Double getPricePerMonth() {
+        return pricePerMonth;
+    }
+
+    public void setPricePerMonth(Double pricePerMonth) {
+        this.pricePerMonth = pricePerMonth;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Owner getOwner() {
+        return owner;
+    }
+
+    public void setOwner(Owner owner) {
+        this.owner = owner;
+    }
+
+    public String getVirtualTourUrl() {
+        return virtualTourUrl;
+    }
+
+    public void setVirtualTourUrl(String virtualTourUrl) {
+        this.virtualTourUrl = virtualTourUrl;
+    }
 }

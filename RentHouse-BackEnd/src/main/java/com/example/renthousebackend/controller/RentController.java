@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/api/rents")
@@ -35,7 +36,7 @@ public class RentController {
             Rent rent = rentService.rentHouse(userId, houseId, startDate, endDate);
             return ResponseEntity.ok(rent);
         } catch (RuntimeException e) {
-          
+
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
             return ResponseEntity.status(409).body(error);
@@ -50,7 +51,7 @@ public class RentController {
         Rent currentRent = rentService.getCurrentRent(house);
 
         if (currentRent != null) {
-           
+
             if (!"rented".equals(house.getStatus())) {
                 house.setStatus("rented");
                 houseRepository.save(house);
@@ -58,7 +59,6 @@ public class RentController {
             return ResponseEntity.ok(currentRent);
         }
 
-    
         if (!"available".equals(house.getStatus())) {
             house.setStatus("available");
             houseRepository.save(house);
@@ -84,4 +84,17 @@ public class RentController {
     public List<Rent> getRentsByUser(@PathVariable Long userId) {
         return rentService.getRentsByUser(userId);
     }
+
+    @GetMapping("/count")
+    public ResponseEntity<Map<String, Long>> getTotalRentCount() {
+        long count = rentService.countAllRents(); 
+        return ResponseEntity.ok(Collections.singletonMap("count", count));
+    }
+
+    @GetMapping("/active/count")
+    public ResponseEntity<Map<String, Long>> getActiveRentCount() {
+        long count = rentService.countActiveRents(); 
+        return ResponseEntity.ok(Collections.singletonMap("count", count));
+    }
+
 }

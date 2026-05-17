@@ -18,14 +18,14 @@ public class User {
     private String password;
     private String phoneNumber;
     private String role;
+    private int points = 0;
+    private String fcmToken;
     @Column(columnDefinition = "LONGTEXT")
     private String profileImage;
-   
 
     public User() {
-      
-    }
 
+    }
 
     public Long getId() {
         return id;
@@ -81,6 +81,23 @@ public class User {
 
     public void setProfileImage(String profileImage) {
         this.profileImage = profileImage;
+    }
+
+    public int getPoints() {
+        return points;
+    }
+
+    public void setPoints(int points) {
+        this.points = points;
+    }
+
+    // Add getter and setter
+    public String getFcmToken() {
+        return fcmToken;
+    }
+
+    public void setFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
     }
 
 }

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,9 @@ public class HouseService {
     private final RentRepository rentRepository;
     private final FavoriteRepository favoriteRepository;
     private final VisitRequestRepository visitRequestRepository;
+     @Autowired
+    private NotificationService notificationService;
+
 
         public HouseService(
             HouseRepository houseRepository, 
@@ -92,7 +96,37 @@ public class HouseService {
     }
 
     public House updateHouse(House house) {
-        return houseRepository.save(house);
+        House existingHouse = houseRepository.findById(house.getId())
+            .orElseThrow(() -> new RuntimeException("House not found"));
+
+        String oldStatus = existingHouse.getStatus();
+        String newStatus = house.getStatus();
+
+        // Save the updated house
+        House saved = houseRepository.save(house);
+
+        // 🔔 Trigger notification if status changed TO "available"
+        boolean justBecameAvailable =
+            !"available".equalsIgnoreCase(oldStatus)
+            && "available".equalsIgnoreCase(newStatus);
+
+        if (justBecameAvailable) {
+            List<String> fcmTokens =
+                favoriteRepository.findFcmTokensByHouseId(house.getId());
+
+            if (!fcmTokens.isEmpty()) {
+                notificationService.sendBatchNotification(
+                    fcmTokens,
+                    house.getTitle(),
+                    house.getLocation(),
+                    house.getId()
+                );
+                System.out.println("🔔 Notified " + fcmTokens.size()
+                                   + " users about house availability: " + house.getTitle());
+            }
+        }
+
+        return saved;
     }
 
     public House createHouseWithOwner(House house) {
@@ -121,5 +155,6 @@ public class HouseService {
 
         return houseRepository.findAllById(filteredIds);
     }
+     public long countAllHouses() { return houseRepository.count(); }
 
 }

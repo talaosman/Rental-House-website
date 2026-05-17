@@ -1,10 +1,13 @@
 package com.example.renthousebackend.controller;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,7 +23,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.renthousebackend.entity.House;
+import com.example.renthousebackend.entity.Offer;
 import com.example.renthousebackend.entity.Owner;
+import com.example.renthousebackend.repository.HouseRepository;
+import com.example.renthousebackend.repository.OfferRepository;
 import com.example.renthousebackend.repository.OwnerRepository;
 import com.example.renthousebackend.service.FileService;
 import com.example.renthousebackend.service.HouseService;
@@ -35,16 +41,38 @@ public class HouseController {
     private final HouseService houseService;
     private final FileService fileService;
     private final OwnerRepository ownerRepository;
+    private final OfferRepository offerRepository;
 
-    public HouseController(HouseService houseService, FileService fileService, OwnerRepository ownerRepository) {
+    public HouseController(HouseService houseService, FileService fileService, OwnerRepository ownerRepository,
+            OfferRepository offerRepository) {
         this.houseService = houseService;
         this.fileService = fileService;
         this.ownerRepository = ownerRepository;
-    }
+        this.offerRepository = offerRepository;
+
+    };
 
     @GetMapping
-    public List<House> getAllHouses() {
-        return houseService.getAllHouses();
+    public List<Map<String, Object>> getAllHouses() {
+
+        List<House> houses = houseService.getAllHouses();
+
+        return houses.stream().map(house -> {
+
+            Map<String, Object> map = new java.util.HashMap<>();
+
+            map.put("id", house.getId());
+            map.put("title", house.getTitle());
+            map.put("location", house.getLocation());
+            map.put("image", house.getImage());
+            map.put("nbOfBedrooms", house.getNbOfBedrooms());
+            map.put("propertyType", house.getPropertyType());
+            map.put("pricePerDay", house.getPricePerDay());
+            map.put("pricePerMonth", house.getPricePerMonth());
+
+            return map;
+
+        }).toList();
     }
 
     @GetMapping("/{id}")
@@ -82,7 +110,6 @@ public class HouseController {
         return houseService.createHouseWithOwner(house);
     }
 
-
     @PostMapping(consumes = { "multipart/form-data" })
     public House createHouse(
             @RequestParam String title,
@@ -94,8 +121,8 @@ public class HouseController {
             @RequestParam String ownerName,
             @RequestParam String ownerEmail,
             @RequestParam String ownerPhone,
-            @RequestParam(required = false) Double latitude,  
-            @RequestParam(required = false) Double longitude, 
+            @RequestParam(required = false) Double latitude,
+            @RequestParam(required = false) Double longitude,
             @RequestPart(required = false) MultipartFile image) throws IOException {
 
         Owner owner = new Owner();
@@ -111,7 +138,6 @@ public class HouseController {
         house.setNbOfBedrooms(Integer.parseInt(nbOfBedrooms));
         house.setPropertyType(propertyType);
 
-     
         house.setLatitude(latitude);
         house.setLongitude(longitude);
 
@@ -124,14 +150,14 @@ public class HouseController {
         return houseService.createHouseWithOwner(house);
     }
 
-   
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteHouse(
             @PathVariable Long id,
             @RequestParam(required = false, defaultValue = "false") boolean force) {
         try {
             House house = houseService.getHouseById(id);
-            if (house == null) return ResponseEntity.notFound().build();
+            if (house == null)
+                return ResponseEntity.notFound().build();
 
             if (!force) {
                 int relatedCount = houseService.countRelatedFavoritesAndRentals(id);
@@ -156,22 +182,21 @@ public class HouseController {
             @RequestBody Map<String, Object> houseData) {
 
         try {
-            String title        = (String) houseData.get("title");
-            String location     = (String) houseData.get("location");
-            String status       = (String) houseData.get("status");
-            String description  = (String) houseData.get("description");
+            String title = (String) houseData.get("title");
+            String location = (String) houseData.get("location");
+            String status = (String) houseData.get("status");
+            String description = (String) houseData.get("description");
             String propertyType = (String) houseData.get("propertyType");
-            int nbOfBedrooms    = Integer.parseInt(houseData.get("nbOfBedrooms").toString());
+            int nbOfBedrooms = Integer.parseInt(houseData.get("nbOfBedrooms").toString());
 
-            String ownerName  = (String) houseData.get("ownerName");
+            String ownerName = (String) houseData.get("ownerName");
             String ownerEmail = (String) houseData.get("ownerEmail");
             String ownerPhone = (String) houseData.get("ownerPhone");
 
-            Double pricePerDay   = Double.parseDouble(houseData.get("pricePerDay").toString());
+            Double pricePerDay = Double.parseDouble(houseData.get("pricePerDay").toString());
             Double pricePerMonth = Double.parseDouble(houseData.get("pricePerMonth").toString());
 
-          
-            Double latitude  = null;
+            Double latitude = null;
             Double longitude = null;
             if (houseData.get("latitude") != null && !houseData.get("latitude").toString().isBlank()) {
                 latitude = Double.parseDouble(houseData.get("latitude").toString());
@@ -181,7 +206,8 @@ public class HouseController {
             }
 
             House existingHouse = houseService.getHouseById(id);
-            if (existingHouse == null) return ResponseEntity.notFound().build();
+            if (existingHouse == null)
+                return ResponseEntity.notFound().build();
 
             existingHouse.setTitle(title);
             existingHouse.setLocation(location);
@@ -192,11 +218,9 @@ public class HouseController {
             existingHouse.setStatus(status);
             existingHouse.setDescription(description);
 
-           
             existingHouse.setLatitude(latitude);
             existingHouse.setLongitude(longitude);
 
-           
             if (houseData.containsKey("imageData") && houseData.get("imageData") != null) {
                 String imageData = (String) houseData.get("imageData");
                 if (!imageData.isEmpty()) {
@@ -211,7 +235,6 @@ public class HouseController {
                 }
             }
 
-            
             List<Owner> owners = ownerRepository.findByEmail(ownerEmail);
             Owner owner = owners.isEmpty() ? new Owner() : owners.get(0);
             owner.setName(ownerName);
@@ -248,6 +271,11 @@ public class HouseController {
         }
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<Map<String, Long>> getHouseCount() {
+        long count = houseService.countAllHouses(); 
+        return ResponseEntity.ok(Collections.singletonMap("count", count));
+    }
    
     public static class UploadBase64Request {
         public String title;
@@ -262,7 +290,7 @@ public class HouseController {
         public String description;
         public String imageFilename;
         public String imageData;
-        public Double latitude;  
-        public Double longitude;  
+        public Double latitude;
+        public Double longitude;
     }
 }

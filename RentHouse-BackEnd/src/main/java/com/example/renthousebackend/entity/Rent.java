@@ -21,11 +21,19 @@ public class Rent {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    private double totalPrice;
+
     public Rent() {
-        
+
     }
 
- 
+    public double getTotalPrice() {
+        return totalPrice;
+    }
+
+    public void setTotalPrice(double totalPrice) {
+        this.totalPrice = totalPrice;
+    }
 
     public Long getId() {
         return id;

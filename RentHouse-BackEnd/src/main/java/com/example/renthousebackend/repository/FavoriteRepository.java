@@ -29,4 +29,11 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     @Query("DELETE FROM Favorite f WHERE f.property.id = :houseId")
     void deleteByPropertyId(@Param("houseId") Long houseId);
 
+    List<Favorite> findByProperty(House property);
+
+  
+    @Query("SELECT f.user.fcmToken FROM Favorite f WHERE f.property.id = :houseId " +
+           "AND f.user.fcmToken IS NOT NULL AND f.user.fcmToken != ''")
+    List<String> findFcmTokensByHouseId(Long houseId);
+
 }

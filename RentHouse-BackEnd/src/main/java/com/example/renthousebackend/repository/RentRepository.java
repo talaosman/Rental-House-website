@@ -16,24 +16,26 @@ import com.example.renthousebackend.entity.User;
 
 public interface RentRepository extends JpaRepository<Rent, Long> {
 
-    List<Rent> findByHouse(House house);
+        List<Rent> findByHouse(House house);
 
-    List<Rent> findByUser(User user);
+        List<Rent> findByUser(User user);
 
-    boolean existsByHouseAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-            House house, LocalDate endDate, LocalDate startDate);
+        boolean existsByHouseAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                        House house, LocalDate endDate, LocalDate startDate);
 
-    Rent findTopByHouseIdOrderByEndDateDesc(Long houseId);
+        Rent findTopByHouseIdOrderByEndDateDesc(Long houseId);
 
-    int countByHouseId(Long houseId);
+        int countByHouseId(Long houseId);
 
-    List<Rent> findByUserId(Long userId);
+        List<Rent> findByUserId(Long userId);
 
-    Optional<Rent> findFirstByHouseAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-            House house, LocalDate start, LocalDate end);
+        Optional<Rent> findFirstByHouseAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                        House house, LocalDate start, LocalDate end);
 
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM Rent r WHERE r.house.id = :houseId")
-    void deleteByHouseId(@Param("houseId") Long houseId);
+        long countByEndDateGreaterThanEqualAndStartDateLessThanEqual(LocalDate end, LocalDate start);
+
+        @Modifying
+        @Transactional
+        @Query("DELETE FROM Rent r WHERE r.house.id = :houseId")
+        void deleteByHouseId(@Param("houseId") Long houseId);
 }
