@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useAppState } from "./listingContext.js";
 import "./PostListing.css";
+import { useNavigate } from "react-router-dom";
+import { useAppState } from "./listingContext.js";
 
 const PostListing = () => {
   const { allListings, setAllListings } = useAppState();
+  const navigate = useNavigate();
   const [imageFile, setImageFile] = useState(null);
   const [geocodeStatus, setGeocodeStatus] = useState(""); // "loading" | "found" | "not_found" | ""
   const geocodeTimer = useRef(null);
-
+  const [tourFile, setTourFile] = useState(null);
+  const [tourUploading, setTourUploading] = useState(false);
+  const [tourStatus, setTourStatus] = useState(""); // "success" | "error" | ""
   const [form, setForm] = useState({
     title: "",
     pricePerDay: "",
@@ -24,25 +28,18 @@ const PostListing = () => {
     longitude: "",
   });
 
-  const addListing = (newListing) => {
-    const maxId = allListings.reduce((max, listing) => Math.max(max, listing.id), 0);
-    setAllListings((prev) => [...prev, { ...newListing, id: maxId + 1 }]);
-  };
-
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // ─── Auto-geocode location as user types ──────────────────────────────────
+  // ─── Auto-geocode ────────────────────────────────────────────
   const geocodeLocation = async (locationText) => {
     if (!locationText || locationText.trim().length < 5) {
       setGeocodeStatus("");
       setForm((prev) => ({ ...prev, latitude: "", longitude: "" }));
       return;
     }
-
     setGeocodeStatus("loading");
-
     try {
       const encoded = encodeURIComponent(locationText.trim());
       const res = await fetch(
@@ -50,7 +47,6 @@ const PostListing = () => {
         { headers: { "Accept-Language": "en" } }
       );
       const data = await res.json();
-
       if (data && data.length > 0) {
         const { lat, lon } = data[0];
         setForm((prev) => ({
@@ -69,15 +65,11 @@ const PostListing = () => {
     }
   };
 
-  // Debounce geocoding to avoid spamming the API
   const handleLocationChange = (e) => {
     const value = e.target.value;
     setForm((prev) => ({ ...prev, location: value }));
-
     clearTimeout(geocodeTimer.current);
-    geocodeTimer.current = setTimeout(() => {
-      geocodeLocation(value);
-    }, 800);
+    geocodeTimer.current = setTimeout(() => geocodeLocation(value), 800);
   };
 
   useEffect(() => () => clearTimeout(geocodeTimer.current), []);
@@ -102,15 +94,14 @@ const PostListing = () => {
       !form.description ||
       !imageFile
     ) {
-      alert("Please fill in all fields.");
+      alert("Please fill in all required fields.");
       return;
     }
 
     if (!form.latitude || !form.longitude) {
       alert(
         "Could not find GPS coordinates for this location.\n\n" +
-        "Please enter a more specific address (e.g. '123 Main St, Seattle, WA') " +
-        "or manually enter latitude and longitude."
+        "Please enter a more specific address or fill in the coordinates manually."
       );
       return;
     }
@@ -131,8 +122,8 @@ const PostListing = () => {
         propertyType: form.propertyType,
         imageFilename: imageFile.name,
         imageData: base64Image,
-        latitude: parseFloat(form.latitude),   // ✅ new
-        longitude: parseFloat(form.longitude), // ✅ new
+        latitude: parseFloat(form.latitude),
+        longitude: parseFloat(form.longitude),
       };
 
       const listingRes = await fetch("http://localhost:5000/api/houses/uploadBase64", {
@@ -146,6 +137,46 @@ const PostListing = () => {
       const data = await listingRes.json();
       setAllListings((prev) => [...prev, data]);
 
+      // ── Upload virtual tour if one was selected ──────────────
+      // Use a LOCAL variable — React state is async, so reading
+      // `tourStatus` right after setTourStatus is always stale.
+      let tourUploadedOk = false;
+      const hadTourFile = !!tourFile;
+
+      if (tourFile && data.id) {
+        setTourUploading(true);
+        try {
+          const tourPayload = new FormData();
+          tourPayload.append("file", tourFile);
+
+          const authHeader = localStorage.getItem("authHeader");
+          const tourRes = await fetch(
+            `http://localhost:5000/api/houses/${data.id}/virtual-tour`,
+            {
+              method: "PUT",
+              headers: { ...(authHeader && { Authorization: authHeader }) },
+              credentials: "include",
+              body: tourPayload,
+            }
+          );
+
+          if (!tourRes.ok) {
+            const err = await tourRes.json().catch(() => ({}));
+            throw new Error(err.error || `Tour upload failed (${tourRes.status})`);
+          }
+
+          tourUploadedOk = true;
+        } catch (tourErr) {
+          console.error("Virtual tour upload error:", tourErr);
+          tourUploadedOk = false;
+        } finally {
+          // ← KEY FIX: clear uploading state BEFORE the alert fires so
+          // the "Uploading…" indicator is never visible behind the modal.
+          setTourUploading(false);
+        }
+      }
+
+      // ── Reset form ───────────────────────────────────────────
       setForm({
         title: "",
         pricePerDay: "",
@@ -161,228 +192,320 @@ const PostListing = () => {
         longitude: "",
       });
       setImageFile(null);
+      setTourFile(null);
       setGeocodeStatus("");
 
-      alert("Listing added successfully!");
+      // Use local variable to decide message — state isn't synchronously readable
+      if (hadTourFile && !tourUploadedOk) {
+        alert("Virtual tour failed to upload — you can retry from the Edit Property page.");
+      }
+      navigate(`/property/${data.id}`);
     } catch (error) {
       console.error(error);
       alert(error.message || "Failed to upload listing");
     }
   };
 
-  useEffect(() => {
-    console.log(allListings);
-  }, [allListings]);
-
   return (
     <div className="post-listing-page">
       <form onSubmit={handleSubmit}>
+
+        {/* ── Header ── */}
         <h2>Post a Property Listing</h2>
 
-        {/* Title */}
-        <div className="form-group">
-          <label htmlFor="title">Property Title</label>
-          <input
-            id="title"
-            type="text"
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            placeholder="Enter property title"
-            required
-          />
-        </div>
+        {/* ── Section 1 · Property Details ── */}
+        <div className="form-section">
+          <p className="section-title">Property Details</p>
 
-        {/* Property Type */}
-        <div className="form-group">
-          <label htmlFor="propertyType">Property Type</label>
-          <input
-            id="propertyType"
-            type="text"
-            name="propertyType"
-            value={form.propertyType}
-            onChange={handleChange}
-            placeholder="Enter property type (e.g., Apartment, House)"
-            required
-          />
-        </div>
-
-        {/* Bedrooms */}
-        <div className="form-group">
-          <label htmlFor="nbOfBedrooms">Number of Bedrooms</label>
-          <input
-            id="nbOfBedrooms"
-            type="number"
-            name="nbOfBedrooms"
-            value={form.nbOfBedrooms}
-            onChange={handleChange}
-            placeholder="Enter number of bedrooms"
-            required
-          />
-        </div>
-
-        {/* Location with auto-geocode */}
-        <div className="form-group">
-          <label htmlFor="location">
-            Address / Location
-            <span className="label-hint"> — enter a full street address for best accuracy</span>
-          </label>
-          <input
-            id="location"
-            type="text"
-            name="location"
-            value={form.location}
-            onChange={handleLocationChange}
-            placeholder="e.g. 450 Pine St, Seattle, WA 98101"
-            required
-          />
-
-          {/* Geocode feedback */}
-          {geocodeStatus === "loading" && (
-            <div className="geocode-status loading">
-              📍 Looking up coordinates...
-            </div>
-          )}
-          {geocodeStatus === "found" && form.latitude && (
-            <div className="geocode-status found">
-              ✅ Location found — {form.latitude}, {form.longitude}
-            </div>
-          )}
-          {geocodeStatus === "not_found" && (
-            <div className="geocode-status not-found">
-              ⚠️ Address not recognized. Enter coordinates manually below.
-            </div>
-          )}
-        </div>
-
-        {/* Manual lat/lng override */}
-        <div className="form-group coords-row">
-          <div>
-            <label htmlFor="latitude">Latitude</label>
+          <div className="form-group">
+            <label htmlFor="title">Property Title</label>
             <input
-              id="latitude"
-              type="number"
-              step="0.000001"
-              name="latitude"
-              value={form.latitude}
+              id="title"
+              type="text"
+              name="title"
+              value={form.title}
               onChange={handleChange}
-              placeholder="e.g. 47.608013"
+              placeholder="e.g. Bright Corner Apartment with City Views"
+              required
             />
           </div>
-          <div>
-            <label htmlFor="longitude">Longitude</label>
-            <input
-              id="longitude"
-              type="number"
-              step="0.000001"
-              name="longitude"
-              value={form.longitude}
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="propertyType">Property Type</label>
+              <input
+                id="propertyType"
+                type="text"
+                name="propertyType"
+                value={form.propertyType}
+                onChange={handleChange}
+                placeholder="Apartment, House, Studio…"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="nbOfBedrooms">Bedrooms</label>
+              <input
+                id="nbOfBedrooms"
+                type="number"
+                name="nbOfBedrooms"
+                value={form.nbOfBedrooms}
+                onChange={handleChange}
+                placeholder="e.g. 2"
+                min="0"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="description">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              value={form.description}
               onChange={handleChange}
-              placeholder="e.g. -122.335167"
+              placeholder="Describe the property — amenities, neighbourhood, standout features…"
+              required
             />
           </div>
         </div>
-        <p className="coords-hint">
-          💡 Tip: To get exact coordinates, right-click any spot on{" "}
-          <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer">
-            Google Maps
-          </a>{" "}
-          → click the coordinates shown at the top to copy them.
-        </p>
 
-        {/* Prices */}
-        <div className="form-group">
-          <label htmlFor="pricePerDay">Price per Day</label>
-          <input
-            id="pricePerDay"
-            type="number"
-            name="pricePerDay"
-            value={form.pricePerDay}
-            onChange={handleChange}
-            placeholder="Enter daily price"
-            required
-          />
+        {/* ── Section 2 · Location ── */}
+        <div className="form-section">
+          <p className="section-title">Location</p>
+
+          <div className="form-group">
+            <label htmlFor="location">
+              Street Address
+              <span className="label-hint">Enter a full address for the best map accuracy</span>
+            </label>
+            <input
+              id="location"
+              type="text"
+              name="location"
+              value={form.location}
+              onChange={handleLocationChange}
+              placeholder="e.g. 450 Pine St, Seattle, WA 98101"
+              required
+            />
+            {geocodeStatus === "found" && form.latitude && (
+              <div className="geocode-status found">
+                ✅ Location found — {form.latitude}, {form.longitude}
+              </div>
+            )}
+            {geocodeStatus === "not_found" && (
+              <div className="geocode-status not-found">
+                ⚠️ Address not recognised — enter coordinates manually below.
+              </div>
+            )}
+          </div>
+
+          <div className="coords-row">
+            <div className="form-group">
+              <label htmlFor="latitude">Latitude</label>
+              <input
+                id="latitude"
+                type="number"
+                step="0.000001"
+                name="latitude"
+                value={form.latitude}
+                onChange={handleChange}
+                placeholder="e.g. 47.608013"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="longitude">Longitude</label>
+              <input
+                id="longitude"
+                type="number"
+                step="0.000001"
+                name="longitude"
+                value={form.longitude}
+                onChange={handleChange}
+                placeholder="e.g. -122.335167"
+              />
+            </div>
+          </div>
+
+          <p className="coords-hint">
+            💡 Right-click any spot on{" "}
+            <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer">
+              Google Maps
+            </a>{" "}
+            and click the coordinates at the top to copy them here.
+          </p>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="pricePerMonth">Price per Month</label>
-          <input
-            id="pricePerMonth"
-            type="number"
-            name="pricePerMonth"
-            value={form.pricePerMonth}
-            onChange={handleChange}
-            placeholder="Enter monthly price"
-            required
-          />
+        {/* ── Section 3 · Pricing ── */}
+        <div className="form-section">
+          <p className="section-title">Pricing</p>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="pricePerDay">Price per Day ($)</label>
+              <input
+                id="pricePerDay"
+                type="number"
+                name="pricePerDay"
+                value={form.pricePerDay}
+                onChange={handleChange}
+                placeholder="e.g. 120"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="pricePerMonth">Price per Month ($)</label>
+              <input
+                id="pricePerMonth"
+                type="number"
+                name="pricePerMonth"
+                value={form.pricePerMonth}
+                onChange={handleChange}
+                placeholder="e.g. 2800"
+                required
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Description */}
-        <div className="form-group">
-          <label htmlFor="description">Description</label>
-          <textarea
-            id="description"
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            placeholder="Enter a detailed description"
-            required
-          />
+        {/* ── Section 4 · Photos ── */}
+        <div className="form-section">
+          <p className="section-title">Photos</p>
+
+          <div className="form-group">
+            <label>Property Image</label>
+            <div className="file-upload-wrapper">
+              <label className="file-upload-label">
+                <span className="upload-icon">🖼</span>
+                <span>
+                  {imageFile
+                    ? imageFile.name
+                    : "Click to upload — JPG, PNG or WEBP"}
+                </span>
+                <input
+                  type="file"
+                  name="image"
+                  accept="image/*"
+                  onChange={(e) => setImageFile(e.target.files[0])}
+                  required
+                />
+              </label>
+            </div>
+          </div>
         </div>
 
-        {/* Image */}
-        <label htmlFor="image">Upload Image</label>
-        <input
-          id="image"
-          type="file"
-          name="image"
-          onChange={(e) => setImageFile(e.target.files[0])}
-          required
-        />
+        {/* ── Section 5 · Virtual Tour ── */}
+        <div className="form-section">
+          <p className="section-title">360° Virtual Tour</p>
+          <p className="tour-hint">
+            Optional — upload an equirectangular panorama image to let renters explore the space in 360°.
+            The tour will be attached to this listing automatically after posting.
+          </p>
 
-        {/* Owner info */}
-        <div className="form-group">
-          <label htmlFor="ownerName">Owner Name</label>
-          <input
-            id="ownerName"
-            type="text"
-            name="ownerName"
-            value={form.ownerName}
-            onChange={handleChange}
-            placeholder="Enter owner's name"
-            required
-          />
+          <div className="form-group" style={{ marginTop: "12px" }}>
+            <label>
+              360° Panorama Image
+              <span className="label-hint">Equirectangular JPEG or PNG · max 30 MB</span>
+            </label>
+            <div className="file-upload-wrapper">
+              <label className="file-upload-label">
+                <span className="upload-icon">🌐</span>
+                <span>
+                  {tourFile ? tourFile.name : "Click to select your 360° panorama file"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  onChange={(e) => {
+                    setTourFile(e.target.files[0] || null);
+                    setTourStatus("");
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+
+          {tourFile && (
+            <div className="tour-selected-info">
+              <span className="tour-file-name">📐 {tourFile.name}</span>
+              <span className="tour-file-size">
+                {(tourFile.size / (1024 * 1024)).toFixed(1)} MB
+              </span>
+            </div>
+          )}
+
+          {/*
+            Uploading indicator — uses its own subtle style, NOT geocode-status.
+            Cleared BEFORE the alert so it's never visible behind the modal.
+          */}
+          {tourUploading && (
+            <div className="tour-uploading-bar">
+              <div className="tour-uploading-spinner" />
+              Uploading 360° panorama…
+            </div>
+          )}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="ownerEmail">Owner Email</label>
-          <input
-            id="ownerEmail"
-            type="email"
-            name="ownerEmail"
-            value={form.ownerEmail}
-            onChange={handleChange}
-            placeholder="Enter owner's email"
-            required
-          />
+        {/* ── Section 6 · Owner Info ── */}
+        <div className="form-section">
+          <p className="section-title">Owner Information</p>
+
+          <div className="form-group">
+            <label htmlFor="ownerName">Full Name</label>
+            <input
+              id="ownerName"
+              type="text"
+              name="ownerName"
+              value={form.ownerName}
+              onChange={handleChange}
+              placeholder="Your full name"
+              required
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="ownerEmail">Email Address</label>
+              <input
+                id="ownerEmail"
+                type="email"
+                name="ownerEmail"
+                value={form.ownerEmail}
+                onChange={handleChange}
+                placeholder="you@example.com"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="ownerPhone">Phone Number</label>
+              <input
+                id="ownerPhone"
+                type="text"
+                name="ownerPhone"
+                value={form.ownerPhone}
+                onChange={handleChange}
+                placeholder="+1 555 000 0000"
+                required
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="ownerPhone">Owner Phone</label>
-          <input
-            id="ownerPhone"
-            type="text"
-            name="ownerPhone"
-            value={form.ownerPhone}
-            onChange={handleChange}
-            placeholder="Enter owner's phone number"
-            required
-          />
+        {/* ── Submit ── */}
+        <div className="submit-section">
+          <p className="submit-note">
+            Your listing will be visible to renters immediately after posting.
+          </p>
+          <button type="submit" className="submit-button" disabled={tourUploading}>
+            {tourUploading ? "Uploading tour…" : "Post Listing"}
+            {!tourUploading && <span className="btn-arrow">→</span>}
+          </button>
         </div>
 
-        <button type="submit" className="submit-button">
-          Post Listing
-        </button>
       </form>
     </div>
   );

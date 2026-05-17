@@ -8,22 +8,10 @@ const EditHouseForm = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [geocodeStatus, setGeocodeStatus] = useState("");
   const geocodeTimer = useRef(null);
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          imageData: reader.result,
-          imageFilename: file.name
-        }));
-      };
-      reader.readAsDataURL(file);
-      setSelectedImage(URL.createObjectURL(file));
-    }
-  };
+  const [tourFile, setTourFile] = useState(null);
+  const [tourUploading, setTourUploading] = useState(false);
+  const [tourStatus, setTourStatus] = useState(""); // "success" | "error" | ""
+  const [existingTourKey, setExistingTourKey] = useState(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -41,7 +29,6 @@ const EditHouseForm = () => {
     longitude: "",
   });
 
-  
   useEffect(() => {
     fetch(`http://localhost:5000/api/houses/${id}`)
       .then(res => res.json())
@@ -62,6 +49,7 @@ const EditHouseForm = () => {
           longitude: data.longitude || "",
         });
         if (data.latitude && data.longitude) setGeocodeStatus("found");
+        if (data.virtualTourUrl) setExistingTourKey(data.virtualTourUrl);
       })
       .catch(err => console.error("Failed to load house", err));
   }, [id]);
@@ -69,6 +57,22 @@ const EditHouseForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({
+          ...prev,
+          imageData: reader.result,
+          imageFilename: file.name,
+        }));
+      };
+      reader.readAsDataURL(file);
+      setSelectedImage(URL.createObjectURL(file));
+    }
   };
 
   const geocodeLocation = async (locationText) => {
@@ -141,118 +145,403 @@ const EditHouseForm = () => {
       alert("Failed to update house. Please try again.");
     }
   };
+ const handleTourUpload = async () => {
+  if (!tourFile) return;
+  setTourUploading(true);
+  setTourStatus("");
+
+  const formPayload = new FormData();
+  formPayload.append("file", tourFile);
+
+  try {
+    // Use the same authHeader your login already stores
+    const authHeader = localStorage.getItem("authHeader");
+
+    const res = await fetch(
+      `http://localhost:5000/api/houses/${id}/virtual-tour`,
+      {
+        method: "PUT",
+        headers: {
+          ...(authHeader && { Authorization: authHeader }),
+        },
+        credentials: "include",   // also send session cookie as fallback
+        body: formPayload,
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Upload failed (${res.status})`);
+    }
+
+    const data = await res.json();
+    setExistingTourKey(data.key);
+    setTourStatus("success");
+    setTourFile(null);
+  } catch (err) {
+    console.error(err);
+    setTourStatus("error");
+  } finally {
+    setTourUploading(false);
+  }
+};
+
+const handleTourDelete = async () => {
+  if (!window.confirm("Remove the 360° virtual tour from this property?")) return;
+
+  try {
+    const authHeader = localStorage.getItem("authHeader");
+
+    const res = await fetch(
+      `http://localhost:5000/api/houses/${id}/virtual-tour`,
+      {
+        method: "DELETE",
+        headers: {
+          ...(authHeader && { Authorization: authHeader }),
+        },
+        credentials: "include",
+      }
+    );
+
+    if (!res.ok) throw new Error("Delete failed");
+    setExistingTourKey(null);
+    setTourStatus("");
+  } catch (err) {
+    console.error(err);
+    alert("Failed to remove virtual tour.");
+  }
+};
 
   return (
     <div className="edit-form-container">
-      <h2 className="form-title">Edit Property</h2>
       <form className="edit-form" onSubmit={handleSubmit}>
 
-        <label title="Enter the property title">
-          Title
-          <input name="title" value={formData.title} onChange={handleChange} placeholder="Title" required />
-        </label>
+        {/* ── Header ── */}
+        <h2 className="form-title">Edit Property</h2>
 
-        <label title="Enter a full street address for accurate Google Maps directions">
-          Location / Address
-          <input
-            name="location"
-            value={formData.location}
-            onChange={handleLocationChange}
-            placeholder="e.g. 450 Pine St, Seattle, WA 98101"
-            required
-          />
-        </label>
+        {/* ── Section 1 · Property Details ── */}
+        <div className="form-section">
+          <p className="section-title">Property Details</p>
 
-       
-        <div className="coords-row">
-          <label title="GPS latitude — auto-filled from address lookup, or enter manually">
-            Latitude
+          <div className="form-group">
+            <label htmlFor="title">Property Title</label>
             <input
-              name="latitude"
-              type="number"
-              step="0.000001"
-              value={formData.latitude}
+              id="title"
+              name="title"
+              type="text"
+              value={formData.title}
               onChange={handleChange}
-              placeholder="e.g. 47.608013"
+              placeholder="e.g. Bright Corner Apartment with City Views"
+              required
             />
-          </label>
-          <label title="GPS longitude — auto-filled from address lookup, or enter manually">
-            Longitude
-            <input
-              name="longitude"
-              type="number"
-              step="0.000001"
-              value={formData.longitude}
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="propertyType">Property Type</label>
+              <input
+                id="propertyType"
+                name="propertyType"
+                type="text"
+                value={formData.propertyType}
+                onChange={handleChange}
+                placeholder="Apartment, House, Studio…"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="nbOfBedrooms">Bedrooms</label>
+              <input
+                id="nbOfBedrooms"
+                name="nbOfBedrooms"
+                type="number"
+                value={formData.nbOfBedrooms}
+                onChange={handleChange}
+                placeholder="e.g. 2"
+                min="0"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="status">Status</label>
+              <input
+                id="status"
+                name="status"
+                type="text"
+                value={formData.status}
+                onChange={handleChange}
+                placeholder="Available, Rented…"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="description">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
               onChange={handleChange}
-              placeholder="e.g. -122.335167"
+              placeholder="Describe the property — amenities, neighbourhood, standout features…"
+              required
             />
-          </label>
+          </div>
         </div>
-        <p className="coords-hint">
-          💡 To get exact coordinates: right-click the spot on{" "}
-          <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer">Google Maps</a>
-          {" "}→ copy the lat/lng shown at the top.
-        </p>
 
-        <label title="Price per day for renting">
-          Price Per Day
-          <input name="pricePerDay" type="number" value={formData.pricePerDay} onChange={handleChange} placeholder="Price Per Day" required />
-        </label>
+        {/* ── Section 2 · Location ── */}
+        <div className="form-section">
+          <p className="section-title">Location</p>
 
-        <label title="Price per month for renting">
-          Price Per Month
-          <input name="pricePerMonth" type="number" value={formData.pricePerMonth} onChange={handleChange} placeholder="Price Per Month" required />
-        </label>
+          <div className="form-group">
+            <label htmlFor="location">Street Address</label>
+            <input
+              id="location"
+              name="location"
+              type="text"
+              value={formData.location}
+              onChange={handleLocationChange}
+              placeholder="e.g. 450 Pine St, Seattle, WA 98101"
+              required
+            />
+            {geocodeStatus === "found" && formData.latitude && (
+              <div className="geocode-status found">
+                ✅ Location found — {formData.latitude}, {formData.longitude}
+              </div>
+            )}
+            {geocodeStatus === "not_found" && (
+              <div className="geocode-status not-found">
+                ⚠️ Address not recognised — enter coordinates manually below.
+              </div>
+            )}
+          </div>
 
-        <label title="Type of property (Apartment, Villa, etc.)">
-          Property Type
-          <input name="propertyType" value={formData.propertyType} onChange={handleChange} placeholder="Property Type" required />
-        </label>
+          <div className="coords-row">
+            <div className="form-group">
+              <label htmlFor="latitude">Latitude</label>
+              <input
+                id="latitude"
+                name="latitude"
+                type="number"
+                step="0.000001"
+                value={formData.latitude}
+                onChange={handleChange}
+                placeholder="e.g. 47.608013"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="longitude">Longitude</label>
+              <input
+                id="longitude"
+                name="longitude"
+                type="number"
+                step="0.000001"
+                value={formData.longitude}
+                onChange={handleChange}
+                placeholder="e.g. -122.335167"
+              />
+            </div>
+          </div>
 
-        <label title="Number of bedrooms">
-          Bedrooms
-          <input name="nbOfBedrooms" type="number" value={formData.nbOfBedrooms} onChange={handleChange} placeholder="Bedrooms" required />
-        </label>
+          <p className="coords-hint">
+            💡 Right-click any spot on{" "}
+            <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer">
+              Google Maps
+            </a>{" "}
+            and click the coordinates at the top to copy them here.
+          </p>
+        </div>
 
-        <label title="Current status (Available, Rented, etc.)">
-          Status
-          <input name="status" value={formData.status} onChange={handleChange} placeholder="Status" required />
-        </label>
+        {/* ── Section 3 · Pricing ── */}
+        <div className="form-section">
+          <p className="section-title">Pricing</p>
 
-        <label title="Upload a new property image (optional)">
-          Property Image
-          <input type="file" accept="image/*" onChange={handleImageChange} />
-          {selectedImage && (
-            <img src={selectedImage} alt="Preview" className="image-preview" />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="pricePerDay">Price per Day ($)</label>
+              <input
+                id="pricePerDay"
+                name="pricePerDay"
+                type="number"
+                value={formData.pricePerDay}
+                onChange={handleChange}
+                placeholder="e.g. 120"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="pricePerMonth">Price per Month ($)</label>
+              <input
+                id="pricePerMonth"
+                name="pricePerMonth"
+                type="number"
+                value={formData.pricePerMonth}
+                onChange={handleChange}
+                placeholder="e.g. 2800"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Section 4 · Photos ── */}
+        <div className="form-section">
+          <p className="section-title">Photos</p>
+
+          <div className="form-group">
+            <label>Property Image</label>
+            <div className="file-upload-wrapper">
+              <label className="file-upload-label">
+                <span className="upload-icon">🖼</span>
+                <span>
+                  {selectedImage
+                    ? formData.imageFilename
+                    : "Click to replace image — JPG, PNG or WEBP"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+              </label>
+            </div>
+            {selectedImage && (
+              <img src={selectedImage} alt="Preview" className="image-preview" />
+            )}
+          </div>
+        </div>
+        {/* ── Section · Virtual Tour ── */}
+        <div className="form-section">
+          <p className="section-title">360° Virtual Tour</p>
+
+          {existingTourKey ? (
+            <div className="tour-existing">
+              <span className="tour-active-badge">⦿ Virtual tour active</span>
+              <p className="tour-hint">
+                Upload a new file below to replace it, or remove it entirely.
+              </p>
+              <button
+                type="button"
+                className="tour-delete-btn"
+                onClick={handleTourDelete}
+              >
+                🗑 Remove Virtual Tour
+              </button>
+            </div>
+          ) : (
+            <p className="tour-hint">No virtual tour uploaded yet for this property.</p>
           )}
-        </label>
 
-        <label title="Detailed description of the property">
-          Description
-          <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" required />
-        </label>
+          <div className="form-group" style={{ marginTop: "12px" }}>
+            <label>
+              {existingTourKey ? "Replace 360° Image" : "Upload 360° Image"}
+              <span className="label-hint">
+                Equirectangular JPEG or PNG · max 30 MB
+              </span>
+            </label>
+            <div className="file-upload-wrapper">
+              <label className="file-upload-label">
+                <span className="upload-icon">🌐</span>
+                <span>
+                  {tourFile ? tourFile.name : "Click to select your 360° panorama file"}
+                </span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  onChange={(e) => {
+                    setTourFile(e.target.files[0]);
+                    setTourStatus("");
+                  }}
+                />
+              </label>
+            </div>
+          </div>
 
-        <hr />
-        <h3>Owner Information</h3>
+          {tourFile && (
+            <button
+              type="button"
+              className="tour-upload-btn"
+              onClick={handleTourUpload}
+              disabled={tourUploading}
+            >
+              {tourUploading ? "Uploading…" : "Upload Virtual Tour"}
+            </button>
+          )}
 
-        <label title="Name of the property owner">
-          Owner Name
-          <input name="ownerName" value={formData.ownerName} onChange={handleChange} placeholder="Owner Name" required />
-        </label>
+          {tourStatus === "success" && (
+            <div className="geocode-status found">
+              ✅ Virtual tour uploaded successfully!
+            </div>
+          )}
+          {tourStatus === "error" && (
+            <div className="geocode-status not-found">
+              ⚠️ Upload failed — check the file format and try again.
+            </div>
+          )}
+        </div>
 
-        <label title="Owner's email address">
-          Owner Email
-          <input name="ownerEmail" type="email" value={formData.ownerEmail} onChange={handleChange} placeholder="Owner Email" required />
-        </label>
+        {/* ── Section 5 · Owner Info ── */}
+        <div className="form-section">
+          <p className="section-title">Owner Information</p>
 
-        <label title="Owner's phone number">
-          Owner Phone
-          <input name="ownerPhone" value={formData.ownerPhone} onChange={handleChange} placeholder="Owner Phone" required />
-        </label>
+          <div className="form-group">
+            <label htmlFor="ownerName">Full Name</label>
+            <input
+              id="ownerName"
+              name="ownerName"
+              type="text"
+              value={formData.ownerName}
+              onChange={handleChange}
+              placeholder="Owner's full name"
+              required
+            />
+          </div>
 
-        <button className="submit-btn" type="submit">
-          Update Property
-        </button>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="ownerEmail">Email Address</label>
+              <input
+                id="ownerEmail"
+                name="ownerEmail"
+                type="email"
+                value={formData.ownerEmail}
+                onChange={handleChange}
+                placeholder="owner@example.com"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="ownerPhone">Phone Number</label>
+              <input
+                id="ownerPhone"
+                name="ownerPhone"
+                type="text"
+                value={formData.ownerPhone}
+                onChange={handleChange}
+                placeholder="+1 555 000 0000"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Submit ── */}
+        <div className="submit-section">
+          <p className="submit-note">
+            Changes will be reflected on the listing page immediately after saving.
+          </p>
+          <button type="submit" className="submit-btn">
+            Save Changes
+            <span className="btn-arrow">→</span>
+          </button>
+        </div>
+
       </form>
     </div>
   );

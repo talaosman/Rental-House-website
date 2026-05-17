@@ -9,6 +9,14 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const [userRole, setUserRole] = useState(null);
+  const [userData, setUserData] = useState({
+    userId: localStorage.getItem("userId") || "",
+    fullName: localStorage.getItem("username") || "",
+    email: localStorage.getItem("email") || "",
+    phoneNumber: localStorage.getItem("phoneNumber") || "",
+    password: localStorage.getItem("password") || "",
+    profileImage: localStorage.getItem("profileImage") || "",
+  });
 
   const handleMenuToggle = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -59,6 +67,15 @@ const Navbar = () => {
     };
   }, [isMobileMenuOpen]);
 
+  const avatarUrl =
+    userData.profileImage && userData.profileImage !== "null"
+      ? userData.profileImage.startsWith("data:") || userData.profileImage.startsWith("http")
+        ? userData.profileImage
+        : `data:image/jpeg;base64,${userData.profileImage}`
+      : userData.fullName
+        ? `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.fullName)}&background=random`
+        : `https://ui-avatars.com/api/?name=User&background=random`;
+
   return (
     <>
       {/* Top Navbar */}
@@ -74,14 +91,14 @@ const Navbar = () => {
           {/* Logo */}
           <div className="navbar-logo-luxury">
             <Link to="/">
-              <img src="/home.png" alt="RentalHub" className="logo-img-luxury" />
+              <img src="/home.svg" alt="RentalHub" className="logo-img-luxury" />
               <span className="logo-text-luxury">RentalHub</span>
             </Link>
           </div>
 
           {/* Desktop Navigation Links */}
           <ul className="navbar-links-luxury">
-            {userRole !== "ADMIN" && (
+            {userRole !== "ADMIN" && userRole !== "HOUSE_OWNER" && (
               <li>
                 <Link
                   to="/"
@@ -91,15 +108,17 @@ const Navbar = () => {
                 </Link>
               </li>
             )}
-            <li>
-              <Link
-                to="/search"
-                className={`navbar-link ${location.pathname === "/search" ? "active" : ""}`}
-              >
-                <span>Search Listings</span>
-              </Link>
-            </li>
-            {isLoggedIn && userRole !== "ADMIN" && (
+            {userRole !== "HOUSE_OWNER" && (
+              <li>
+                <Link
+                  to="/search"
+                  className={`navbar-link ${location.pathname === "/search" ? "active" : ""}`}
+                >
+                  <span>Search Listings</span>
+                </Link>
+              </li>
+            )}
+            {isLoggedIn && userRole !== "ADMIN" && userRole !== "HOUSE_OWNER" && (
               <li>
                 <Link
                   to="/favorites"
@@ -109,7 +128,12 @@ const Navbar = () => {
                 </Link>
               </li>
             )}
-            {isLoggedIn && userRole !== "ADMIN" && (
+            {userRole === "HOUSE_OWNER" && (
+              <Link to="/owner-dashboard" className={`navbar-link ${location.pathname === "/owner-dashboard" ? "active" : ""}`} >
+                My Properties
+              </Link>
+            )}
+            {isLoggedIn && userRole !== "ADMIN" && userRole !== "HOUSE_OWNER" && (
               <li>
                 <Link
                   to="/feedback"
@@ -174,7 +198,7 @@ const Navbar = () => {
             ) : (
               <Link to="/profile" className="profile-link-luxury">
                 <div className="profile-avatar-luxury">
-                  <img src="account.png" alt="Profile" className="profile-img-luxury" />
+                  <img src={avatarUrl} alt="Profile" className="profile-img-luxury" />
                   <span className="profile-status-luxury"></span>
                 </div>
               </Link>
@@ -188,7 +212,7 @@ const Navbar = () => {
         <div className="sidebar-header-luxury">
           <div className="sidebar-logo-luxury">
             <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>
-              <img src="/home.png" alt="RentalHub" className="logo-img-sidebar" />
+              <img src="/home.svg" alt="RentalHub" className="logo-img-sidebar" />
               <span className="logo-text-sidebar">RentalHub</span>
             </Link>
           </div>
@@ -201,7 +225,7 @@ const Navbar = () => {
         </div>
 
         <ul className="sidebar-links-luxury">
-          {userRole !== "ADMIN" && (
+          {userRole !== "ADMIN" && userRole !== "HOUSE_OWNER" && (
             <li>
               <Link
                 to="/"
@@ -215,20 +239,22 @@ const Navbar = () => {
               </Link>
             </li>
           )}
-          <li>
-            <Link
-              to="/search"
-              className={location.pathname === "/search" ? "active" : ""}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-              </svg>
-              <span>Search Listings</span>
-            </Link>
-          </li>
-          {isLoggedIn && userRole !== "ADMIN" && (
+          {userRole !== "HOUSE_OWNER" && (
+            <li>
+              <Link
+                to="/search"
+                className={location.pathname === "/search" ? "active" : ""}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <span>Search Listings</span>
+              </Link>
+            </li>
+          )}
+          {isLoggedIn && userRole !== "ADMIN" && userRole !== "HOUSE_OWNER" && (
             <li>
               <Link
                 to="/favorites"
@@ -242,7 +268,7 @@ const Navbar = () => {
               </Link>
             </li>
           )}
-          {isLoggedIn && userRole !== "ADMIN" && (
+          {isLoggedIn && userRole !== "ADMIN" && userRole !== "HOUSE_OWNER" && (
             <li>
               <Link
                 to="/feedback"
@@ -300,6 +326,21 @@ const Navbar = () => {
               </Link>
             </li>
           )}
+          {userRole === "HOUSE_OWNER" && (
+            <li>
+              <Link
+                to="/owner-dashboard"
+                className={location.pathname === "/owner-dashboard" ? "active" : ""}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span>My Properties</span>
+              </Link>
+            </li>
+          )}
           {userRole !== "ADMIN" && (
             <li>
               <Link
@@ -330,7 +371,7 @@ const Navbar = () => {
             </Link>
           ) : (
             <Link to="/profile" className="sidebar-profile" onClick={() => setIsMobileMenuOpen(false)}>
-              <img src="account.png" alt="Profile" className="profile-img-sidebar" />
+              <img src={avatarUrl} alt="Profile" className="profile-img-sidebar" />
               <div className="sidebar-profile-info">
                 <span className="profile-name">My Profile</span>
                 <span className="profile-email">View Account</span>

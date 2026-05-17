@@ -4,8 +4,9 @@ import { useAppState } from "./listingContext.js";
 import "./PropertyDetails.css";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { FaCalendarDay, FaCalendarAlt, FaHeart, FaRegHeart, FaMapMarkerAlt, FaDirections } from "react-icons/fa";
-
+import { FaCalendarDay, FaCalendarAlt, FaHeart, FaRegHeart, FaMapMarkerAlt, FaDirections, FaVrCardboard, FaImage } from "react-icons/fa";
+import VirtualTourViewer from "./VirtualTourViewer";
+import API from "./api";
 const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY ||
   "pk_test_51RoNCB2Ylq8U0YVR6yVwbqvqm4Dy3QO8SPHEHSgoCPvHhbxYsufl6cDwR1buRjDZdobHLSNHf4HCee7f4aXNTvwp00qdh8ZSXK";
 
@@ -22,30 +23,31 @@ const stripePromise = isKeyValid ? loadStripe(STRIPE_KEY) : null;
 const CARD_ELEMENT_OPTIONS = {
   style: {
     base: {
-      fontSize: '16px',
-      color: '#495057',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontSize: '18px',
+      color: '#0f172a',
+      fontFamily: "'Sora', system-ui, sans-serif",
       fontSmoothing: 'antialiased',
-      '::placeholder': { color: '#adb5bd' },
-      iconColor: '#666',
+      lineHeight: '28px',
+      '::placeholder': {
+        color: '#94a3b8',
+      },
+      iconColor: '#64748b',
     },
-    invalid: { color: '#e74c3c', iconColor: '#e74c3c' },
+    invalid: {
+      color: '#dc2626',
+      iconColor: '#dc2626',
+    },
   },
   hidePostalCode: true,
 };
-
-
 const parseSpringDate = (raw) => {
   if (!raw) return null;
   if (Array.isArray(raw)) {
-    
     const [y, m, d] = raw;
     return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
   }
-
   return String(raw).slice(0, 10);
 };
-
 
 const todayStr = () => {
   const now = new Date();
@@ -59,7 +61,6 @@ const isActiveLease = (startRaw, endRaw) => {
   if (!start || !end) return false;
   return today >= start && today <= end;
 };
-
 
 const GoogleMapsButton = ({ latitude, longitude, location }) => {
   const handleViewOnMap = () => {
@@ -103,7 +104,6 @@ const GoogleMapsButton = ({ latitude, longitude, location }) => {
   );
 };
 
-// ─── Main component ───────────────────────────────────────────────────────────
 const PropertyDetailsContent = () => {
   const { allListings } = useAppState();
   const { id } = useParams();
@@ -131,6 +131,47 @@ const PropertyDetailsContent = () => {
   const [currentRent, setCurrentRent] = useState(null);
   const [isAvailable, setIsAvailable] = useState(true);
   const [rents, setRents] = useState([]);
+  const [virtualTourUrl, setVirtualTourUrl] = useState(null);
+  // NEW: toggle state for hero view
+  const [heroView, setHeroView] = useState("photo"); // "photo" | "tour"
+  const [offer, setOffer] = useState(null);
+
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (!userId || !id) return;
+
+    // eslint-disable-next-line no-undef
+    API.get(`/api/offers/user/${userId}/applicable/${id}`)
+      .then((res) => {
+        if (res.data?.hasOffer) {
+          setOffer(res.data.discountPercentage);
+        } else {
+          setOffer(null);
+        }
+      })
+      .catch(() => setOffer(null));
+  }, [id]);
+  const applyDiscount = (price) => {
+    if (!offer) return price;
+    return price * (1 - offer / 100);
+  };
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchTourUrl = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/houses/${id}/virtual-tour-url`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.virtualTourUrl) {
+          setVirtualTourUrl(`http://localhost:5000/api/houses/${id}/virtual-tour-image`);
+        }
+      } catch (err) {
+        console.error("Failed to fetch virtual tour URL:", err);
+      }
+    };
+    fetchTourUrl();
+  }, [id]);
 
   const stripe = useStripe();
   const elements = useElements();
@@ -141,7 +182,6 @@ const PropertyDetailsContent = () => {
     { label: "Daily", value: "perDay", icon: <FaCalendarDay /> },
     { label: "Monthly", value: "perMonth", icon: <FaCalendarAlt /> },
   ];
-
 
   useEffect(() => {
     let timeout;
@@ -157,47 +197,23 @@ const PropertyDetailsContent = () => {
 
   useEffect(() => { setUserRole(localStorage.getItem("userRole")); }, []);
 
-  
   const refetchRentStatus = useCallback(async () => {
     try {
       const res = await fetch(`http://localhost:5000/api/rents/is-rented/${id}`);
       if (!res.ok) { setCurrentRent(null); setIsAvailable(true); return; }
       const data = await res.json();
-
-      
-      if (data.available === true) {
-        setIsAvailable(true);
-        setCurrentRent(null);
-        return;
-      }
-
-     
+      if (data.available === true) { setIsAvailable(true); setCurrentRent(null); return; }
       const startRaw = data.startDate;
-      const endRaw   = data.endDate;
-
+      const endRaw = data.endDate;
       if (startRaw && endRaw) {
         if (isActiveLease(startRaw, endRaw)) {
-        
-          setCurrentRent({
-            ...data,
-            startDate: parseSpringDate(startRaw),
-            endDate:   parseSpringDate(endRaw),
-          });
+          setCurrentRent({ ...data, startDate: parseSpringDate(startRaw), endDate: parseSpringDate(endRaw) });
           setIsAvailable(false);
-        } else {
-      
-          setCurrentRent(null);
-          setIsAvailable(true);
-        }
-      } else {
-  
-        setCurrentRent(null);
-        setIsAvailable(true);
-      }
+        } else { setCurrentRent(null); setIsAvailable(true); }
+      } else { setCurrentRent(null); setIsAvailable(true); }
     } catch (err) {
       console.error("refetchRentStatus error:", err);
-      setCurrentRent(null);
-      setIsAvailable(true);
+      setCurrentRent(null); setIsAvailable(true);
     }
   }, [id]);
 
@@ -213,12 +229,10 @@ const PropertyDetailsContent = () => {
     fetchRents();
   }, [id]);
 
-  
   const isUnavailable = !isAvailable && currentRent != null;
   const unavailableMessage = isUnavailable && currentRent?.endDate
     ? `Unavailable until ${new Date(currentRent.endDate + "T12:00:00").toLocaleDateString()}`
     : "Currently rented";
-
 
   const handleRentHouse = async () => {
     const calculatedEndDate = rentType === "perMonth"
@@ -236,9 +250,7 @@ const PropertyDetailsContent = () => {
           const errData = await res.json().catch(() => ({}));
           throw new Error(errData.error || "Renting failed");
         }
-        setRentSuccess(true);
-        setIsRented(true);
-       
+        setRentSuccess(true); setIsRented(true);
         setIsAvailable(false);
         setCurrentRent({ startDate, endDate: calculatedEndDate });
         setProperty((prev) => ({ ...prev, status: "rented" }));
@@ -246,7 +258,6 @@ const PropertyDetailsContent = () => {
       } catch (err) {
         alert(err.message || "Failed to complete rental. Please try again.");
       }
-
     } else if (paymentMethod === "credit") {
       setCardError("");
       try {
@@ -256,10 +267,8 @@ const PropertyDetailsContent = () => {
         if (!stripe || !elements) { const m = "Payment loading, wait a moment."; setCardError(m); alert(m); return; }
         const cardElement = elements.getElement(CardElement);
         if (!cardElement) { const m = "Card info missing, refresh page."; setCardError(m); alert(m); return; }
-
         localStorage.setItem("stripeStartDate", startDate);
         localStorage.setItem("stripeEndDate", calculatedEndDate);
-
         const res = await fetch("http://localhost:5000/api/stripe/checkout/integrated", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -272,7 +281,6 @@ const PropertyDetailsContent = () => {
         if (!res.ok) throw new Error(`Server error (${res.status})`);
         const clientSecret = await res.text();
         if (!clientSecret || clientSecret.length < 10) throw new Error("Invalid payment session.");
-
         const result = await stripe.confirmCardPayment(clientSecret, {
           payment_method: {
             card: cardElement,
@@ -282,7 +290,6 @@ const PropertyDetailsContent = () => {
             },
           },
         });
-
         if (result.error) {
           const errorMessages = {
             'card_declined': "Your card was declined.",
@@ -303,13 +310,11 @@ const PropertyDetailsContent = () => {
           if (!rentRes.ok) {
             alert("Payment succeeded but save failed. Contact support. ID: " + result.paymentIntent.id);
           } else {
-            setRentSuccess(true);
-            setIsRented(true);
+            setRentSuccess(true); setIsRented(true);
             setIsAvailable(false);
             setCurrentRent({ startDate, endDate: calculatedEndDate });
             setProperty((prev) => ({ ...prev, status: "rented" }));
-            setCardError("");
-            cardElement.clear();
+            setCardError(""); cardElement.clear();
             await refetchRentStatus();
           }
           localStorage.removeItem("stripeStartDate");
@@ -345,7 +350,6 @@ const PropertyDetailsContent = () => {
       }
     }
   }, [id, userId, refetchRentStatus]);
-
 
   const fetchRatings = async () => {
     try {
@@ -404,6 +408,7 @@ const PropertyDetailsContent = () => {
       } else {
         await fetch(`http://localhost:5000/api/favorites/add?userId=${userId}&propertyId=${property.id}`, { method: "POST" });
         setIsFavorite(true); setShowFavoriteMessage(true);
+        alert("❤️ Added to favorites! You'll be notified when this property becomes available.");
         setTimeout(() => setShowFavoriteMessage(false), 3000);
       }
     } catch { console.error("Failed to update favorite"); }
@@ -429,17 +434,67 @@ const PropertyDetailsContent = () => {
   return (
     <div className="property-page">
       <div className="property-container">
+
+        {/* ── HERO SECTION with inline toggle ── */}
         <div className="image-section">
-          <img
-            src={property.image.startsWith("http") ? property.image : `http://localhost:5000/uploads/${property.image}`}
-            alt={property.location}
-            className="property-image"
-          />
-          {userRole !== "ADMIN" && (
-            <button className="favorite-btn" onClick={toggleFavorite}>
-              {isFavorite ? <FaHeart /> : <FaRegHeart />}
-            </button>
+
+          {/* Photo view */}
+          <div className={`hero-photo ${heroView === "photo" ? "hero-active" : "hero-hidden"}`}>
+            <img
+              src={property.image.startsWith("http") ? property.image : `http://localhost:5000/uploads/${property.image}`}
+              alt={property.location}
+              className="property-image"
+            />
+          </div>
+
+          {/* 360 tour view */}
+          {virtualTourUrl && (
+            <div className={`hero-tour ${heroView === "tour" ? "hero-active" : "hero-hidden"}`}>
+              <VirtualTourViewer
+                tourUrl={virtualTourUrl}
+                location={property.location}
+              />
+            </div>
           )}
+
+          {/* Overlay controls: favorite + view toggle */}
+          <div className="hero-controls">
+            {/* View toggle pill — only shown when tour exists */}
+            {virtualTourUrl && (
+              <div className="view-toggle-pill">
+                <button
+                  className={`toggle-option ${heroView === "photo" ? "toggle-active" : ""}`}
+                  onClick={() => setHeroView("photo")}
+                  aria-label="Show photo"
+                >
+                  <FaImage className="toggle-icon" />
+                  <span>Photo</span>
+                </button>
+                <button
+                  className={`toggle-option ${heroView === "tour" ? "toggle-active" : ""}`}
+                  onClick={() => setHeroView("tour")}
+                  aria-label="View 360° tour"
+                >
+                  <FaVrCardboard className="toggle-icon" />
+                  <span>360° Tour</span>
+                </button>
+              </div>
+            )}
+
+            {/* Favorite button */}
+            {userRole !== "ADMIN" && (
+              <button className="favorite-btn" onClick={toggleFavorite}>
+                {isFavorite ? <FaHeart /> : <FaRegHeart />}
+              </button>
+            )}
+          </div>
+
+          {/* Status badge overlaid on image */}
+          <div className="hero-status-badge">
+            <span className={`status ${isAvailable ? "available" : "rented"}`}>
+              {isAvailable ? "Available" : "Rented"}
+            </span>
+          </div>
         </div>
 
         <div className="property-content">
@@ -450,10 +505,6 @@ const PropertyDetailsContent = () => {
                 <span>{property.propertyType}</span>
                 <span>•</span>
                 <span>{property.nbOfBedrooms} Bedrooms</span>
-                <span>•</span>
-                <span className={`status ${isAvailable ? 'available' : 'rented'}`}>
-                  {isAvailable ? 'Available' : 'Rented'}
-                </span>
               </div>
               {isUnavailable && currentRent?.endDate && (
                 <div className="availability-msg">
@@ -461,9 +512,46 @@ const PropertyDetailsContent = () => {
                 </div>
               )}
             </div>
-            <div className="property-pricing">
-              <div className="price-day">${property.pricePerDay}/day</div>
-              <div className="price-month">${property.pricePerMonth}/month</div>
+            <div className="property-header-right">
+              {userRole === "ADMIN" && (
+                <button className="edit-btn" onClick={() => navigate(`/edit-house/${property.id}`)}>
+                  <span className="edit-btn-icon">✏️</span>
+                  <span>Edit Listing</span>
+                </button>
+              )}
+              <div className="property-pricing">
+                <div className="price-day">
+                  {offer ? (
+                    <>
+                      <span className="original-price">
+                        ${property.pricePerDay}
+                      </span>
+                      <span className="discounted-price">
+                        ${applyDiscount(property.pricePerDay).toFixed(0)}
+                      </span>
+                    </>
+                  ) : (
+                    <>${property.pricePerDay}</>
+                  )}
+                  <span className="price-unit">/day</span>
+                </div>
+
+                <div className="price-month">
+                  {offer ? (
+                    <>
+                      <span className="original-price">
+                        ${property.pricePerMonth}
+                      </span>
+                      <span className="discounted-price">
+                        ${applyDiscount(property.pricePerMonth).toFixed(0)}
+                      </span>
+                    </>
+                  ) : (
+                    <>${property.pricePerMonth}</>
+                  )}
+                  <span className="price-unit">/month</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -481,9 +569,12 @@ const PropertyDetailsContent = () => {
           <div className="section owner-section">
             <h2>Owner Contact</h2>
             <div className="owner-details">
-              <p><strong>{property.owner?.name}</strong></p>
-              <p>{property.owner?.phone}</p>
-              <p>{property.owner?.email}</p>
+              <div className="owner-avatar">{property.owner?.name?.charAt(0) || "O"}</div>
+              <div className="owner-info">
+                <p><strong>{property.owner?.name}</strong></p>
+                <p>{property.owner?.phone}</p>
+                <p>{property.owner?.email}</p>
+              </div>
             </div>
           </div>
 
@@ -509,7 +600,7 @@ const PropertyDetailsContent = () => {
                 {rentOptions.map((option) => (
                   <button
                     key={option.value}
-                    className={`type-btn ${rentType === option.value ? 'active' : ''}`}
+                    className={`type-btn ${rentType === option.value ? "active" : ""}`}
                     onClick={() => setRentType(option.value)}
                   >
                     {option.icon} {option.label}
@@ -538,11 +629,11 @@ const PropertyDetailsContent = () => {
               )}
 
               <div className="payment-methods">
-                <button className={`payment-btn ${paymentMethod === "cash" ? 'active' : ''}`} onClick={() => setPaymentMethod("cash")}>
+                <button className={`payment-btn ${paymentMethod === "cash" ? "active" : ""}`} onClick={() => setPaymentMethod("cash")}>
                   💵 Cash
                 </button>
                 <button
-                  className={`payment-btn ${paymentMethod === "credit" ? 'active' : ''}`}
+                  className={`payment-btn ${paymentMethod === "credit" ? "active" : ""}`}
                   onClick={() => setPaymentMethod("credit")}
                   disabled={!stripeReady && !stripeLoadError}
                 >
@@ -553,9 +644,9 @@ const PropertyDetailsContent = () => {
               {paymentMethod === "credit" && (
                 <div className="card-details">
                   <label>Card Information</label>
-                  <div style={{ padding: '12px', backgroundColor: '#fff3cd', color: '#856404', borderRadius: '4px', marginBottom: '12px', fontSize: '14px', border: '1px solid #ffc107' }}>
+                  {/* <div className="payment-details">
                     ⚠️ <strong>Payment Issues?</strong> Disable ad blockers for this site.
-                  </div>
+                  </div> */}
                   {!stripeReady && !stripeLoadError && (
                     <div style={{ padding: '10px', backgroundColor: '#fff3cd', color: '#856404', borderRadius: '4px', marginBottom: '10px' }}>⏳ Loading Stripe...</div>
                   )}
@@ -596,7 +687,7 @@ const PropertyDetailsContent = () => {
                   <h3>Rate this property</h3>
                   <div className="stars">
                     {[1, 2, 3, 4, 5].map((s) => (
-                      <span key={s} className={`star ${rating >= s ? 'active' : ''}`} onClick={() => setRating(s)}>★</span>
+                      <span key={s} className={`star ${rating >= s ? "active" : ""}`} onClick={() => setRating(s)}>★</span>
                     ))}
                   </div>
                   <textarea placeholder="Your thoughts..." value={comment} onChange={(e) => setComment(e.target.value)} />
@@ -611,11 +702,6 @@ const PropertyDetailsContent = () => {
             <button className="visit-btn" onClick={handleVisitRequest}>Schedule Visit</button>
           </div>
 
-          {userRole === "ADMIN" && (
-            <button className="edit-btn" onClick={() => navigate(`/edit-house/${property.id}`)}>
-              ✏️ Edit Property
-            </button>
-          )}
         </div>
       </div>
 
