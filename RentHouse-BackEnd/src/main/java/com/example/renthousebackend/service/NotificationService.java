@@ -1,83 +1,99 @@
 package com.example.renthousebackend.service;
 
+import com.example.renthousebackend.entity.User;
+import com.example.renthousebackend.repository.UserRepository;
 import com.google.firebase.messaging.*;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class NotificationService {
 
-    /**
-     * Sends a push notification via FCM to a specific device token.
-     * The notification appears as a message on the user's phone.
-     */
-    public void sendHouseAvailableNotification(String fcmToken,
-                                                String houseTitle,
-                                                String houseLocation,
-                                                Long houseId) {
-        if (fcmToken == null || fcmToken.isBlank()) {
-            System.out.println("⚠️ No FCM token for user — skipping notification");
-            return;
-        }
+    @Autowired
+    private UserRepository userRepo;
 
-        try {
-            Notification notification = Notification.builder()
-                .setTitle("🏠 House Now Available!")
-                .setBody("Good news! " + houseTitle + " in " + houseLocation
-                         + " is now available for rent.")
-                .build();
+    public void sendBatchNotification(List<String> fcmTokens,
+                                      String houseTitle,
+                                      String houseLocation,
+                                      Long houseId) {
 
-            Message message = Message.builder()
-                .setToken(fcmToken)
-                .setNotification(notification)
-                // Extra data payload for deep linking
-                .putData("houseId", String.valueOf(houseId))
-                .putData("type", "house_available")
-                .putData("click_action", "OPEN_HOUSE_DETAILS")
-                .build();
-
-            String response = FirebaseMessaging.getInstance().send(message);
-            System.out.println("✅ Notification sent successfully: " + response);
-
-        } catch (FirebaseMessagingException e) {
-            System.err.println("❌ Failed to send notification: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Send to multiple users (for batch notification when a house becomes available).
-     */
-    public void sendBatchNotification(java.util.List<String> fcmTokens,
-                                       String houseTitle,
-                                       String houseLocation,
-                                       Long houseId) {
         if (fcmTokens == null || fcmTokens.isEmpty()) return;
 
-        // Filter out blank tokens
-        java.util.List<String> validTokens = fcmTokens.stream()
-            .filter(t -> t != null && !t.isBlank())
-            .toList();
+        List<String> validTokens = fcmTokens.stream()
+                .filter(t -> t != null && !t.isBlank())
+                .toList();
 
         if (validTokens.isEmpty()) return;
 
         try {
-            MulticastMessage message = MulticastMessage.builder()
-                .addAllTokens(validTokens)
-                .setNotification(Notification.builder()
-                    .setTitle("🏠 House Now Available!")
-                    .setBody(houseTitle + " in " + houseLocation
-                             + " is now available for rent. Book it before someone else does!")
-                    .build())
-                .putData("houseId", String.valueOf(houseId))
-                .putData("type", "house_available")
-                .build();
 
-            BatchResponse response = FirebaseMessaging.getInstance()
-                                                      .sendEachForMulticast(message);
-            System.out.println("✅ Batch sent: " + response.getSuccessCount()
-                               + " success, " + response.getFailureCount() + " failed");
+            MulticastMessage message = MulticastMessage.builder()
+                    .addAllTokens(validTokens)
+                    .setNotification(Notification.builder()
+                            .setTitle("🏠 House Now Available!")
+                            .setBody(houseTitle + " in "
+                                    + houseLocation
+                                    + " is now available!")
+                            .build())
+                    .putData("houseId", String.valueOf(houseId))
+                    .putData("type", "house_available")
+                    .build();
+
+            BatchResponse response =
+                    FirebaseMessaging.getInstance()
+                            .sendEachForMulticast(message);
+
+            System.out.println("✅ Sent: "
+                    + response.getSuccessCount()
+                    + " success, "
+                    + response.getFailureCount()
+                    + " failed");
+
+            // CHECK FAILED TOKENS
+            for (int i = 0; i < response.getResponses().size(); i++) {
+
+                SendResponse r = response.getResponses().get(i);
+
+                if (!r.isSuccessful()) {
+
+                    FirebaseMessagingException ex = r.getException();
+
+                    String badToken = validTokens.get(i);
+
+                    System.err.println("❌ Token failed: "
+                            + ex.getMessage());
+
+                    // REMOVE INVALID TOKEN
+                    if (ex.getMessagingErrorCode()
+                            == MessagingErrorCode.UNREGISTERED) {
+
+                        removeInvalidToken(badToken);
+                    }
+                }
+            }
 
         } catch (FirebaseMessagingException e) {
-            System.err.println("❌ Batch notification failed: " + e.getMessage());
+            System.err.println("❌ Batch failed: " + e.getMessage());
+        }
+    }
+
+    private void removeInvalidToken(String token) {
+
+        Optional<User> userOpt = userRepo.findByFcmToken(token);
+
+        if (userOpt.isPresent()) {
+
+            User user = userOpt.get();
+
+            user.setFcmToken(null);
+
+            userRepo.save(user);
+
+            System.out.println("🗑 Invalid token removed from DB");
         }
     }
 }

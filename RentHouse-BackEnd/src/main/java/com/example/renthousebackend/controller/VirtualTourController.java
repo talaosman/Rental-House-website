@@ -208,16 +208,18 @@ public class VirtualTourController {
             if (s3Meta.contentLength() != null) {
                 headers.setContentLength(s3Meta.contentLength());
             }
-         
-            headers.setCacheControl("private, max-age=3600");
-            headers.set("Content-Encoding", "identity"); 
+
+            // ✅ Tell browser to cache the full image aggressively
+            headers.setCacheControl("private, max-age=86400, immutable");
+            headers.set("Content-Encoding", "identity");
             headers.set("X-Content-Type-Options", "nosniff");
-          
+            // ✅ Hint the full file size so browser doesn't throttle
+            headers.set("Accept-Ranges", "bytes");
 
             StreamingResponseBody body = outputStream -> {
                 try (s3Stream) {
-                   
-                    byte[] buffer = new byte[512 * 1024]; 
+                    // ✅ 2MB buffer instead of 512KB — fewer flushes, faster transfer
+                    byte[] buffer = new byte[2 * 1024 * 1024];
                     int bytesRead;
                     while ((bytesRead = s3Stream.read(buffer)) != -1) {
                         outputStream.write(buffer, 0, bytesRead);

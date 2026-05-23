@@ -3,7 +3,9 @@ package com.example.renthousebackend.controller;
 import com.example.renthousebackend.entity.Rent;
 import com.example.renthousebackend.entity.House;
 import com.example.renthousebackend.service.RentService;
+import com.example.renthousebackend.service.NotificationService;
 import com.example.renthousebackend.repository.HouseRepository;
+import com.example.renthousebackend.repository.FavoriteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,12 @@ public class RentController {
     @Autowired
     private HouseRepository houseRepository;
 
+    @Autowired
+    private FavoriteRepository favoriteRepository;
+
+    @Autowired
+    private NotificationService notificationService;
+
     @PostMapping("/rent")
     public ResponseEntity<?> rentHouse(
             @RequestParam Long userId,
@@ -36,7 +44,6 @@ public class RentController {
             Rent rent = rentService.rentHouse(userId, houseId, startDate, endDate);
             return ResponseEntity.ok(rent);
         } catch (RuntimeException e) {
-
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
             return ResponseEntity.status(409).body(error);
@@ -48,10 +55,9 @@ public class RentController {
         House house = houseRepository.findById(houseId)
                 .orElseThrow(() -> new RuntimeException("House not found"));
 
+        // Check current active rent
         Rent currentRent = rentService.getCurrentRent(house);
-
         if (currentRent != null) {
-
             if (!"rented".equals(house.getStatus())) {
                 house.setStatus("rented");
                 houseRepository.save(house);
@@ -59,9 +65,41 @@ public class RentController {
             return ResponseEntity.ok(currentRent);
         }
 
+        // Check for future rents
+        Rent futureRent = rentService.getNextFutureRent(house);
+        if (futureRent != null) {
+            if (!"rented".equals(house.getStatus())) {
+                house.setStatus("rented");
+                houseRepository.save(house);
+            }
+            return ResponseEntity.ok(futureRent);
+        }
+
+        // ✅ House is truly available
+        // Only notify if status was previously "rented" (just became available)
         if (!"available".equals(house.getStatus())) {
             house.setStatus("available");
             houseRepository.save(house);
+
+            // 🔔 Notify all users who favorited this house
+            try {
+                List<String> tokens = favoriteRepository
+                    .findFcmTokensByHouseId(houseId);
+
+                if (!tokens.isEmpty()) {
+                    notificationService.sendBatchNotification(
+                        tokens,
+                        house.getTitle(),
+                        house.getLocation(),
+                        house.getId()
+                    );
+                    System.out.println("🔔 Notified " + tokens.size()
+                        + " users — house " + houseId + " is now available");
+                }
+            } catch (Exception e) {
+                // Never let notification failure break the rent check
+                System.err.println("⚠️ Notification failed: " + e.getMessage());
+            }
         }
 
         Rent lastRent = rentService.getLastRent(house);
@@ -87,14 +125,13 @@ public class RentController {
 
     @GetMapping("/count")
     public ResponseEntity<Map<String, Long>> getTotalRentCount() {
-        long count = rentService.countAllRents(); 
+        long count = rentService.countAllRents();
         return ResponseEntity.ok(Collections.singletonMap("count", count));
     }
 
     @GetMapping("/active/count")
     public ResponseEntity<Map<String, Long>> getActiveRentCount() {
-        long count = rentService.countActiveRents(); 
+        long count = rentService.countActiveRents();
         return ResponseEntity.ok(Collections.singletonMap("count", count));
     }
-
 }

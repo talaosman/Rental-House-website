@@ -59,14 +59,13 @@ public class RentService {
         double finalPrice = house.getPricePerMonth();
         boolean offerApplied = false;
 
- 
         List<Offer> userOffers = offerRepository.findByUserIdAndUsedFalse(userId);
         for (Offer offer : userOffers) {
             boolean valid = offer.isActive()
                     && offer.getExpiryDate().isAfter(LocalDate.now())
                     && (!offer.isSameOwnerOnly()
-                        || offer.getHouse() == null
-                        || offer.getHouse().getOwner().getId().equals(house.getOwner().getId()))
+                    || offer.getHouse() == null
+                    || offer.getHouse().getOwner().getId().equals(house.getOwner().getId()))
                     && (offer.getHouse() == null || offer.getHouse().getId().equals(houseId));
 
             if (valid) {
@@ -78,15 +77,14 @@ public class RentService {
             }
         }
 
- 
         if (!offerApplied) {
             List<Offer> ownerOffers = offerRepository.findAll().stream()
-                    .filter(o -> o.getUser() == null                      // owner-created (no specific user target)
-                            && o.getHouse() != null
-                            && o.getHouse().getId().equals(houseId)        // for this house specifically
-                            && o.isActive()
-                            && !o.isUsed()
-                            && o.getExpiryDate().isAfter(LocalDate.now()))
+                    .filter(o -> o.getUser() == null // owner-created (no specific user target)
+                    && o.getHouse() != null
+                    && o.getHouse().getId().equals(houseId) // for this house specifically
+                    && o.isActive()
+                    && !o.isUsed()
+                    && o.getExpiryDate().isAfter(LocalDate.now()))
                     .toList();
 
             if (!ownerOffers.isEmpty()) {
@@ -99,10 +97,8 @@ public class RentService {
             }
         }
 
-      
         long rentsBefore = rentRepository.findByUser(user).size();
 
- 
         Rent rent = new Rent();
         rent.setHouse(house);
         rent.setUser(user);
@@ -115,10 +111,8 @@ public class RentService {
         house.setStatus("rented");
         houseRepository.saveAndFlush(house);
 
-      
         user.setPoints(user.getPoints() + 10);
 
-      
         long totalRentsAfter = rentsBefore + 1;
         if (totalRentsAfter % 3 == 0) {
             Offer newOffer = new Offer();
@@ -167,5 +161,13 @@ public class RentService {
     public long countActiveRents() {
         return rentRepository.countByEndDateGreaterThanEqualAndStartDateLessThanEqual(
                 LocalDate.now(), LocalDate.now());
+    }
+
+    public Rent getNextFutureRent(House house) {
+        LocalDate today = LocalDate.now();
+        return rentRepository.findByHouse(house).stream()
+                .filter(r -> r.getEndDate() != null && !r.getEndDate().isBefore(today))
+                .min(java.util.Comparator.comparing(Rent::getStartDate))
+                .orElse(null);
     }
 }
