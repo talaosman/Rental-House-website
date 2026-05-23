@@ -133,7 +133,7 @@ const HomePage = () => {
                     }}
                   />
                   <div className="property-overlay">
-                    <button className="view-details-btn">View Details</button>
+                    <button className="view-details-btn1">View Details</button>
                   </div>
                 </div>
 

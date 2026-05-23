@@ -544,7 +544,7 @@ body {
 }
 .total-price .amount {
   font-family: 'Lora', serif;
-  font-size: 30px; font-weight: 500; color: var(--blue);
+  font-size: 25px !important; font-weight: 500; color: var(--blue);
   letter-spacing: -.03em;
 }
 
@@ -811,6 +811,24 @@ body {
 ═══════════════════════════════════════════════════ */
 @keyframes mFade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes mUp   { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.total-amount-block {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.total-price .original-price {
+  font-size: 2.5rem !important;
+  color: #aaa;
+  text-decoration: line-through;
+}
+
+.total-price .discounted-price {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1a6e3c;
+}
 
 /* ═══════════════════════════════════════════════════
    RESPONSIVE

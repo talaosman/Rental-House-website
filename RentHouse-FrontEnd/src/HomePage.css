@@ -175,7 +175,7 @@ body { margin: 0; padding: 0; overflow-x: hidden; }
   opacity: 0; transition: opacity 0.4s ease;
 }
 .property-card:hover .property-overlay { opacity: 1; }
-.view-details-btn {
+.view-details-btn1 {
   background: #fff; color: #1e3a5f;
   border: none; padding: 12px 32px;
   border-radius: 30px; font-weight: 600;
@@ -183,7 +183,7 @@ body { margin: 0; padding: 0; overflow-x: hidden; }
   transition: transform 0.3s ease;
   font-family: 'Inter', sans-serif;
 }
-.view-details-btn:hover { transform: scale(1.05); }
+.view-details-btn1:hover { transform: scale(1.05); }
 
 
 .property-infoHome {

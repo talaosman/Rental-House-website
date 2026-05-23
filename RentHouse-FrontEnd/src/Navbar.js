@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import "./Navbar.css";
+import NotificationBell from "./NotificationBell";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -187,6 +188,7 @@ const Navbar = () => {
 
           {/* Right Section - Login/Profile */}
           <div className="navbar-right-luxury">
+            {isLoggedIn && userRole !== "ADMIN" && <NotificationBell />}
             {!isLoggedIn ? (
               <Link to="/about" className="btn-try-now">
                 <span>Get Started</span>

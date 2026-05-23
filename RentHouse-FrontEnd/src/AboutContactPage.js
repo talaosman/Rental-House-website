@@ -264,18 +264,25 @@ const AboutContactPage = () => {
   }, []);
 
   const saveFcmTokenToBackend = async (userId) => {
-    try {
-      const token = await requestNotificationPermission();
-      if (token) {
-        await fetch(`http://localhost:5000/api/users/${userId}/fcm-token`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fcmToken: token }),
-        });
-      }
-    } catch { /* non-critical */ }
-  };
-
+  try {
+    console.log("🔥 Requesting FCM permission for user:", userId);
+    const token = await requestNotificationPermission();
+    console.log("🔥 Got token:", token);
+    if (token) {
+      const res = await fetch(`http://localhost:5000/api/users/${userId}/fcm-token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fcmToken: token })
+      });
+      const data = await res.json();
+      console.log("🔥 Backend response:", data);
+    } else {
+      console.warn("⚠️ Token is null — notification permission was denied or not granted");
+    }
+  } catch (error) {
+    console.error("⚠️ FCM error:", error);
+  }
+};
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -332,7 +339,7 @@ const AboutContactPage = () => {
           localStorage.setItem("profileImage", profileImage ||
             `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=random`);
           localStorage.setItem("isLoggedIn", "true");
-          saveFcmTokenToBackend(id);
+          await saveFcmTokenToBackend(id)
 
           const roleLower = (role || "").toLowerCase().trim();
 

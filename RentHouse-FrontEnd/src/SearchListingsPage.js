@@ -22,7 +22,7 @@ const SearchListings = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  /* ── Fetch offers per listing ─────────────────── */
+
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     if (!userId || !allListings.length) return;

@@ -56,10 +56,9 @@ const todayStr = () => {
 
 const isActiveLease = (startRaw, endRaw) => {
   const today = todayStr();
-  const start = parseSpringDate(startRaw);
   const end = parseSpringDate(endRaw);
-  if (!start || !end) return false;
-  return today >= start && today <= end;
+  if (!end) return false;
+  return today <= end;
 };
 
 const GoogleMapsButton = ({ latitude, longitude, location }) => {
@@ -231,14 +230,17 @@ const PropertyDetailsContent = () => {
 
   const isUnavailable = !isAvailable && currentRent != null;
   const unavailableMessage = isUnavailable && currentRent?.endDate
-    ? `Unavailable until ${new Date(currentRent.endDate + "T12:00:00").toLocaleDateString()}`
+    ? currentRent.startDate > todayStr()
+      ? `Booked from ${new Date(currentRent.startDate + "T12:00:00").toLocaleDateString()} — available after ${new Date(currentRent.endDate + "T12:00:00").toLocaleDateString()}`
+      : `Unavailable until ${new Date(currentRent.endDate + "T12:00:00").toLocaleDateString()}`
     : "Currently rented";
 
   const handleRentHouse = async () => {
     const calculatedEndDate = rentType === "perMonth"
       ? new Date(new Date(startDate).getTime() + 29 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
       : endDate;
-    const totalAmount = rentType === "perMonth" ? property.pricePerMonth : calculateTotalRent();
+    const rawTotal = rentType === "perMonth" ? property.pricePerMonth : calculateTotalRent();
+    const totalAmount = offer ? applyDiscount(rawTotal) : rawTotal;
 
     if (paymentMethod === "cash") {
       try {
@@ -508,7 +510,10 @@ const PropertyDetailsContent = () => {
               </div>
               {isUnavailable && currentRent?.endDate && (
                 <div className="availability-msg">
-                  Available after {new Date(currentRent.endDate + "T12:00:00").toLocaleDateString()}
+                  {currentRent.startDate > todayStr()
+                    ? `Booked ${new Date(currentRent.startDate + "T12:00:00").toLocaleDateString()} → Available after ${new Date(currentRent.endDate + "T12:00:00").toLocaleDateString()}`
+                    : `Available after ${new Date(currentRent.endDate + "T12:00:00").toLocaleDateString()}`
+                  }
                 </div>
               )}
             </div>
@@ -624,7 +629,22 @@ const PropertyDetailsContent = () => {
               {((rentType === "perDay" && startDate && endDate) || (rentType === "perMonth" && startDate)) && (
                 <div className="total-price">
                   <span>Total</span>
-                  <span className="amount">${rentType === "perMonth" ? property.pricePerMonth : calculateTotalRent()}</span>
+                  <div className="total-amount-block">
+                    {offer ? (
+                      <>
+                        <span className="original-price" style={{ color: "#aaa", textDecoration: "line-through", marginRight: "6px" }}>
+                          ${rentType === "perMonth" ? property.pricePerMonth : calculateTotalRent()}
+                        </span>
+                        <span className="amount" style={{ color: "#1a6e3c" }}>
+                          ${applyDiscount(rentType === "perMonth" ? property.pricePerMonth : calculateTotalRent()).toFixed(0)}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="amount">
+                        ${rentType === "perMonth" ? property.pricePerMonth : calculateTotalRent()}
+                      </span>
+                    )}
+                  </div>
                 </div>
               )}
 

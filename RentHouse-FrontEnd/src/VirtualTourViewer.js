@@ -31,20 +31,36 @@ const VirtualTourViewer = ({ tourUrl, location }) => {
         autoLoad: true,
         autoRotate: -1.5,
 
-        
-        hfov: 75,           // was 100 — narrower = sharper, less distortion
-        minHfov: 40,        // tighter zoom-in limit
-        maxHfov: 100,       // allow zooming out if needed
+        // ✅ Quality fixes
+        hfov: 100,              // wider FOV = less zoom-in distortion
+        minHfov: 50,
+        maxHfov: 120,
 
-        // force Pannellum to use the full image resolution
-        // instead of downscaling for "performance"
+        // ✅ Force full resolution rendering
+        multiRes: false,        // disable multi-res downscaling
+        dynamic: false,
+
+        // ✅ Prevent Pannellum from downsampling the texture
+        // These force WebGL to use the full image size
+        haov: 360,
+        vaov: 180,
+        vOffset: 0,
+
         compass: false,
         showFullscreenCtrl: true,
         showZoomCtrl: true,
-        
+        mouseZoom: true,
+        keyboardZoom: true,
+
+        // ✅ WebGL quality
+        backgroundColor: [0, 0, 0],
+
         onLoad: () => {
           clearTimeout(loadTimeout);
-          if (!destroyed) setStatus("ready");
+          if (!destroyed) {
+            setStatus("ready");
+            setTimeout(fixCanvasResolution, 100); // after Pannellum paints
+          }
         },
         onError: (err) => {
           clearTimeout(loadTimeout);
@@ -53,8 +69,6 @@ const VirtualTourViewer = ({ tourUrl, location }) => {
         },
       });
 
-      // ← KEY FIX: Pannellum sometimes skips onLoad for blob URLs.
-      // After 12 seconds, if still loading, check if the canvas was painted and force-ready.
       loadTimeout = setTimeout(() => {
         if (!destroyed && status !== "ready" && status !== "error") {
           const canvas = viewerRef.current?.querySelector("canvas");
@@ -67,27 +81,49 @@ const VirtualTourViewer = ({ tourUrl, location }) => {
       }, 12000);
     };
 
+    // After initPannellum runs, fix canvas resolution
+    const fixCanvasResolution = () => {
+      if (!viewerRef.current) return;
+      const canvas = viewerRef.current.querySelector("canvas");
+      if (!canvas) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+
+      // Only upscale if canvas is lower than display resolution
+      if (canvas.width < rect.width * dpr) {
+        canvas.width = Math.floor(rect.width * dpr);
+        canvas.height = Math.floor(rect.height * dpr);
+        canvas.style.width = rect.width + "px";
+        canvas.style.height = rect.height + "px";
+      }
+    };
+
     const loadImage = async () => {
       setStatus("loading");
       try {
         const res = await fetch(tourUrl, { credentials: "include" });
-
-        if (!res.ok) {
-          console.error("Fetch failed:", res.status);
-          setStatus("error");
-          return;
-        }
+        if (!res.ok) { setStatus("error"); return; }
 
         const contentType = res.headers.get("content-type") || "";
-        if (!contentType.startsWith("image/")) {
-          console.error("Bad content-type:", contentType);
-          setStatus("error");
-          return;
-        }
+        if (!contentType.startsWith("image/")) { setStatus("error"); return; }
 
+        // ✅ Read entire blob before initializing Pannellum
         const blob = await res.blob();
+
+        // ✅ Verify it's fully downloaded
+        console.log(`Panorama loaded: ${(blob.size / 1024 / 1024).toFixed(1)} MB`);
+
         blobUrl = URL.createObjectURL(blob);
         if (destroyed) { URL.revokeObjectURL(blobUrl); return; }
+
+        // ✅ Pre-decode the image so WebGL gets the full texture
+        const img = new Image();
+        img.src = blobUrl;
+        await new Promise((resolve) => {
+          img.onload = resolve;
+          img.onerror = resolve; // proceed anyway
+        });
 
         if (window.pannellum) {
           initPannellum(blobUrl);
