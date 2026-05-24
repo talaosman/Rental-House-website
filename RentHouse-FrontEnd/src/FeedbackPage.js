@@ -26,17 +26,18 @@ function FeedbackForm() {
     setStatus('');
 
     try {
-      const payload = {
-        ...formData,
-        username: userInfo.username,
-        email: userInfo.email,
-      };
+      const userId = localStorage.getItem('userId');
+      const payload = { message: formData.message };
 
-      const response = await axios.post('http://localhost:5000/api/feedback', payload);
+      // Send userId as query param so backend links to User entity
+      const url = userId
+        ? `http://localhost:5000/api/feedback?userId=${userId}`
+        : 'http://localhost:5000/api/feedback';
+
+      const response = await axios.post(url, payload);
       if (response.status === 201) {
         setStatus('success');
         setFormData({ message: '' });
-        // Clear success message after 5 seconds
         setTimeout(() => setStatus(''), 5000);
       } else {
         setStatus('error');
@@ -117,9 +118,9 @@ function FeedbackForm() {
               </div>
 
               {/* Submit Button */}
-              <button 
-                type="submit" 
-                className="feedback-submit-btn" 
+              <button
+                type="submit"
+                className="feedback-submit-btn"
                 disabled={loading || !formData.message.trim()}
               >
                 {loading ? (
