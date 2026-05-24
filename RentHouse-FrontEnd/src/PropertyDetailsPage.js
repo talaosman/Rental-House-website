@@ -715,12 +715,14 @@ const PropertyDetailsContent = () => {
                   {showThankYou && <div className="thank-you">Thanks for your review!</div>}
                 </div>
               )}
+
+              <div className="visit-action">
+                <button className="visit-btn" onClick={handleVisitRequest}>Schedule Visit</button>
+              </div>
             </div>
           )}
 
-          <div className="visit-action">
-            <button className="visit-btn" onClick={handleVisitRequest}>Schedule Visit</button>
-          </div>
+
 
         </div>
       </div>

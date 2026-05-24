@@ -485,6 +485,7 @@ body {
 
 /* ── Booking ──────────────────────────────────────── */
 .booking-section {
+  margin-top: 20px;
   background: linear-gradient(160deg, var(--surface) 0%, #eef5ff 100%);
   border-radius: var(--r-lg);
   padding: 40px 44px;
