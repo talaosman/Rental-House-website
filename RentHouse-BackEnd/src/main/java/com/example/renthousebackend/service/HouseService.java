@@ -27,14 +27,13 @@ public class HouseService {
     private final RentRepository rentRepository;
     private final FavoriteRepository favoriteRepository;
     private final VisitRequestRepository visitRequestRepository;
-     @Autowired
+    @Autowired
     private NotificationService notificationService;
 
-
-        public HouseService(
-            HouseRepository houseRepository, 
+    public HouseService(
+            HouseRepository houseRepository,
             FavoriteRepository favoriteRepository,
-            RentRepository rentRepository, 
+            RentRepository rentRepository,
             OwnerRepository ownerRepository,
             VisitRequestRepository visitRequestRepository) {
         this.houseRepository = houseRepository;
@@ -77,16 +76,17 @@ public class HouseService {
     public House createHouse(House house) {
         return houseRepository.save(house);
     }
-         @Transactional
+
+    @Transactional
     public void deleteHouse(Long id, boolean force) {
         if (force) {
             // Delete all related records in the correct order
             // 1. Delete visit requests
             visitRequestRepository.deleteByHouseId(id);
-            
+
             // 2. Delete rentals
             rentRepository.deleteByHouseId(id);
-            
+
             // 3. Delete favorites
             favoriteRepository.deleteByPropertyId(id);
         }
@@ -97,7 +97,7 @@ public class HouseService {
 
     public House updateHouse(House house) {
         House existingHouse = houseRepository.findById(house.getId())
-            .orElseThrow(() -> new RuntimeException("House not found"));
+                .orElseThrow(() -> new RuntimeException("House not found"));
 
         String oldStatus = existingHouse.getStatus();
         String newStatus = house.getStatus();
@@ -106,23 +106,23 @@ public class HouseService {
         House saved = houseRepository.save(house);
 
         // 🔔 Trigger notification if status changed TO "available"
-        boolean justBecameAvailable =
-            !"available".equalsIgnoreCase(oldStatus)
-            && "available".equalsIgnoreCase(newStatus);
+        boolean justBecameAvailable
+                = !"available".equalsIgnoreCase(oldStatus)
+                && "available".equalsIgnoreCase(newStatus);
 
         if (justBecameAvailable) {
-            List<String> fcmTokens =
-                favoriteRepository.findFcmTokensByHouseId(house.getId());
+            List<String> fcmTokens
+                    = favoriteRepository.findFcmTokensByHouseId(house.getId());
 
             if (!fcmTokens.isEmpty()) {
                 notificationService.sendBatchNotification(
-                    fcmTokens,
-                    house.getTitle(),
-                    house.getLocation(),
-                    house.getId()
+                        fcmTokens,
+                        house.getTitle(),
+                        house.getLocation(),
+                        house.getId()
                 );
                 System.out.println("🔔 Notified " + fcmTokens.size()
-                                   + " users about house availability: " + house.getTitle());
+                        + " users about house availability: " + house.getTitle());
             }
         }
 
@@ -133,11 +133,52 @@ public class HouseService {
         Owner owner = house.getOwner();
 
         if (owner != null && owner.getId() == null) {
-            ownerRepository.save(owner); // save new owner
+
+            // Look up by email only (reliable in DB)
+            // then verify name + phone in Java to avoid JPQL REPLACE issues
+            Owner existingOwner = ownerRepository
+                    .findFirstByEmailIgnoreCase(owner.getEmail().trim())
+                    .orElse(null);
+
+            if (existingOwner != null
+                    && normalizePhone(existingOwner.getPhone())
+                            .equals(normalizePhone(owner.getPhone()))
+                    && existingOwner.getName().trim()
+                            .equalsIgnoreCase(owner.getName().trim())) {
+
+                // Exact match — reuse
+                house.setOwner(existingOwner);
+                System.out.println("♻️ Reusing existing owner: "
+                        + existingOwner.getName() + " (id=" + existingOwner.getId() + ")");
+
+            } else if (existingOwner != null) {
+                // Same email but different name or phone → update existing
+                existingOwner.setName(owner.getName().trim());
+                existingOwner.setPhone(owner.getPhone().trim());
+                ownerRepository.save(existingOwner);
+                house.setOwner(existingOwner);
+                System.out.println("✏️ Updated existing owner: " + existingOwner.getName());
+
+            } else {
+                // Truly new owner
+                owner.setName(owner.getName().trim());
+                owner.setEmail(owner.getEmail().trim());
+                owner.setPhone(owner.getPhone().trim());
+                ownerRepository.save(owner);
+                house.setOwner(owner);
+                System.out.println("✅ Created new owner: " + owner.getName());
+            }
         }
 
-        house.setOwner(owner);
         return houseRepository.save(house);
+    }
+
+// Strip all non-digit characters for phone comparison
+    private String normalizePhone(String phone) {
+        if (phone == null) {
+            return "";
+        }
+        return phone.replaceAll("[^0-9]", "");
     }
 
     public List<House> getTop3MostRentedHouses() {
@@ -155,6 +196,9 @@ public class HouseService {
 
         return houseRepository.findAllById(filteredIds);
     }
-     public long countAllHouses() { return houseRepository.count(); }
+
+    public long countAllHouses() {
+        return houseRepository.count();
+    }
 
 }
