@@ -158,56 +158,119 @@ public class VisitRequestController {
         return ResponseEntity.ok("Visit request " + (accepted ? "accepted" : "declined"));
     }
 
-    @GetMapping("/respond-html/{requestId}")
-    public ResponseEntity<String> respondToVisitHtml(
-            @PathVariable Long requestId,
-            @RequestParam boolean accepted) {
+   @GetMapping("/respond-html/{requestId}")
+public ResponseEntity<String> respondToVisitHtml(
+        @PathVariable Long requestId,
+        @RequestParam boolean accepted) {
 
-        VisitRequest visitRequest = visitRequestRepository.findById(requestId).orElse(null);
-        if (visitRequest == null) {
-            return ResponseEntity.badRequest().body("<h2>Visit request not found.</h2>");
-        }
-
-        if (visitRequest.getAccepted() != null) {
-            return ResponseEntity.ok("<h2>This request has already been processed.</h2>");
-        }
-
-        visitRequest.setAccepted(accepted);
-        visitRequestRepository.save(visitRequest);
-
-      
-        String visitorEmail = visitRequest.getVisitorEmail();
-        String visitorName = visitRequest.getVisitorName();
-        String subject;
-        String body;
-
-        if (accepted) {
-            subject = "Your Visit Request Has Been Accepted";
-            body = String.format(
-                    "Dear %s,\n\nYour visit request for the property at %s on %s at %s has been accepted.\nThe owner will contact you soon.\n\nThank you.",
-                    visitorName,
-                    visitRequest.getHouse().getLocation(),
-                    visitRequest.getVisitDate(),
-                    visitRequest.getVisitTime());
-        } else {
-            subject = "Your Visit Request Has Been Declined";
-            body = String.format(
-                    "Dear %s,\n\nWe are sorry to inform you that your visit request for the property at %s on %s at %s has been declined.\n\nThank you for your understanding.",
-                    visitorName,
-                    visitRequest.getHouse().getLocation(),
-                    visitRequest.getVisitDate(),
-                    visitRequest.getVisitTime());
-        }
-
-        emailService.sendSimpleEmail(visitorEmail, subject, body);
-
-        String confirmationHtml = "<html><head><title>Response Submitted</title></head><body style='font-family:sans-serif;text-align:center;margin-top:100px;'>"
-                + "<h2>Visit request has been " + (accepted ? "accepted" : "rejected") + ".</h2>"
-                + "<p>You can now close this tab.</p>"
-                + "<script>setTimeout(() => window.close(), 0.0001);</script>"
-                + "</body></html>";
-
-        return ResponseEntity.ok().header("Content-Type", "text/html").body(confirmationHtml);
+    VisitRequest visitRequest = visitRequestRepository.findById(requestId).orElse(null);
+    if (visitRequest == null) {
+        return ResponseEntity.badRequest()
+            .header("Content-Type", "text/html")
+            .body("""
+                <html><body style='font-family:sans-serif;text-align:center;margin-top:100px;'>
+                <h2 style='color:red;'>❌ Visit request not found.</h2>
+                </body></html>
+            """);
     }
 
+    if (visitRequest.getAccepted() != null) {
+        return ResponseEntity.ok()
+            .header("Content-Type", "text/html")
+            .body("""
+                <html><body style='font-family:sans-serif;text-align:center;margin-top:100px;'>
+                <h2 style='color:orange;'>⚠️ This request has already been processed.</h2>
+                <p>You can close this tab.</p>
+                </body></html>
+            """);
+    }
+
+    visitRequest.setAccepted(accepted);
+    visitRequestRepository.save(visitRequest);
+
+    // Send email to visitor
+    String visitorEmail = visitRequest.getVisitorEmail();
+    String visitorName = visitRequest.getVisitorName();
+    String location = visitRequest.getHouse().getLocation();
+    String date = visitRequest.getVisitDate().toString();
+    String time = visitRequest.getVisitTime().toString();
+
+    String subject;
+    String body;
+
+    if (accepted) {
+        subject = "Your Visit Request Has Been Accepted ✅";
+        body = String.format(
+            "Dear %s,\n\nYour visit request for the property at %s on %s at %s has been accepted.\nThe owner will contact you soon.\n\nThank you.",
+            visitorName, location, date, time);
+    } else {
+        subject = "Your Visit Request Has Been Declined ❌";
+        body = String.format(
+            "Dear %s,\n\nWe are sorry to inform you that your visit request for the property at %s on %s at %s has been declined.\n\nThank you for your understanding.",
+            visitorName, location, date, time);
+    }
+
+    emailService.sendSimpleEmail(visitorEmail, subject, body);
+
+    // ✅ Return a styled confirmation page — NO redirect, auto-closes after 3s
+    String color = accepted ? "#22c55e" : "#ef4444";
+    String icon = accepted ? "✅" : "❌";
+    String status = accepted ? "Accepted" : "Rejected";
+
+    String confirmationHtml = String.format("""
+        <html>
+        <head>
+            <title>Response Submitted</title>
+            <style>
+                body {
+                    font-family: 'Segoe UI', sans-serif;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    margin: 0;
+                    background: #f8fafc;
+                }
+                .card {
+                    background: white;
+                    border-radius: 16px;
+                    padding: 48px 64px;
+                    text-align: center;
+                    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+                    max-width: 420px;
+                }
+                .icon { font-size: 64px; margin-bottom: 16px; }
+                h2 { color: %s; font-size: 28px; margin: 0 0 12px; }
+                p { color: #64748b; font-size: 15px; margin: 0 0 8px; }
+                .countdown { color: #94a3b8; font-size: 13px; margin-top: 20px; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <div class="icon">%s</div>
+                <h2>Visit %s</h2>
+                <p>The visitor has been notified by email.</p>
+                <p>You can now close this tab.</p>
+                <p class="countdown" id="countdown">This tab will close in 3 seconds...</p>
+            </div>
+            <script>
+                let seconds = 3;
+                const el = document.getElementById('countdown');
+                const interval = setInterval(() => {
+                    seconds--;
+                    el.textContent = 'This tab will close in ' + seconds + ' second' + (seconds !== 1 ? 's' : '') + '...';
+                    if (seconds <= 0) {
+                        clearInterval(interval);
+                        window.close();
+                    }
+                }, 1000);
+            </script>
+        </body>
+        </html>
+        """, color, icon, status);
+
+    return ResponseEntity.ok()
+    .header("Content-Type", "text/html; charset=UTF-8")
+    .body(confirmationHtml);
+}
 }
