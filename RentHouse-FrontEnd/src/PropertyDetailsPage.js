@@ -7,6 +7,7 @@ import { Elements, CardElement, useStripe, useElements } from "@stripe/react-str
 import { FaCalendarDay, FaCalendarAlt, FaHeart, FaRegHeart, FaMapMarkerAlt, FaDirections, FaVrCardboard, FaImage } from "react-icons/fa";
 import VirtualTourViewer from "./VirtualTourViewer";
 import API from "./api";
+import AvailabilityCalendar from "./AvailabilityCalendar";
 const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY ||
   "pk_test_51RoNCB2Ylq8U0YVR6yVwbqvqm4Dy3QO8SPHEHSgoCPvHhbxYsufl6cDwR1buRjDZdobHLSNHf4HCee7f4aXNTvwp00qdh8ZSXK";
 
@@ -134,6 +135,19 @@ const PropertyDetailsContent = () => {
   // NEW: toggle state for hero view
   const [heroView, setHeroView] = useState("photo"); // "photo" | "tour"
   const [offer, setOffer] = useState(null);
+  const [currency, setCurrency] = useState("USD");
+
+  const currencyRates = {
+    USD: 1,
+    EUR: 0.92,
+    GBP: 0.78,
+  };
+
+  const currencySymbols = {
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+  };
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -153,6 +167,15 @@ const PropertyDetailsContent = () => {
   const applyDiscount = (price) => {
     if (!offer) return price;
     return price * (1 - offer / 100);
+  };
+  const formatPrice = (price) => {
+    const converted = price * currencyRates[currency];
+
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(converted);
   };
 
   useEffect(() => {
@@ -524,19 +547,30 @@ const PropertyDetailsContent = () => {
                   <span>Edit Listing</span>
                 </button>
               )}
+              <div className="currency-toggle">
+                {["USD", "EUR", "GBP"].map((curr) => (
+                  <button
+                    key={curr}
+                    className={`currency-btn ${currency === curr ? "active" : ""}`}
+                    onClick={() => setCurrency(curr)}
+                  >
+                    {curr}
+                  </button>
+                ))}
+              </div>
               <div className="property-pricing">
                 <div className="price-day">
                   {offer ? (
                     <>
                       <span className="original-price">
-                        ${property.pricePerDay}
+                        {formatPrice(property.pricePerDay)}
                       </span>
                       <span className="discounted-price">
-                        ${applyDiscount(property.pricePerDay).toFixed(0)}
+                        {formatPrice(applyDiscount(property.pricePerDay))}
                       </span>
                     </>
                   ) : (
-                    <>${property.pricePerDay}</>
+                    <>{formatPrice(property.pricePerDay)}</>
                   )}
                   <span className="price-unit">/day</span>
                 </div>
@@ -545,14 +579,14 @@ const PropertyDetailsContent = () => {
                   {offer ? (
                     <>
                       <span className="original-price">
-                        ${property.pricePerMonth}
+                        {formatPrice(property.pricePerMonth)}
                       </span>
                       <span className="discounted-price">
-                        ${applyDiscount(property.pricePerMonth).toFixed(0)}
+                        {formatPrice(applyDiscount(property.pricePerMonth))}
                       </span>
                     </>
                   ) : (
-                    <>${property.pricePerMonth}</>
+                    <>{formatPrice(property.pricePerMonth)}</>
                   )}
                   <span className="price-unit">/month</span>
                 </div>
@@ -601,6 +635,8 @@ const PropertyDetailsContent = () => {
             <div className="section booking-section">
               <h2>Book Your Stay</h2>
 
+               <AvailabilityCalendar houseId={id} />
+
               <div className="rent-type">
                 {rentOptions.map((option) => (
                   <button
@@ -633,15 +669,29 @@ const PropertyDetailsContent = () => {
                     {offer ? (
                       <>
                         <span className="original-price" style={{ color: "#aaa", textDecoration: "line-through", marginRight: "6px" }}>
-                          ${rentType === "perMonth" ? property.pricePerMonth : calculateTotalRent()}
+                          {formatPrice(
+                            rentType === "perMonth"
+                              ? property.pricePerMonth
+                              : calculateTotalRent()
+                          )}
                         </span>
                         <span className="amount" style={{ color: "#1a6e3c" }}>
-                          ${applyDiscount(rentType === "perMonth" ? property.pricePerMonth : calculateTotalRent()).toFixed(0)}
+                          {formatPrice(
+                            applyDiscount(
+                              rentType === "perMonth"
+                                ? property.pricePerMonth
+                                : calculateTotalRent()
+                            )
+                          )}
                         </span>
                       </>
                     ) : (
                       <span className="amount">
-                        ${rentType === "perMonth" ? property.pricePerMonth : calculateTotalRent()}
+                        {formatPrice(
+                          rentType === "perMonth"
+                            ? property.pricePerMonth
+                            : calculateTotalRent()
+                        )}
                       </span>
                     )}
                   </div>
