@@ -2,16 +2,18 @@ import React, { useState, useEffect, useRef } from "react";
 import "./PostListing.css";
 import { useNavigate } from "react-router-dom";
 import { useAppState } from "./listingContext.js";
+import CountryCodePicker from "./CountryCodePicker";
 
 const PostListing = () => {
   const { allListings, setAllListings } = useAppState();
   const navigate = useNavigate();
   const [imageFile, setImageFile] = useState(null);
-  const [geocodeStatus, setGeocodeStatus] = useState(""); // "loading" | "found" | "not_found" | ""
+  const [geocodeStatus, setGeocodeStatus] = useState("");
   const geocodeTimer = useRef(null);
   const [tourFile, setTourFile] = useState(null);
   const [tourUploading, setTourUploading] = useState(false);
-  const [tourStatus, setTourStatus] = useState(""); // "success" | "error" | ""
+  const [tourStatus, setTourStatus] = useState("");
+
   const [form, setForm] = useState({
     title: "",
     pricePerDay: "",
@@ -22,7 +24,8 @@ const PostListing = () => {
     propertyType: "",
     ownerName: "",
     ownerEmail: "",
-    ownerPhone: "",
+    ownerPhone: "",        // just the local number, no code
+    ownerCountryCode: "+961", // separate field for the dial code
     description: "",
     latitude: "",
     longitude: "",
@@ -109,21 +112,26 @@ const PostListing = () => {
     try {
       const base64Image = await toBase64(imageFile);
 
+      // Combine country code + local number before sending to backend
+      const fullPhone = form.ownerPhone
+        ? `${form.ownerCountryCode} ${form.ownerPhone}`.trim()
+        : "";
+
       const payload = {
-        title: form.title,
-        pricePerDay: form.pricePerDay,
-        pricePerMonth: form.pricePerMonth,
-        location: form.location,
-        description: form.description,
-        ownerName: form.ownerName,
-        ownerEmail: form.ownerEmail,
-        ownerPhone: form.ownerPhone,
-        nbOfBedrooms: form.nbOfBedrooms,
-        propertyType: form.propertyType,
-        imageFilename: imageFile.name,
-        imageData: base64Image,
-        latitude: parseFloat(form.latitude),
-        longitude: parseFloat(form.longitude),
+        title:          form.title,
+        pricePerDay:    form.pricePerDay,
+        pricePerMonth:  form.pricePerMonth,
+        location:       form.location,
+        description:    form.description,
+        ownerName:      form.ownerName,
+        ownerEmail:     form.ownerEmail,
+        ownerPhone:     fullPhone,
+        nbOfBedrooms:   form.nbOfBedrooms,
+        propertyType:   form.propertyType,
+        imageFilename:  imageFile.name,
+        imageData:      base64Image,
+        latitude:       parseFloat(form.latitude),
+        longitude:      parseFloat(form.longitude),
       };
 
       const listingRes = await fetch("http://localhost:5000/api/houses/uploadBase64", {
@@ -138,8 +146,6 @@ const PostListing = () => {
       setAllListings((prev) => [...prev, data]);
 
       // ── Upload virtual tour if one was selected ──────────────
-      // Use a LOCAL variable — React state is async, so reading
-      // `tourStatus` right after setTourStatus is always stale.
       let tourUploadedOk = false;
       const hadTourFile = !!tourFile;
 
@@ -170,32 +176,22 @@ const PostListing = () => {
           console.error("Virtual tour upload error:", tourErr);
           tourUploadedOk = false;
         } finally {
-          // ← KEY FIX: clear uploading state BEFORE the alert fires so
-          // the "Uploading…" indicator is never visible behind the modal.
           setTourUploading(false);
         }
       }
 
       // ── Reset form ───────────────────────────────────────────
       setForm({
-        title: "",
-        pricePerDay: "",
-        pricePerMonth: "",
-        location: "",
-        nbOfBedrooms: "",
-        propertyType: "",
-        ownerName: "",
-        ownerEmail: "",
-        ownerPhone: "",
-        description: "",
-        latitude: "",
-        longitude: "",
+        title: "", pricePerDay: "", pricePerMonth: "",
+        location: "", nbOfBedrooms: "", propertyType: "",
+        ownerName: "", ownerEmail: "", ownerPhone: "",
+        ownerCountryCode: "+961",
+        description: "", latitude: "", longitude: "",
       });
       setImageFile(null);
       setTourFile(null);
       setGeocodeStatus("");
 
-      // Use local variable to decide message — state isn't synchronously readable
       if (hadTourFile && !tourUploadedOk) {
         alert("Virtual tour failed to upload — you can retry from the Edit Property page.");
       }
@@ -220,11 +216,8 @@ const PostListing = () => {
           <div className="form-group">
             <label htmlFor="title">Property Title</label>
             <input
-              id="title"
-              type="text"
-              name="title"
-              value={form.title}
-              onChange={handleChange}
+              id="title" type="text" name="title"
+              value={form.title} onChange={handleChange}
               placeholder="e.g. Bright Corner Apartment with City Views"
               required
             />
@@ -234,27 +227,18 @@ const PostListing = () => {
             <div className="form-group">
               <label htmlFor="propertyType">Property Type</label>
               <input
-                id="propertyType"
-                type="text"
-                name="propertyType"
-                value={form.propertyType}
-                onChange={handleChange}
+                id="propertyType" type="text" name="propertyType"
+                value={form.propertyType} onChange={handleChange}
                 placeholder="Apartment, House, Studio…"
                 required
               />
             </div>
-
             <div className="form-group">
               <label htmlFor="nbOfBedrooms">Bedrooms</label>
               <input
-                id="nbOfBedrooms"
-                type="number"
-                name="nbOfBedrooms"
-                value={form.nbOfBedrooms}
-                onChange={handleChange}
-                placeholder="e.g. 2"
-                min="0"
-                required
+                id="nbOfBedrooms" type="number" name="nbOfBedrooms"
+                value={form.nbOfBedrooms} onChange={handleChange}
+                placeholder="e.g. 2" min="0" required
               />
             </div>
           </div>
@@ -262,10 +246,8 @@ const PostListing = () => {
           <div className="form-group">
             <label htmlFor="description">Description</label>
             <textarea
-              id="description"
-              name="description"
-              value={form.description}
-              onChange={handleChange}
+              id="description" name="description"
+              value={form.description} onChange={handleChange}
               placeholder="Describe the property — amenities, neighbourhood, standout features…"
               required
             />
@@ -282,11 +264,8 @@ const PostListing = () => {
               <span className="label-hint">Enter a full address for the best map accuracy</span>
             </label>
             <input
-              id="location"
-              type="text"
-              name="location"
-              value={form.location}
-              onChange={handleLocationChange}
+              id="location" type="text" name="location"
+              value={form.location} onChange={handleLocationChange}
               placeholder="e.g. 450 Pine St, Seattle, WA 98101"
               required
             />
@@ -306,24 +285,16 @@ const PostListing = () => {
             <div className="form-group">
               <label htmlFor="latitude">Latitude</label>
               <input
-                id="latitude"
-                type="number"
-                step="0.000001"
-                name="latitude"
-                value={form.latitude}
-                onChange={handleChange}
+                id="latitude" type="number" step="0.000001" name="latitude"
+                value={form.latitude} onChange={handleChange}
                 placeholder="e.g. 47.608013"
               />
             </div>
             <div className="form-group">
               <label htmlFor="longitude">Longitude</label>
               <input
-                id="longitude"
-                type="number"
-                step="0.000001"
-                name="longitude"
-                value={form.longitude}
-                onChange={handleChange}
+                id="longitude" type="number" step="0.000001" name="longitude"
+                value={form.longitude} onChange={handleChange}
                 placeholder="e.g. -122.335167"
               />
             </div>
@@ -346,26 +317,17 @@ const PostListing = () => {
             <div className="form-group">
               <label htmlFor="pricePerDay">Price per Day ($)</label>
               <input
-                id="pricePerDay"
-                type="number"
-                name="pricePerDay"
-                value={form.pricePerDay}
-                onChange={handleChange}
-                placeholder="e.g. 120"
-                required
+                id="pricePerDay" type="number" name="pricePerDay"
+                value={form.pricePerDay} onChange={handleChange}
+                placeholder="e.g. 120" required
               />
             </div>
-
             <div className="form-group">
               <label htmlFor="pricePerMonth">Price per Month ($)</label>
               <input
-                id="pricePerMonth"
-                type="number"
-                name="pricePerMonth"
-                value={form.pricePerMonth}
-                onChange={handleChange}
-                placeholder="e.g. 2800"
-                required
+                id="pricePerMonth" type="number" name="pricePerMonth"
+                value={form.pricePerMonth} onChange={handleChange}
+                placeholder="e.g. 2800" required
               />
             </div>
           </div>
@@ -381,14 +343,10 @@ const PostListing = () => {
               <label className="file-upload-label">
                 <span className="upload-icon">🖼</span>
                 <span>
-                  {imageFile
-                    ? imageFile.name
-                    : "Click to upload — JPG, PNG or WEBP"}
+                  {imageFile ? imageFile.name : "Click to upload — JPG, PNG or WEBP"}
                 </span>
                 <input
-                  type="file"
-                  name="image"
-                  accept="image/*"
+                  type="file" name="image" accept="image/*"
                   onChange={(e) => setImageFile(e.target.files[0])}
                   required
                 />
@@ -401,8 +359,8 @@ const PostListing = () => {
         <div className="form-section">
           <p className="section-title">360° Virtual Tour</p>
           <p className="tour-hint">
-            Optional — upload an equirectangular panorama image to let renters explore the space in 360°.
-            The tour will be attached to this listing automatically after posting.
+            Optional — upload an equirectangular panorama image to let renters explore
+            the space in 360°. The tour will be attached to this listing automatically after posting.
           </p>
 
           <div className="form-group" style={{ marginTop: "12px" }}>
@@ -417,12 +375,8 @@ const PostListing = () => {
                   {tourFile ? tourFile.name : "Click to select your 360° panorama file"}
                 </span>
                 <input
-                  type="file"
-                  accept="image/jpeg,image/png"
-                  onChange={(e) => {
-                    setTourFile(e.target.files[0] || null);
-                    setTourStatus("");
-                  }}
+                  type="file" accept="image/jpeg,image/png"
+                  onChange={(e) => { setTourFile(e.target.files[0] || null); setTourStatus(""); }}
                 />
               </label>
             </div>
@@ -437,10 +391,6 @@ const PostListing = () => {
             </div>
           )}
 
-          {/*
-            Uploading indicator — uses its own subtle style, NOT geocode-status.
-            Cleared BEFORE the alert so it's never visible behind the modal.
-          */}
           {tourUploading && (
             <div className="tour-uploading-bar">
               <div className="tour-uploading-spinner" />
@@ -456,13 +406,9 @@ const PostListing = () => {
           <div className="form-group">
             <label htmlFor="ownerName">Full Name</label>
             <input
-              id="ownerName"
-              type="text"
-              name="ownerName"
-              value={form.ownerName}
-              onChange={handleChange}
-              placeholder="Your full name"
-              required
+              id="ownerName" type="text" name="ownerName"
+              value={form.ownerName} onChange={handleChange}
+              placeholder="Your full name" required
             />
           </div>
 
@@ -470,27 +416,32 @@ const PostListing = () => {
             <div className="form-group">
               <label htmlFor="ownerEmail">Email Address</label>
               <input
-                id="ownerEmail"
-                type="email"
-                name="ownerEmail"
-                value={form.ownerEmail}
-                onChange={handleChange}
-                placeholder="you@example.com"
-                required
+                id="ownerEmail" type="email" name="ownerEmail"
+                value={form.ownerEmail} onChange={handleChange}
+                placeholder="you@example.com" required
               />
             </div>
 
+            {/* ── Phone with country picker ── */}
             <div className="form-group">
-              <label htmlFor="ownerPhone">Phone Number</label>
-              <input
-                id="ownerPhone"
-                type="text"
-                name="ownerPhone"
-                value={form.ownerPhone}
-                onChange={handleChange}
-                placeholder="+1 555 000 0000"
-                required
-              />
+              <label>Phone Number</label>
+              <div className="phone-input-row">
+                <CountryCodePicker
+                  value={form.ownerCountryCode}
+                  onChange={(code) =>
+                    setForm((prev) => ({ ...prev, ownerCountryCode: code }))
+                  }
+                />
+                <input
+                  type="tel"
+                  name="ownerPhone"
+                  className="phone-local-input"
+                  value={form.ownerPhone}
+                  onChange={handleChange}
+                  placeholder="e.g. 71 234 567"
+                  required
+                />
+              </div>
             </div>
           </div>
         </div>

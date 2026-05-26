@@ -415,6 +415,51 @@ body {
 .submit-button:hover:not(:disabled) .btn-arrow {
   transform: translateX(4px);
 }
+/* ── Append these rules to the bottom of PostListing.css ── */
+
+/* Phone number row: picker + local number side by side */
+.phone-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The local number input inside the phone row */
+.phone-local-input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-family: inherit;
+  color: #495057;
+  background: #f8f9fa;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
+}
+
+.phone-local-input:focus {
+  border-color: #3a5a7a;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(58,90,122,0.1);
+}
+
+/* Override CountryCodePicker trigger border to match PostListing inputs */
+.post-listing-page .ccp-trigger {
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  background: #f8f9fa;
+  padding: 11px 12px;
+  min-width: 96px;
+}
+
+.post-listing-page .ccp-trigger:hover:not(:disabled),
+.post-listing-page .ccp-open .ccp-trigger {
+  border-color: #3a5a7a;
+  box-shadow: 0 0 0 4px rgba(58,90,122,0.1);
+  background: #fff;
+}
 
 /* ═══════════════════════════════════════════════════
    RESPONSIVE

@@ -1,0 +1,244 @@
+/* ═══════════════════════════════════════════════════
+   CountryCodePicker.css
+   Matches the navy/gold RentalHub design language
+═══════════════════════════════════════════════════ */
+
+:root {
+  --ccp-navy:    #0d2d52;
+  --ccp-mid:     #1a4a7a;
+  --ccp-border:  #dde5ef;
+  --ccp-surface: #f7f9fc;
+  --ccp-muted:   #6b84a0;
+  --ccp-white:   #ffffff;
+  --ccp-accent:  #c8a96e;
+  --ccp-radius:  10px;
+  --ccp-shadow:  0 8px 32px rgba(10,30,60,0.14), 0 2px 8px rgba(10,30,60,0.08);
+}
+
+/* ── Wrapper (position anchor) ── */
+.ccp-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+/* ── Trigger button ── */
+.ccp-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px 9px 10px;
+  background: var(--ccp-white);
+  border: 1.5px solid var(--ccp-border);
+  border-radius: var(--ccp-radius);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ccp-navy);
+  cursor: pointer;
+  transition: border-color .18s, box-shadow .18s;
+  white-space: nowrap;
+  min-width: 90px;
+  user-select: none;
+}
+
+.ccp-trigger:hover:not(:disabled) {
+  border-color: var(--ccp-navy);
+  box-shadow: 0 0 0 3px rgba(13,45,82,.07);
+}
+
+.ccp-open .ccp-trigger {
+  border-color: var(--ccp-navy);
+  box-shadow: 0 0 0 3px rgba(13,45,82,.1);
+}
+
+.ccp-trigger:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+/* Flag emoji */
+.ccp-flag {
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+/* Dial code */
+.ccp-code {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ccp-navy);
+  letter-spacing: .01em;
+}
+
+/* Chevron */
+.ccp-chevron {
+  color: var(--ccp-muted);
+  transition: transform .2s ease;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+
+.ccp-chevron--open {
+  transform: rotate(180deg);
+}
+
+/* ── Dropdown panel ── */
+.ccp-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 9999;
+  background: var(--ccp-white);
+  border: 1.5px solid var(--ccp-border);
+  border-radius: 14px;
+  box-shadow: var(--ccp-shadow);
+  width: 260px;
+  overflow: hidden;
+  animation: ccpSlide .18s cubic-bezier(.4,0,.2,1);
+}
+
+@keyframes ccpSlide {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Search bar ── */
+.ccp-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--ccp-border);
+  background: var(--ccp-surface);
+}
+
+.ccp-search-icon {
+  color: var(--ccp-muted);
+  flex-shrink: 0;
+}
+
+.ccp-search {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ccp-navy);
+}
+
+.ccp-search::placeholder {
+  color: var(--ccp-muted);
+}
+
+/* ── Options list ── */
+.ccp-list {
+  list-style: none;
+  margin: 0; padding: 6px 0;
+  max-height: 240px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar */
+.ccp-list::-webkit-scrollbar        { width: 5px; }
+.ccp-list::-webkit-scrollbar-track  { background: transparent; }
+.ccp-list::-webkit-scrollbar-thumb  { background: var(--ccp-border); border-radius: 10px; }
+.ccp-list::-webkit-scrollbar-thumb:hover { background: #b8c8dc; }
+
+/* Individual option */
+.ccp-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition: background .14s;
+}
+
+.ccp-option:hover {
+  background: var(--ccp-surface);
+}
+
+.ccp-option--selected {
+  background: #edf3fa;
+}
+
+.ccp-option--selected .ccp-option-name {
+  color: var(--ccp-navy);
+  font-weight: 600;
+}
+
+/* Flag in option */
+.ccp-option-flag {
+  font-size: 22px;
+  line-height: 1;
+  width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Country name */
+.ccp-option-name {
+  flex: 1;
+  font-size: 13.5px;
+  color: #2c3e55;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dial code */
+.ccp-option-code {
+  font-size: 12px;
+  color: var(--ccp-muted);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* No results */
+.ccp-no-results {
+  padding: 16px 14px;
+  text-align: center;
+  color: var(--ccp-muted);
+  font-size: 13px;
+}
+
+/* ── Integration into UserProfile phone row ── */
+/* Replace .country-code-select in UserProfile.css with this */
+.phone-field-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.phone-number-input {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1c2f45;
+  background: #f7f9fc;
+  border: 1.5px solid #0d2d52;
+  border-radius: 10px;
+  padding: 9px 12px;
+  outline: none;
+  transition: box-shadow .18s, border-color .18s;
+}
+
+.phone-number-input:focus {
+  border-color: #0d2d52;
+  box-shadow: 0 0 0 3px rgba(13,45,82,.08);
+}
+
+/* Responsive — on mobile, let dropdown open upward if needed */
+@media (max-width: 480px) {
+  .ccp-dropdown {
+    width: 230px;
+  }
+}
