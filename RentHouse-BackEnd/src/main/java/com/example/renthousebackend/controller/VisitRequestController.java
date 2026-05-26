@@ -68,11 +68,10 @@ public class VisitRequestController {
                 .visitTime(visitTime)
                 .house(house)
                 .user(user)
-                .accepted(null) 
+                .accepted(null)
                 .build();
 
         VisitRequest savedRequest = visitRequestRepository.save(visitRequest);
-
 
         String ownerEmail = house.getOwner().getEmail();
         String subject = "New Visit Request for Your Property";
@@ -105,7 +104,7 @@ public class VisitRequestController {
                 visitTime,
                 acceptUrl,
                 rejectUrl);
-       
+
         emailService.sendHtmlEmail(ownerEmail, subject, body);
 
         return ResponseEntity.ok(savedRequest);
@@ -129,7 +128,6 @@ public class VisitRequestController {
         visitRequest.setAccepted(accepted);
         visitRequestRepository.save(visitRequest);
 
-      
         String visitorEmail = visitRequest.getVisitorEmail();
         String visitorName = visitRequest.getVisitorName();
         String subject;
@@ -158,66 +156,66 @@ public class VisitRequestController {
         return ResponseEntity.ok("Visit request " + (accepted ? "accepted" : "declined"));
     }
 
-   @GetMapping("/respond-html/{requestId}")
-public ResponseEntity<String> respondToVisitHtml(
-        @PathVariable Long requestId,
-        @RequestParam boolean accepted) {
+    @GetMapping("/respond-html/{requestId}")
+    public ResponseEntity<String> respondToVisitHtml(
+            @PathVariable Long requestId,
+            @RequestParam boolean accepted) {
 
-    VisitRequest visitRequest = visitRequestRepository.findById(requestId).orElse(null);
-    if (visitRequest == null) {
-        return ResponseEntity.badRequest()
-            .header("Content-Type", "text/html")
-            .body("""
+        VisitRequest visitRequest = visitRequestRepository.findById(requestId).orElse(null);
+        if (visitRequest == null) {
+            return ResponseEntity.badRequest()
+                    .header("Content-Type", "text/html")
+                    .body("""
                 <html><body style='font-family:sans-serif;text-align:center;margin-top:100px;'>
                 <h2 style='color:red;'>❌ Visit request not found.</h2>
                 </body></html>
             """);
-    }
+        }
 
-    if (visitRequest.getAccepted() != null) {
-        return ResponseEntity.ok()
-            .header("Content-Type", "text/html")
-            .body("""
+        if (visitRequest.getAccepted() != null) {
+            return ResponseEntity.ok()
+                    .header("Content-Type", "text/html")
+                    .body("""
                 <html><body style='font-family:sans-serif;text-align:center;margin-top:100px;'>
                 <h2 style='color:orange;'>⚠️ This request has already been processed.</h2>
                 <p>You can close this tab.</p>
                 </body></html>
             """);
-    }
+        }
 
-    visitRequest.setAccepted(accepted);
-    visitRequestRepository.save(visitRequest);
+        visitRequest.setAccepted(accepted);
+        visitRequestRepository.save(visitRequest);
 
-    // Send email to visitor
-    String visitorEmail = visitRequest.getVisitorEmail();
-    String visitorName = visitRequest.getVisitorName();
-    String location = visitRequest.getHouse().getLocation();
-    String date = visitRequest.getVisitDate().toString();
-    String time = visitRequest.getVisitTime().toString();
+        // Send email to visitor
+        String visitorEmail = visitRequest.getVisitorEmail();
+        String visitorName = visitRequest.getVisitorName();
+        String location = visitRequest.getHouse().getLocation();
+        String date = visitRequest.getVisitDate().toString();
+        String time = visitRequest.getVisitTime().toString();
 
-    String subject;
-    String body;
+        String subject;
+        String body;
 
-    if (accepted) {
-        subject = "Your Visit Request Has Been Accepted ✅";
-        body = String.format(
-            "Dear %s,\n\nYour visit request for the property at %s on %s at %s has been accepted.\nThe owner will contact you soon.\n\nThank you.",
-            visitorName, location, date, time);
-    } else {
-        subject = "Your Visit Request Has Been Declined ❌";
-        body = String.format(
-            "Dear %s,\n\nWe are sorry to inform you that your visit request for the property at %s on %s at %s has been declined.\n\nThank you for your understanding.",
-            visitorName, location, date, time);
-    }
+        if (accepted) {
+            subject = "Your Visit Request Has Been Accepted ✅";
+            body = String.format(
+                    "Dear %s,\n\nYour visit request for the property at %s on %s at %s has been accepted.\nThe owner will contact you soon.\n\nThank you.",
+                    visitorName, location, date, time);
+        } else {
+            subject = "Your Visit Request Has Been Declined ❌";
+            body = String.format(
+                    "Dear %s,\n\nWe are sorry to inform you that your visit request for the property at %s on %s at %s has been declined.\n\nThank you for your understanding.",
+                    visitorName, location, date, time);
+        }
 
-    emailService.sendSimpleEmail(visitorEmail, subject, body);
+        emailService.sendSimpleEmail(visitorEmail, subject, body);
 
-    // ✅ Return a styled confirmation page — NO redirect, auto-closes after 3s
-    String color = accepted ? "#22c55e" : "#ef4444";
-    String icon = accepted ? "✅" : "❌";
-    String status = accepted ? "Accepted" : "Rejected";
+        // ✅ Return a styled confirmation page — NO redirect, auto-closes after 3s
+        String color = accepted ? "#22c55e" : "#ef4444";
+        String icon = accepted ? "✅" : "❌";
+        String status = accepted ? "Accepted" : "Rejected";
 
-    String confirmationHtml = String.format("""
+        String confirmationHtml = String.format("""
         <html>
         <head>
             <title>Response Submitted</title>
@@ -269,8 +267,8 @@ public ResponseEntity<String> respondToVisitHtml(
         </html>
         """, color, icon, status);
 
-    return ResponseEntity.ok()
-    .header("Content-Type", "text/html; charset=UTF-8")
-    .body(confirmationHtml);
-}
+        return ResponseEntity.ok()
+                .header("Content-Type", "text/html; charset=UTF-8")
+                .body(confirmationHtml);
+    }
 }
