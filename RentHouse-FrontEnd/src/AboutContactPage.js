@@ -500,14 +500,14 @@ const AboutContactPage = () => {
             <div className="oauth-divider"><span>or continue with</span></div>
             <button
               type="button" className="oauth-btn google"
-              onClick={() => window.location.href = "http://localhost:5000/oauth2/authorization/google"}
+              onClick={() => window.location.href = `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/oauth2/authorization/google`}
             >
               <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="oauth-icon" />
               Continue with Google
             </button>
             <button
               type="button" className="oauth-btn github"
-              onClick={() => window.location.href = "http://localhost:5000/oauth2/authorization/github"}
+              onClick={() => window.location.href = `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/oauth2/authorization/github`}
             >
               <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="GitHub" className="oauth-icon" />
               Continue with GitHub
