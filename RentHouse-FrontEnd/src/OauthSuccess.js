@@ -7,43 +7,25 @@ export default function OauthSuccess() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const userId = params.get("userId");
+    const username = params.get("username");
+    const email = params.get("email");
 
     if (!userId) {
       alert("OAuth login failed: no user ID returned");
       return;
     }
 
-    // Fetch the latest user info from backend
-    fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/auth/oauth2/user`, {
-      method: "GET",
-      credentials: "include",
-    })
-      .then(res => res.json())
-      .then(user => {
-        localStorage.setItem("userId", user.id);
-        localStorage.setItem("username", user.username || "");
-        localStorage.setItem("email", user.email || "");
-        localStorage.setItem("userRole", user.role || "USER");
-        localStorage.setItem(
-          "profileImage",
-          user.profileImage && user.profileImage !== "null"
-            ? user.profileImage
-            : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=random`
-        );
+    localStorage.setItem("userId", userId);
+    localStorage.setItem("username", username || "");
+    localStorage.setItem("email", email || "");
+    localStorage.setItem("userRole", "USER");
+    localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem(
+      "profileImage",
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(username || "User")}&background=random`
+    );
 
-        localStorage.setItem("isLoggedIn", "true");
-        if (user.password) {
-          // Save the generated password (only shown once!)
-          localStorage.setItem("password", user.password);
-        }
-
-        // Redirect to homepage
-        window.location.href = "/";
-      })
-      .catch(err => {
-        console.error("Failed to fetch OAuth user:", err);
-        alert("Login failed");
-      });
+    window.location.href = "/";
   }, [location]);
 
   return <p>Logging you in...</p>;
