@@ -14,9 +14,9 @@ export default function OauthSuccess() {
     }
 
     // Fetch the latest user info from backend
-    fetch("/api/auth/oauth2/user", {
+    fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/auth/oauth2/user`, {
       method: "GET",
-      credentials: "include", // important if using cookies/session
+      credentials: "include",
     })
       .then(res => res.json())
       .then(user => {
