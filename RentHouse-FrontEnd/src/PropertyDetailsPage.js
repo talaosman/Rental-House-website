@@ -8,6 +8,7 @@ import { FaCalendarDay, FaCalendarAlt, FaHeart, FaRegHeart, FaMapMarkerAlt, FaDi
 import VirtualTourViewer from "./VirtualTourViewer";
 import API from "./api";
 import AvailabilityCalendar from "./AvailabilityCalendar";
+
 const STRIPE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY ||
   "pk_test_51RoNCB2Ylq8U0YVR6yVwbqvqm4Dy3QO8SPHEHSgoCPvHhbxYsufl6cDwR1buRjDZdobHLSNHf4HCee7f4aXNTvwp00qdh8ZSXK";
 
@@ -29,9 +30,7 @@ const CARD_ELEMENT_OPTIONS = {
       fontFamily: "'Sora', system-ui, sans-serif",
       fontSmoothing: 'antialiased',
       lineHeight: '28px',
-      '::placeholder': {
-        color: '#94a3b8',
-      },
+      '::placeholder': { color: '#94a3b8' },
       iconColor: '#64748b',
     },
     invalid: {
@@ -41,6 +40,7 @@ const CARD_ELEMENT_OPTIONS = {
   },
   hidePostalCode: true,
 };
+
 const parseSpringDate = (raw) => {
   if (!raw) return null;
   if (Array.isArray(raw)) {
@@ -104,6 +104,12 @@ const GoogleMapsButton = ({ latitude, longitude, location }) => {
   );
 };
 
+const WhatsAppIcon = () => (
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="15" height="15" fill="#fff">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+  </svg>
+);
+
 const PropertyDetailsContent = () => {
   const { allListings } = useAppState();
   const { id } = useParams();
@@ -132,45 +138,30 @@ const PropertyDetailsContent = () => {
   const [isAvailable, setIsAvailable] = useState(true);
   const [rents, setRents] = useState([]);
   const [virtualTourUrl, setVirtualTourUrl] = useState(null);
-  // NEW: toggle state for hero view
-  const [heroView, setHeroView] = useState("photo"); // "photo" | "tour"
+  const [heroView, setHeroView] = useState("photo");
   const [offer, setOffer] = useState(null);
   const [currency, setCurrency] = useState("USD");
 
-  const currencyRates = {
-    USD: 1,
-    EUR: 0.92,
-    GBP: 0.78,
-  };
-
-  const currencySymbols = {
-    USD: "$",
-    EUR: "€",
-    GBP: "£",
-  };
+  const currencyRates = { USD: 1, EUR: 0.92, GBP: 0.78 };
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     if (!userId || !id) return;
-
-    // eslint-disable-next-line no-undef
     API.get(`/api/offers/user/${userId}/applicable/${id}`)
       .then((res) => {
-        if (res.data?.hasOffer) {
-          setOffer(res.data.discountPercentage);
-        } else {
-          setOffer(null);
-        }
+        if (res.data?.hasOffer) setOffer(res.data.discountPercentage);
+        else setOffer(null);
       })
       .catch(() => setOffer(null));
   }, [id]);
+
   const applyDiscount = (price) => {
     if (!offer) return price;
     return price * (1 - offer / 100);
   };
+
   const formatPrice = (price) => {
     const converted = price * currencyRates[currency];
-
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency,
@@ -460,10 +451,8 @@ const PropertyDetailsContent = () => {
     <div className="property-page">
       <div className="property-container">
 
-        {/* ── HERO SECTION with inline toggle ── */}
+        {/* HERO SECTION */}
         <div className="image-section">
-
-          {/* Photo view */}
           <div className={`hero-photo ${heroView === "photo" ? "hero-active" : "hero-hidden"}`}>
             <img
               src={property.image.startsWith("http") ? property.image : `http://localhost:5000/uploads/${property.image}`}
@@ -472,19 +461,13 @@ const PropertyDetailsContent = () => {
             />
           </div>
 
-          {/* 360 tour view */}
           {virtualTourUrl && (
             <div className={`hero-tour ${heroView === "tour" ? "hero-active" : "hero-hidden"}`}>
-              <VirtualTourViewer
-                tourUrl={virtualTourUrl}
-                location={property.location}
-              />
+              <VirtualTourViewer tourUrl={virtualTourUrl} location={property.location} />
             </div>
           )}
 
-          {/* Overlay controls: favorite + view toggle */}
           <div className="hero-controls">
-            {/* View toggle pill — only shown when tour exists */}
             {virtualTourUrl && (
               <div className="view-toggle-pill">
                 <button
@@ -505,8 +488,6 @@ const PropertyDetailsContent = () => {
                 </button>
               </div>
             )}
-
-            {/* Favorite button */}
             {userRole !== "ADMIN" && (
               <button className="favorite-btn" onClick={toggleFavorite}>
                 {isFavorite ? <FaHeart /> : <FaRegHeart />}
@@ -514,7 +495,6 @@ const PropertyDetailsContent = () => {
             )}
           </div>
 
-          {/* Status badge overlaid on image */}
           <div className="hero-status-badge">
             <span className={`status ${isAvailable ? "available" : "rented"}`}>
               {isAvailable ? "Available" : "Rented"}
@@ -522,7 +502,10 @@ const PropertyDetailsContent = () => {
           </div>
         </div>
 
+        {/* CONTENT */}
         <div className="property-content">
+
+          {/* Header */}
           <div className="property-header">
             <div>
               <h1 className="property-location">{property.location}</h1>
@@ -562,28 +545,19 @@ const PropertyDetailsContent = () => {
                 <div className="price-day">
                   {offer ? (
                     <>
-                      <span className="original-price">
-                        {formatPrice(property.pricePerDay)}
-                      </span>
-                      <span className="discounted-price">
-                        {formatPrice(applyDiscount(property.pricePerDay))}
-                      </span>
+                      <span className="original-price">{formatPrice(property.pricePerDay)}</span>
+                      <span className="discounted-price">{formatPrice(applyDiscount(property.pricePerDay))}</span>
                     </>
                   ) : (
                     <>{formatPrice(property.pricePerDay)}</>
                   )}
                   <span className="price-unit">/day</span>
                 </div>
-
                 <div className="price-month">
                   {offer ? (
                     <>
-                      <span className="original-price">
-                        {formatPrice(property.pricePerMonth)}
-                      </span>
-                      <span className="discounted-price">
-                        {formatPrice(applyDiscount(property.pricePerMonth))}
-                      </span>
+                      <span className="original-price">{formatPrice(property.pricePerMonth)}</span>
+                      <span className="discounted-price">{formatPrice(applyDiscount(property.pricePerMonth))}</span>
                     </>
                   ) : (
                     <>{formatPrice(property.pricePerMonth)}</>
@@ -594,29 +568,46 @@ const PropertyDetailsContent = () => {
             </div>
           </div>
 
+          {/* Location */}
           <div className="section location-section">
             <h2><FaMapMarkerAlt className="section-icon" /> Location</h2>
             <p className="location-address">{property.location}</p>
             <GoogleMapsButton latitude={property.latitude} longitude={property.longitude} location={property.location} />
           </div>
 
+          {/* About */}
           <div className="section">
             <h2>About</h2>
             <p>{property.description || "A beautiful, spacious property in a prime location."}</p>
           </div>
 
+          {/* Owner Contact */}
           <div className="section owner-section">
             <h2>Owner Contact</h2>
             <div className="owner-details">
               <div className="owner-avatar">{property.owner?.name?.charAt(0) || "O"}</div>
               <div className="owner-info">
                 <p><strong>{property.owner?.name}</strong></p>
-                <p>{property.owner?.phone}</p>
+                <div className="owner-contact-row">
+                  <span className="owner-phone-text">{property.owner?.phone}</span>
+                  {property.owner?.phone && (
+                    <a
+                      href={`https://wa.me/${property.owner.phone.replace(/\D/g, "")}?text=Hello%2C%20I%20would%20like%20to%20inquire%20about%20your%20property%20at%20${encodeURIComponent(property.location)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="wa-btn"
+                    >
+                      <WhatsAppIcon />
+                      Chat on WhatsApp
+                    </a>
+                  )}
+                </div>
                 <p>{property.owner?.email}</p>
               </div>
             </div>
           </div>
 
+          {/* Reviews */}
           {ratings.length > 0 && (
             <div className="section">
               <h2>Reviews</h2>
@@ -631,11 +622,12 @@ const PropertyDetailsContent = () => {
             </div>
           )}
 
+          {/* Booking */}
           {userId && userRole !== "ADMIN" && (
             <div className="section booking-section">
               <h2>Book Your Stay</h2>
 
-               <AvailabilityCalendar houseId={id} />
+              <AvailabilityCalendar houseId={id} />
 
               <div className="rent-type">
                 {rentOptions.map((option) => (
@@ -669,29 +661,15 @@ const PropertyDetailsContent = () => {
                     {offer ? (
                       <>
                         <span className="original-price" style={{ color: "#aaa", textDecoration: "line-through", marginRight: "6px" }}>
-                          {formatPrice(
-                            rentType === "perMonth"
-                              ? property.pricePerMonth
-                              : calculateTotalRent()
-                          )}
+                          {formatPrice(rentType === "perMonth" ? property.pricePerMonth : calculateTotalRent())}
                         </span>
                         <span className="amount" style={{ color: "#1a6e3c" }}>
-                          {formatPrice(
-                            applyDiscount(
-                              rentType === "perMonth"
-                                ? property.pricePerMonth
-                                : calculateTotalRent()
-                            )
-                          )}
+                          {formatPrice(applyDiscount(rentType === "perMonth" ? property.pricePerMonth : calculateTotalRent()))}
                         </span>
                       </>
                     ) : (
                       <span className="amount">
-                        {formatPrice(
-                          rentType === "perMonth"
-                            ? property.pricePerMonth
-                            : calculateTotalRent()
-                        )}
+                        {formatPrice(rentType === "perMonth" ? property.pricePerMonth : calculateTotalRent())}
                       </span>
                     )}
                   </div>
@@ -714,9 +692,6 @@ const PropertyDetailsContent = () => {
               {paymentMethod === "credit" && (
                 <div className="card-details">
                   <label>Card Information</label>
-                  {/* <div className="payment-details">
-                    ⚠️ <strong>Payment Issues?</strong> Disable ad blockers for this site.
-                  </div> */}
                   {!stripeReady && !stripeLoadError && (
                     <div style={{ padding: '10px', backgroundColor: '#fff3cd', color: '#856404', borderRadius: '4px', marginBottom: '10px' }}>⏳ Loading Stripe...</div>
                   )}
@@ -771,8 +746,6 @@ const PropertyDetailsContent = () => {
               </div>
             </div>
           )}
-
-
 
         </div>
       </div>

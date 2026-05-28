@@ -442,6 +442,7 @@ body {
 }
 
 /* ── Owner ────────────────────────────────────────── */
+/* ── Owner ────────────────────────────────────────── */
 .owner-section .owner-details {
   background: var(--surface);
   border: 1px solid var(--hairline);
@@ -462,10 +463,54 @@ body {
   text-transform: uppercase;
 }
 
-.owner-info { display: flex; flex-direction: column; gap: 4px; }
+.owner-info { display: flex; flex-direction: column; gap: 6px; }
 .owner-info p { margin: 0; font-size: 14.5px; color: var(--slate); }
-.owner-info p strong { font-size: 16px; color: var(--navy); font-weight: 600; display: block; margin-bottom: 2px; }
+.owner-info p strong { font-size: 16px; color: var(--navy); font-weight: 600; display: block; margin-bottom: 4px; }
 
+.owner-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.owner-phone-text {
+  font-size: 14px;
+  color: var(--slate);
+  letter-spacing: .01em;
+}
+
+.wa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: #25D366;
+  color: #fff;
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: 'Sora', sans-serif;
+  text-decoration: none;
+  letter-spacing: .02em;
+  transition: var(--t);
+  white-space: nowrap;
+  border: none;
+  box-shadow: 0 2px 8px rgba(37,211,102,.35);
+}
+
+.wa-btn:hover {
+  background: #1ebe5d;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(37,211,102,.45);
+}
+
+.wa-btn svg {
+  width: 15px; height: 15px;
+  fill: #fff;
+  flex-shrink: 0;
+}
 /* ── Reviews ──────────────────────────────────────── */
 .reviews { display: flex; flex-direction: column; gap: 12px; }
 
