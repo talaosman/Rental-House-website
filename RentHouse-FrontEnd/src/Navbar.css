@@ -437,6 +437,7 @@
   text-decoration: none;
   transition: all 0.3s ease;
   border: 1px solid #e2e8f0;
+  margin-bottom:70px !important;
 }
 
 .sidebar-profile:hover {
