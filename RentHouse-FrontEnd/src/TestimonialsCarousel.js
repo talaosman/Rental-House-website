@@ -8,7 +8,7 @@ const TestimonialsCarousel = () => {
   const [feedbacks, setFeedbacks] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/feedback")
+    axios.get(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/feedback`)
       .then(res => setFeedbacks(res.data))
       .catch(console.error);
   }, []);

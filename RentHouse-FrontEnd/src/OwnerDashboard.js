@@ -207,7 +207,7 @@ const OwnerDashboard = () => {
                       src={
                         house.image?.startsWith("http")
                           ? house.image
-                          : `http://localhost:5000/uploads/${house.image}`
+                          : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/uploads/${house.image}`
                       }
                       alt={house.title}
                       className="owner-house-img"
@@ -259,7 +259,7 @@ const OwnerDashboard = () => {
                       src={
                         rent.houseImage?.startsWith("http")
                           ? rent.houseImage
-                          : `http://localhost:5000/uploads/${rent.houseImage}`
+                          : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/uploads/${rent.houseImage}`
                       }
                       alt={rent.houseTitle}
                       className="owner-rent-img"

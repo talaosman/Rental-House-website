@@ -118,23 +118,23 @@ const PostListing = () => {
         : "";
 
       const payload = {
-        title:          form.title,
-        pricePerDay:    form.pricePerDay,
-        pricePerMonth:  form.pricePerMonth,
-        location:       form.location,
-        description:    form.description,
-        ownerName:      form.ownerName,
-        ownerEmail:     form.ownerEmail,
-        ownerPhone:     fullPhone,
-        nbOfBedrooms:   form.nbOfBedrooms,
-        propertyType:   form.propertyType,
-        imageFilename:  imageFile.name,
-        imageData:      base64Image,
-        latitude:       parseFloat(form.latitude),
-        longitude:      parseFloat(form.longitude),
+        title: form.title,
+        pricePerDay: form.pricePerDay,
+        pricePerMonth: form.pricePerMonth,
+        location: form.location,
+        description: form.description,
+        ownerName: form.ownerName,
+        ownerEmail: form.ownerEmail,
+        ownerPhone: fullPhone,
+        nbOfBedrooms: form.nbOfBedrooms,
+        propertyType: form.propertyType,
+        imageFilename: imageFile.name,
+        imageData: base64Image,
+        latitude: parseFloat(form.latitude),
+        longitude: parseFloat(form.longitude),
       };
 
-      const listingRes = await fetch("http://localhost:5000/api/houses/uploadBase64", {
+      const listingRes = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/uploadBase64`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -157,7 +157,7 @@ const PostListing = () => {
 
           const authHeader = localStorage.getItem("authHeader");
           const tourRes = await fetch(
-            `http://localhost:5000/api/houses/${data.id}/virtual-tour`,
+            `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${data.id}/virtual-tour`,
             {
               method: "PUT",
               headers: { ...(authHeader && { Authorization: authHeader }) },

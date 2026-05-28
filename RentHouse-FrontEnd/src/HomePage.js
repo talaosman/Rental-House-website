@@ -52,7 +52,7 @@ const HomePage = () => {
     const fetchMostRentedProperties = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:5000/api/houses/most-rented");
+        const response = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/most-rented`);
         if (response.ok) {
           const data = await response.json();
           setFeaturedProperties(data);
@@ -124,7 +124,7 @@ const HomePage = () => {
                     src={
                       property.image.startsWith("http")
                         ? property.image
-                        : `http://localhost:5000/uploads/${property.image}`
+                        : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/uploads/${property.image}`
                     }
                     alt={property.title}
                     className="property-image"

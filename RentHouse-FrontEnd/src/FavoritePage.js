@@ -19,7 +19,7 @@ const FavoritesPage = () => {
 
     async function fetchFavorites() {
       try {
-        const res = await fetch(`http://localhost:5000/api/favorites/user/${userId}`);
+        const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/favorites/user/${userId}`);
         if (!res.ok) throw new Error("Failed to fetch favorites");
         const data = await res.json();
         setFavorites(data);
@@ -35,7 +35,7 @@ const FavoritesPage = () => {
 
   const handleRemove = async (propertyId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/favorites/remove?userId=${userId}&propertyId=${propertyId}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/favorites/remove?userId=${userId}&propertyId=${propertyId}`, {
         method: "DELETE",
       });
 
@@ -145,7 +145,7 @@ const FavoritesPage = () => {
                   src={
                     property.image.startsWith("http")
                       ? property.image
-                      : `http://localhost:5000/uploads/${property.image}`
+                      : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/uploads/${property.image}`
                   }
                   alt={property.title}
                   className="favorite-image-luxury"

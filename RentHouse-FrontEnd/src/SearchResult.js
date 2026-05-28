@@ -84,7 +84,7 @@ const SearchResult = () => {
                 src={
                   listing.image.startsWith("http")
                     ? listing.image
-                    : `http://localhost:5000/uploads/${listing.image}`
+                    : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/uploads/${listing.image}`
                 }
                 alt={listing.title}
                 className="listing-image"

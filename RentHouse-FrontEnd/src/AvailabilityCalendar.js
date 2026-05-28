@@ -67,7 +67,7 @@ const AvailabilityCalendar = ({ houseId, compact = false }) => {
     if (!houseId) return;
     setLoading(true);
     setError(false);
-    fetch(`http://localhost:5000/api/rents/house/${houseId}`)
+    fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/rents/house/${houseId}`)
       .then((r) => {
         if (!r.ok) throw new Error("fetch failed");
         return r.json();

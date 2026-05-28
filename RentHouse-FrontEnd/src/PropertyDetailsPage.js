@@ -173,11 +173,11 @@ const PropertyDetailsContent = () => {
     if (!id) return;
     const fetchTourUrl = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/houses/${id}/virtual-tour-url`);
+        const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${id}/virtual-tour-url`);
         if (!res.ok) return;
         const data = await res.json();
         if (data.virtualTourUrl) {
-          setVirtualTourUrl(`http://localhost:5000/api/houses/${id}/virtual-tour-image`);
+          setVirtualTourUrl(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${id}/virtual-tour-image`);
         }
       } catch (err) {
         console.error("Failed to fetch virtual tour URL:", err);
@@ -212,7 +212,7 @@ const PropertyDetailsContent = () => {
 
   const refetchRentStatus = useCallback(async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/rents/is-rented/${id}`);
+      const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/rents/is-rented/${id}`);
       if (!res.ok) { setCurrentRent(null); setIsAvailable(true); return; }
       const data = await res.json();
       if (data.available === true) { setIsAvailable(true); setCurrentRent(null); return; }
@@ -235,7 +235,7 @@ const PropertyDetailsContent = () => {
   useEffect(() => {
     const fetchRents = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/rents/house/${id}`);
+        const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/rents/house/${id}`);
         setRents(await res.json());
       } catch (err) { console.error("Error fetching rents:", err); }
     };
@@ -259,7 +259,7 @@ const PropertyDetailsContent = () => {
     if (paymentMethod === "cash") {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/rents/rent?userId=${userId}&houseId=${id}&startDate=${startDate}&endDate=${calculatedEndDate}`,
+          `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/rents/rent?userId=${userId}&houseId=${id}&startDate=${startDate}&endDate=${calculatedEndDate}`,
           { method: "POST" }
         );
         if (!res.ok) {
@@ -285,7 +285,7 @@ const PropertyDetailsContent = () => {
         if (!cardElement) { const m = "Card info missing, refresh page."; setCardError(m); alert(m); return; }
         localStorage.setItem("stripeStartDate", startDate);
         localStorage.setItem("stripeEndDate", calculatedEndDate);
-        const res = await fetch("http://localhost:5000/api/stripe/checkout/integrated", {
+        const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/stripe/checkout/integrated`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -320,7 +320,7 @@ const PropertyDetailsContent = () => {
           setCardError(msg); alert("Payment failed: " + msg);
         } else if (result.paymentIntent?.status === "succeeded") {
           const rentRes = await fetch(
-            `http://localhost:5000/api/rents/rent?userId=${userId}&houseId=${id}&startDate=${startDate}&endDate=${calculatedEndDate}`,
+            `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/rents/rent?userId=${userId}&houseId=${id}&startDate=${startDate}&endDate=${calculatedEndDate}`,
             { method: "POST" }
           );
           if (!rentRes.ok) {
@@ -352,7 +352,7 @@ const PropertyDetailsContent = () => {
         setStartDate(savedStart); setEndDate(savedEnd);
         (async () => {
           try {
-            await fetch(`http://localhost:5000/api/rents/rent?userId=${userId}&houseId=${id}&startDate=${savedStart}&endDate=${savedEnd}`, { method: "POST" });
+            await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/rents/rent?userId=${userId}&houseId=${id}&startDate=${savedStart}&endDate=${savedEnd}`, { method: "POST" });
             setRentSuccess(true); setIsRented(true);
             setIsAvailable(false);
             setCurrentRent({ startDate: savedStart, endDate: savedEnd });
@@ -369,7 +369,7 @@ const PropertyDetailsContent = () => {
 
   const fetchRatings = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/ratings/house/${id}`);
+      const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/ratings/house/${id}`);
       setRatings(await res.json());
     } catch { console.error("Error fetching ratings"); }
   };
@@ -377,7 +377,7 @@ const PropertyDetailsContent = () => {
   const submitRating = async () => {
     if (!userId) { setModalMessage("You must be logged in to rate."); setShowLoginModal(true); return; }
     try {
-      await fetch(`http://localhost:5000/api/ratings/add?userId=${userId}&houseId=${id}&stars=${rating}&comment=${comment}`, { method: "POST" });
+      await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/ratings/add?userId=${userId}&houseId=${id}&stars=${rating}&comment=${comment}`, { method: "POST" });
       setRating(0); setComment(""); fetchRatings();
       setShowThankYou(true); setTimeout(() => setShowThankYou(false), 3000);
     } catch { console.error("Error submitting rating"); }
@@ -386,7 +386,7 @@ const PropertyDetailsContent = () => {
   useEffect(() => {
     const fetchProperty = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/houses/${id}`);
+        const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${id}`);
         if (!res.ok) throw new Error("Failed to fetch property");
         setProperty(await res.json());
       } catch (error) { console.error("Error fetching property:", error); }
@@ -398,7 +398,7 @@ const PropertyDetailsContent = () => {
     async function checkFavorite() {
       if (!property || !userId) { setIsFavorite(false); return; }
       try {
-        const res = await fetch(`http://localhost:5000/api/favorites/user/${userId}`);
+        const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/favorites/user/${userId}`);
         if (!res.ok) throw new Error();
         const favorites = await res.json();
         setIsFavorite(Array.isArray(favorites) && favorites.some((fav) => fav.property.id === property.id));
@@ -419,10 +419,10 @@ const PropertyDetailsContent = () => {
     if (!property) return;
     try {
       if (isFavorite) {
-        await fetch(`http://localhost:5000/api/favorites/remove?userId=${userId}&propertyId=${property.id}`, { method: "DELETE" });
+        await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/favorites/remove?userId=${userId}&propertyId=${property.id}`, { method: "DELETE" });
         setIsFavorite(false);
       } else {
-        await fetch(`http://localhost:5000/api/favorites/add?userId=${userId}&propertyId=${property.id}`, { method: "POST" });
+        await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/favorites/add?userId=${userId}&propertyId=${property.id}`, { method: "POST" });
         setIsFavorite(true); setShowFavoriteMessage(true);
         alert("❤️ Added to favorites! You'll be notified when this property becomes available.");
         setTimeout(() => setShowFavoriteMessage(false), 3000);
@@ -455,7 +455,7 @@ const PropertyDetailsContent = () => {
         <div className="image-section">
           <div className={`hero-photo ${heroView === "photo" ? "hero-active" : "hero-hidden"}`}>
             <img
-              src={property.image.startsWith("http") ? property.image : `http://localhost:5000/uploads/${property.image}`}
+              src={property.image.startsWith("http") ? property.image : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/uploads/${property.image}`}
               alt={property.location}
               className="property-image"
             />

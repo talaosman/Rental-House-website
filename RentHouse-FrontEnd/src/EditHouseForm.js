@@ -30,7 +30,7 @@ const EditHouseForm = () => {
   });
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/houses/${id}`)
+    fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${id}`)
       .then(res => res.json())
       .then(data => {
         setFormData({
@@ -127,7 +127,7 @@ const EditHouseForm = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/houses/update/${id}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/update/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -158,7 +158,7 @@ const EditHouseForm = () => {
     const authHeader = localStorage.getItem("authHeader");
 
     const res = await fetch(
-      `http://localhost:5000/api/houses/${id}/virtual-tour`,
+      `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${id}/virtual-tour`,
       {
         method: "PUT",
         headers: {
@@ -193,7 +193,7 @@ const handleTourDelete = async () => {
     const authHeader = localStorage.getItem("authHeader");
 
     const res = await fetch(
-      `http://localhost:5000/api/houses/${id}/virtual-tour`,
+      `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${id}/virtual-tour`,
       {
         method: "DELETE",
         headers: {

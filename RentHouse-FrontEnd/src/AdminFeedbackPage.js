@@ -13,7 +13,7 @@ const AdminFeedbackPage = () => {
   useEffect(() => {
     async function fetchFeedbacks() {
       try {
-        const res = await fetch("http://localhost:5000/api/feedback");
+        const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/feedback`);
         if (!res.ok) throw new Error("Failed to fetch feedbacks");
         const data = await res.json();
         setFeedbacks(data);
@@ -29,7 +29,7 @@ const AdminFeedbackPage = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this feedback?")) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/feedback/${id}`, { method: "DELETE" });
+      const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/feedback/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete feedback");
       setFeedbacks((prev) => prev.filter((fb) => fb.id !== id));
     } catch (err) {

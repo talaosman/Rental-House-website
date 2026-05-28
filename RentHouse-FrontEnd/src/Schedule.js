@@ -26,7 +26,7 @@ const Schedule = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    setError(""); 
+    setError("");
   };
 
   const handleSubmit = async (e) => {
@@ -44,7 +44,7 @@ const Schedule = () => {
 
     try {
       const res = await fetch(
-        "http://localhost:5000/api/visits/request?" +
+        `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/visits/request?` +
         new URLSearchParams({
           houseId,
           userId,

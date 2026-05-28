@@ -31,8 +31,8 @@ function FeedbackForm() {
 
       // Send userId as query param so backend links to User entity
       const url = userId
-        ? `http://localhost:5000/api/feedback?userId=${userId}`
-        : 'http://localhost:5000/api/feedback';
+        ? `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/feedback?userId=${userId}`
+        : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/feedback`;
 
       const response = await axios.post(url, payload);
       if (response.status === 201) {
