@@ -73,10 +73,10 @@ const ForgotPasswordModal = ({ onClose }) => {
     <div className="fp-backdrop" onClick={onClose}>
       <div className="fp-modal" onClick={(e) => e.stopPropagation()}>
 
-        
+
         <button className="fp-close" onClick={onClose}>✕</button>
 
-       
+
         {step === "email" && (
           <>
             <div className="fp-icon">🔑</div>
@@ -104,7 +104,7 @@ const ForgotPasswordModal = ({ onClose }) => {
           </>
         )}
 
-       
+
         {step === "code" && (
           <>
             <div className="fp-icon">📧</div>
@@ -143,7 +143,7 @@ const ForgotPasswordModal = ({ onClose }) => {
           </>
         )}
 
-      
+
         {step === "reset" && (
           <>
             <div className="fp-icon">🔒</div>
@@ -171,12 +171,12 @@ const ForgotPasswordModal = ({ onClose }) => {
                     {showPass ? "🙈" : "👁️"}
                   </button>
                 </div>
-               
+
                 {pass.length > 0 && (
                   <div className="fp-strength">
                     <div
                       className={`fp-strength-bar ${pass.length < 6 ? "weak" :
-                          pass.length < 10 ? "medium" : "strong"
+                        pass.length < 10 ? "medium" : "strong"
                         }`}
                       style={{ width: `${Math.min(100, (pass.length / 14) * 100)}%` }}
                     />
@@ -226,7 +226,7 @@ const ForgotPasswordModal = ({ onClose }) => {
           </>
         )}
 
-  
+
         {step === "done" && (
           <div className="fp-done">
             <div className="fp-done-check">✓</div>
@@ -264,25 +264,25 @@ const AboutContactPage = () => {
   }, []);
 
   const saveFcmTokenToBackend = async (userId) => {
-  try {
-    console.log("🔥 Requesting FCM permission for user:", userId);
-    const token = await requestNotificationPermission();
-    console.log("🔥 Got token:", token);
-    if (token) {
-      const res = await fetch(`http://localhost:5000/api/users/${userId}/fcm-token`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fcmToken: token })
-      });
-      const data = await res.json();
-      console.log("🔥 Backend response:", data);
-    } else {
-      console.warn("⚠️ Token is null — notification permission was denied or not granted");
+    try {
+      console.log("🔥 Requesting FCM permission for user:", userId);
+      const token = await requestNotificationPermission();
+      console.log("🔥 Got token:", token);
+      if (token) {
+        const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/users/${userId}/fcm-token`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fcmToken: token })
+        });
+        const data = await res.json();
+        console.log("🔥 Backend response:", data);
+      } else {
+        console.warn("⚠️ Token is null — notification permission was denied or not granted");
+      }
+    } catch (error) {
+      console.error("⚠️ FCM error:", error);
     }
-  } catch (error) {
-    console.error("⚠️ FCM error:", error);
-  }
-};
+  };
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -348,7 +348,7 @@ const AboutContactPage = () => {
           } else if (roleLower === "house_owner") {
             try {
               const ownerRes = await fetch(
-                `http://localhost:5000/api/owner/resolve?userId=${id}`
+                `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/owner/resolve?userId=${id}`
               );
               if (ownerRes.ok) {
                 const ownerData = await ownerRes.json();
@@ -389,7 +389,7 @@ const AboutContactPage = () => {
   return (
     <div className="container">
 
-    
+
       <div className="hero-panel">
         <div className="hero-logo">
           <div className="hero-logo-mark">
@@ -427,7 +427,7 @@ const AboutContactPage = () => {
         </div>
       </div>
 
-      
+
       <section className="contact-section">
         <div className={formContainerClass}>
           <div className="form-accent-bar" />
@@ -469,7 +469,7 @@ const AboutContactPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
               />
-              
+
               <div className="input-label-row">
                 {isSigningIn && (
                   <button
