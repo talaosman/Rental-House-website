@@ -411,7 +411,7 @@
   font-weight: 600;
   transition: all 0.3s ease;
   box-shadow: 0 4px 16px rgba(30, 58, 95, 0.25);
-  margin-bottom:40px !important;
+  margin-bottom:60px !important;
 }
 
 .btn-sidebar-auth:hover {
