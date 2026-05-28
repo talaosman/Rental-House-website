@@ -1,19 +1,21 @@
 package com.example.renthousebackend.config;
 
-import com.example.renthousebackend.entity.User;
-import com.example.renthousebackend.repository.UserRepository;
+import java.io.IOException;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.example.renthousebackend.entity.User;
+import com.example.renthousebackend.repository.UserRepository;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Optional;
-import java.util.UUID;
 
 @Component
 public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler {
@@ -55,12 +57,14 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             user = existingUser.get();
         }
 
-        // Redirect including the actual DB user ID
+        String frontendUrl = System.getenv("FRONTEND_URL") != null
+                ? System.getenv("FRONTEND_URL")
+                : "http://localhost:3000";
         response.sendRedirect(
-                "http://localhost:3000/oauth-success?" +
-                        "userId=" + user.getId() +
-                        "&username=" + username +
-                        "&email=" + email);
+                frontendUrl + "/oauth-success?"
+                + "userId=" + user.getId()
+                + "&username=" + username
+                + "&email=" + email);
 
     }
 }
