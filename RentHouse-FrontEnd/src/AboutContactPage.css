@@ -801,7 +801,22 @@
 }
 
 @media (max-width: 540px) {
-  .hero-panel { min-height: 220px; padding: 32px 24px 36px; }
-  .contact-section { padding: 36px 20px; }
+  .hero-panel {
+    min-height: 200px;
+    padding: 70px 24px 32px;
+    margin-top: 10px !important;
+  }
+  .hero-logo {
+    top: 70px;
+    left: 24px;
+  }
+  .hero-eyebrow { display: none; }
+  .hero-title {
+    font-size: 1.5rem;
+    margin-bottom: 0;
+  }
+  .hero-desc { display: none; }
+  .hero-stats { display: none; }
+  .contact-section { padding: 32px 20px; }
   .form-container { max-width: 100%; }
 }
