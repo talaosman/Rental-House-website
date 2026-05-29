@@ -33,7 +33,7 @@ public class AuthController {
     @Autowired private EmailService emailService;
     @Autowired private JavaMailSender emailSender;
 
-    // ── Stores ────────────────────────────────────────────────────────────────
+
 
     // OTP signup: email → OTP code
     private final Map<String, String>   otpStore          = new ConcurrentHashMap<>();
@@ -53,7 +53,7 @@ public class AuthController {
     private static final long PENDING_TTL_MS    = 15 * 60 * 1000L; // 15 minutes
     private static final long RESET_CODE_TTL_MS = 15 * 60 * 1000L; // 15 minutes
 
-    // ── Auto-cleanup expired entries every 5 minutes ─────────────────────────
+    
     @Scheduled(fixedDelay = 5 * 60 * 1000L)
     public void cleanupExpired() {
         long now = Instant.now().toEpochMilli();
@@ -80,7 +80,7 @@ public class AuthController {
         });
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    
 
     private String generateOtp() {
         return String.valueOf(new Random().nextInt(900000) + 100000);
@@ -96,7 +96,7 @@ public class AuthController {
         return expiry == null || Instant.now().toEpochMilli() > expiry;
     }
 
-    // ── Signup ────────────────────────────────────────────────────────────────
+    
     // Stores user in memory AND sends OTP in one step.
     // Nothing is written to the DB until verify-otp succeeds.
     @PostMapping("/signup")
@@ -132,7 +132,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // ── Resend OTP ────────────────────────────────────────────────────────────
+    
     // Only works if the user is in pendingUsersStore (not yet verified).
     // Replaces the old OTP and resets its expiry.
     @PostMapping("/resend-otp")
@@ -165,7 +165,7 @@ public class AuthController {
         return ResponseEntity.ok("OTP resent to " + email);
     }
 
-    // ── Send OTP (used only for existing DB users, e.g. 2FA login) ───────────
+    
     @PostMapping("/send-otp")
     public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> request) {
         String email = request.get("email");
@@ -181,7 +181,7 @@ public class AuthController {
         return ResponseEntity.ok("OTP sent to email");
     }
 
-    // ── Verify OTP ────────────────────────────────────────────────────────────
+    
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> request) {
         String email    = request.get("email");
@@ -240,7 +240,7 @@ public class AuthController {
                 .body("User not found after OTP verification");
     }
 
-    // ── Login ─────────────────────────────────────────────────────────────────
+   
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User loginRequest) {
         String email = loginRequest.getEmail();
@@ -271,7 +271,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    // ── Forgot Password ───────────────────────────────────────────────────────
+   
 
     @PostMapping("/forgot-password/send-code")
     public ResponseEntity<?> sendResetCode(@RequestBody Map<String, String> body)
@@ -382,7 +382,7 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Password reset successfully. You can now sign in."));
     }
 
-    // ── Test email ────────────────────────────────────────────────────────────
+    
     @GetMapping("/test-email")
     public ResponseEntity<?> testEmail() {
         try {
