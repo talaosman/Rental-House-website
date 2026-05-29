@@ -392,6 +392,64 @@
   flex-shrink: 0;
 }
 
+/* ── Error input border ── */
+.otp-input-error {
+  border-color: #dc2626 !important;
+  background: #fff5f5 !important;
+}
+
+/* ── Feedback messages ── */
+.otp-feedback {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.otp-feedback-error {
+  background: #fff5f5;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+.otp-feedback-success {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+/* ── Resend row ── */
+.otp-resend-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 16px 0 8px;
+  flex-wrap: wrap;
+}
+.otp-resend-label {
+  font-size: 13.5px;
+  color: #64748b;
+}
+.otp-resend-btn {
+  background: none;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #2563eb;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+.otp-resend-btn:disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+.otp-resend-btn:not(:disabled):hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
 /* ── Responsive ─────────────────────────────────── */
 @media (max-width: 900px) {
   .otp-page {
