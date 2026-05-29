@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.renthousebackend.service.VisitRequestService;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
@@ -36,6 +37,12 @@ public class VisitRequestController {
 
     @Autowired
     private VisitRequestService visitRequestService;
+
+    @Value("${app.backend.url}")
+private String backendUrl;
+
+@Value("${app.frontend.url}")
+private String frontendUrl;
 
     @PostMapping("/request")
     public ResponseEntity<?> createVisit(
@@ -77,8 +84,8 @@ public class VisitRequestController {
 
         String ownerEmail = house.getOwner().getEmail();
         String subject = "New Visit Request for Your Property";
-        String acceptUrl = "http://localhost:5000/api/visits/respond-html/" + savedRequest.getId() + "?accepted=true";
-        String rejectUrl = "http://localhost:5000/api/visits/respond-html/" + savedRequest.getId() + "?accepted=false";
+        String acceptUrl = backendUrl + "/api/visits/respond-html/" + savedRequest.getId() + "?accepted=true";
+        String rejectUrl = backendUrl + "/api/visits/respond-html/" + savedRequest.getId() + "?accepted=false";
 
         String body = String.format(
                 """
@@ -217,57 +224,43 @@ public class VisitRequestController {
         String icon = accepted ? "✅" : "❌";
         String status = accepted ? "Accepted" : "Rejected";
 
-        String confirmationHtml = String.format("""
-        <html>
-        <head>
-            <title>Response Submitted</title>
-            <style>
-                body {
-                    font-family: 'Segoe UI', sans-serif;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    height: 100vh;
-                    margin: 0;
-                    background: #f8fafc;
+       String confirmationHtml = String.format("""
+    <html>
+    <head>
+        <title>Response Submitted</title>
+        <style>
+            body { font-family: 'Segoe UI', sans-serif; display: flex; align-items: center;
+                   justify-content: center; height: 100vh; margin: 0; background: #f8fafc; }
+            .card { background: white; border-radius: 16px; padding: 48px 64px; text-align: center;
+                    box-shadow: 0 4px 24px rgba(0,0,0,0.08); max-width: 420px; }
+            .icon { font-size: 64px; margin-bottom: 16px; }
+            h2 { color: %s; font-size: 28px; margin: 0 0 12px; }
+            p { color: #64748b; font-size: 15px; margin: 0 0 8px; }
+            .countdown { color: #94a3b8; font-size: 13px; margin-top: 20px; }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div class="icon">%s</div>
+            <h2>Visit %s</h2>
+            <p>The visitor has been notified by email.</p>
+            <p class="countdown" id="countdown">Redirecting in 3 seconds...</p>
+        </div>
+        <script>
+            let seconds = 3;
+            const el = document.getElementById('countdown');
+            const interval = setInterval(() => {
+                seconds--;
+                el.textContent = 'Redirecting in ' + seconds + ' second' + (seconds !== 1 ? 's' : '') + '...';
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    window.location.href = '%s';
                 }
-                .card {
-                    background: white;
-                    border-radius: 16px;
-                    padding: 48px 64px;
-                    text-align: center;
-                    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-                    max-width: 420px;
-                }
-                .icon { font-size: 64px; margin-bottom: 16px; }
-                h2 { color: %s; font-size: 28px; margin: 0 0 12px; }
-                p { color: #64748b; font-size: 15px; margin: 0 0 8px; }
-                .countdown { color: #94a3b8; font-size: 13px; margin-top: 20px; }
-            </style>
-        </head>
-        <body>
-            <div class="card">
-                <div class="icon">%s</div>
-                <h2>Visit %s</h2>
-                <p>The visitor has been notified by email.</p>
-                <p>You can now close this tab.</p>
-                <p class="countdown" id="countdown">This tab will close in 3 seconds...</p>
-            </div>
-            <script>
-                let seconds = 3;
-                const el = document.getElementById('countdown');
-                const interval = setInterval(() => {
-                    seconds--;
-                    el.textContent = 'This tab will close in ' + seconds + ' second' + (seconds !== 1 ? 's' : '') + '...';
-                    if (seconds <= 0) {
-                        clearInterval(interval);
-                        window.close();
-                    }
-                }, 1000);
-            </script>
-        </body>
-        </html>
-        """, color, icon, status);
+            }, 1000);
+        </script>
+    </body>
+    </html>
+""", color, icon, status, frontendUrl);
 
         return ResponseEntity.ok()
                 .header("Content-Type", "text/html; charset=UTF-8")
