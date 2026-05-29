@@ -362,6 +362,7 @@ const AboutContactPage = () => {
           }
         })
         .catch(() => {
+          // eslint-disable-next-line no-undef
           if (err.response?.status === 403) {
             alert("Please verify your email first. Check your inbox for the OTP code.");
             localStorage.setItem("pendingEmail", email);
