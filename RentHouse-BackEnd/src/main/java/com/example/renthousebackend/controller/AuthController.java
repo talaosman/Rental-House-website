@@ -228,21 +228,19 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Password reset successfully. You can now sign in."));
     }
 
-      @GetMapping("/test-email")
-        public ResponseEntity<?> testEmail() {
-            try {
-                MimeMessage message = emailSender.createMimeMessage();
-                MimeMessageHelper helper = new MimeMessageHelper(message, true);
-                helper.setTo("talaosman180@gmail.com");
-                helper.setSubject("RentalHub Brevo Test");
-                helper.setText("Brevo is working on production!", false);
-                emailSender.send(message);
-                return ResponseEntity.ok("✅ Email sent successfully via Brevo");
-            } catch (Exception e) {
-                return ResponseEntity.status(500).body("❌ Email failed: " + e.getMessage()
-                        + " | Cause: " + (e.getCause() != null ? e.getCause().getMessage() : "none"));
-            }
+    @GetMapping("/test-email")
+    public ResponseEntity<?> testEmail() {
+    try {
+        emailService.sendViaBrevoApi(
+            "talaosman180@gmail.com",
+            "RentalHub Production Test",
+            "<h2>✅ Brevo HTTP API is working!</h2>"
+        );
+        return ResponseEntity.ok("✅ Request sent — check Gmail inbox and Brevo Logs");
+        } catch (Exception e) {
+        return ResponseEntity.status(500).body("❌ " + e.getMessage());
         }
+    }
 
     @RestController
     @RequestMapping("/api/auth/oauth2")
