@@ -362,7 +362,13 @@ const AboutContactPage = () => {
           }
         })
         .catch(() => {
-          alert("Invalid login credentials");
+          if (err.response?.status === 403) {
+            alert("Please verify your email first. Check your inbox for the OTP code.");
+            localStorage.setItem("pendingEmail", email);
+            window.location.href = "/verify-otp";
+          } else {
+            alert("Invalid login credentials");
+          }
           setIsLoading(false);
         });
     }
