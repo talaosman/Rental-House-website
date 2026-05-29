@@ -5,24 +5,18 @@ import API from "./api";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const getStatus = (listing) => {
-  const raw =
-    listing.status ||
-    listing.rentalStatus ||
-    listing.availability ||
-    "";
-  return raw.toLowerCase().trim();
+const todayStr = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 };
 
-const getPrice = (listing) => {
-  return (
-    listing.price ??
-    listing.pricePerMonth ??
-    listing.monthly_price ??
-    listing.monthlyPrice ??
-    listing.rent ??
-    null
-  );
+const parseSpringDate = (raw) => {
+  if (!raw) return null;
+  if (Array.isArray(raw)) {
+    const [y, m, d] = raw;
+    return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+  return String(raw).slice(0, 10);
 };
 
 const getStatusColor = (status) => {
@@ -37,27 +31,57 @@ const getStatusColor = (status) => {
 const capitalise = (str) =>
   str ? str.charAt(0).toUpperCase() + str.slice(1) : 'Unknown';
 
+// ─── Fetch real-time availability for a single listing ────────────────────────
+const fetchListingStatus = async (id) => {
+  try {
+    const res = await fetch(
+      `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/rents/is-rented/${id}`
+    );
+    if (!res.ok) return { status: 'available', availableAfter: null };
+
+    const data = await res.json();
+
+    // API says available
+    if (data.available === true) return { status: 'available', availableAfter: null };
+
+    // Has active lease — check if it's still valid
+    const endRaw   = data.endDate;
+    const startRaw = data.startDate;
+    const endDate  = parseSpringDate(endRaw);
+    const today    = todayStr();
+
+    if (endDate && today <= endDate) {
+      return {
+        status: 'rented',
+        availableAfter: new Date(endDate + "T12:00:00").toLocaleDateString(),
+      };
+    }
+
+    // Lease expired — treat as available
+    return { status: 'available', availableAfter: null };
+  } catch {
+    return { status: 'available', availableAfter: null };
+  }
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const SearchResult = () => {
-  const [allListings, setAllListings]           = useState([]);
-  const [filteredListings, setFilteredListings] = useState([]);
+  const [allListings,        setAllListings]        = useState([]);
+  const [filteredListings,   setFilteredListings]   = useState([]);
+  const [listingStatuses,    setListingStatuses]    = useState({});   // { [id]: { status, availableAfter } }
   const [showNoResultsModal, setShowNoResultsModal] = useState(false);
-  const [loading, setLoading]                   = useState(true);
+  const [loading,            setLoading]            = useState(true);
+  const [statusLoading,      setStatusLoading]      = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ── Fetch all listings once ────────────────────────────────────────────────
+  // ── 1. Fetch all listings ─────────────────────────────────────────────────
   useEffect(() => {
     setLoading(true);
     API.get("/api/houses")
       .then((res) => {
-        // 🔍 DEBUG — remove after confirming field names
-        if (res.data.length > 0) {
-          console.log("[SearchResult] First listing:", res.data[0]);
-          console.log("[SearchResult] Keys:", Object.keys(res.data[0]));
-        }
         setAllListings(res.data);
         setLoading(false);
       })
@@ -67,7 +91,7 @@ const SearchResult = () => {
       });
   }, []);
 
-  // ── Filter whenever query or data changes ─────────────────────────────────
+  // ── 2. Filter by query ────────────────────────────────────────────────────
   const queryParams = new URLSearchParams(location.search);
   const query       = queryParams.get('query') || '';
 
@@ -82,8 +106,8 @@ const SearchResult = () => {
 
     const q        = query.toLowerCase();
     const filtered = allListings.filter((listing) =>
-      listing.location?.toLowerCase().includes(q)    ||
-      listing.title?.toLowerCase().includes(q)        ||
+      listing.location?.toLowerCase().includes(q)     ||
+      listing.title?.toLowerCase().includes(q)         ||
       listing.propertyType?.toLowerCase().includes(q)
     );
 
@@ -91,13 +115,39 @@ const SearchResult = () => {
     setShowNoResultsModal(filtered.length === 0);
   }, [allListings, query, loading]);
 
-  // ── Navigation ────────────────────────────────────────────────────────────
+  // ── 3. Fetch real-time status for every filtered listing ──────────────────
+  useEffect(() => {
+    if (filteredListings.length === 0) return;
+
+    setStatusLoading(true);
+
+    Promise.all(
+      filteredListings.map((listing) =>
+        fetchListingStatus(listing.id).then((result) => ({ id: listing.id, ...result }))
+      )
+    ).then((results) => {
+      const map = {};
+      results.forEach(({ id, status, availableAfter }) => {
+        map[id] = { status, availableAfter };
+      });
+      setListingStatuses(map);
+      setStatusLoading(false);
+    });
+  }, [filteredListings]);
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
   const handleViewDetails = (id) => navigate(`/property/${id}`);
 
   const closeModal = () => {
     setShowNoResultsModal(false);
     navigate('/');
   };
+
+  const getListingStatus = (id) =>
+    listingStatuses[id]?.status || 'available';
+
+  const getAvailableAfter = (id) =>
+    listingStatuses[id]?.availableAfter || null;
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -127,8 +177,10 @@ const SearchResult = () => {
       ) : filteredListings.length > 0 ? (
         <div className="search-grid">
           {filteredListings.map((listing) => {
-            const status = getStatus(listing);
-            const price  = getPrice(listing);
+            const status        = getListingStatus(listing.id);
+            const availAfter    = getAvailableAfter(listing.id);
+            // ✅ Use same field names as SearchListings.js and PropertyDetails.js
+            const price         = listing.pricePerMonth ?? listing.price ?? null;
 
             return (
               <div
@@ -172,26 +224,30 @@ const SearchResult = () => {
                     <div className="card-meta-item">
                       <p className="card-meta-label">Bedrooms</p>
                       <p className="card-meta-value">
-                        {listing.nbOfBedrooms ?? listing.bedrooms ?? listing.beds ?? '—'} bd
+                        {listing.nbOfBedrooms ?? listing.bedrooms ?? '—'} bd
                       </p>
                     </div>
                     <div className="card-meta-item">
                       <p className="card-meta-label">Status</p>
-                      {/* ✅ FIX: uses getStatus() — no more wrong 'Available' fallback */}
-                      <p
-                        className="card-meta-value"
-                        style={{ color: getStatusColor(status) }}
-                      >
-                        {capitalise(status)}
+                      {/* ✅ FIX: real-time status from /api/rents/is-rented/:id */}
+                      <p className="card-meta-value" style={{ color: getStatusColor(status) }}>
+                        {statusLoading ? '…' : capitalise(status)}
                       </p>
                     </div>
                   </div>
 
+                  {/* Show available-after date when rented */}
+                  {status === 'rented' && availAfter && (
+                    <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>
+                      Available after {availAfter}
+                    </p>
+                  )}
+
                   <div className="card-price-row">
-                    {/* ✅ FIX: uses getPrice() — tries all possible field names */}
+                    {/* ✅ FIX: pricePerMonth matches SearchListings + PropertyDetails */}
                     <div className="card-price">
                       {price != null
-                        ? `$${price.toLocaleString()}`
+                        ? `$${Number(price).toLocaleString()}`
                         : 'Contact'}
                       <span>/mo</span>
                     </div>
