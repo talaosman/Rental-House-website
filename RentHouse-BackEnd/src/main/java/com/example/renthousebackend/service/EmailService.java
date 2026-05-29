@@ -17,7 +17,7 @@ public class EmailService {
     private JavaMailSender emailSender;
 
 
-    @Async 
+    @Async("emailTaskExecutor") 
     public void sendOtpEmail(String to, String otp) {
         try {
             MimeMessage message = emailSender.createMimeMessage();
@@ -46,7 +46,7 @@ public class EmailService {
             e.printStackTrace();
         }
     }
-    @Async
+    @Async("emailTaskExecutor") 
     public void sendHtmlEmail(String to, String subject, String htmlBody) {
         MimeMessage message = emailSender.createMimeMessage();
         try {
