@@ -257,6 +257,7 @@ const AboutContactPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showForgot, setShowForgot] = useState(false); 
+  // eslint-disable-next-line no-undef
   const navigate = useNavigate(); 
 
   useEffect(() => {
