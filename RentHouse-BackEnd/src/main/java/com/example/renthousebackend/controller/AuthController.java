@@ -10,6 +10,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.mail.javamail.MimeMessageHelper;
+
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,8 +22,6 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.security.core.Authentication;
 import java.util.UUID;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.mail.javamail.MimeMessageHelper;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -37,7 +38,7 @@ public class AuthController {
     private EmailService emailService;
 
     @Autowired
-private JavaMailSender emailSender;
+    private JavaMailSender emailSender;
 
     // Shared OTP store for both signup verification and password reset
     private Map<String, String> otpStore = new ConcurrentHashMap<>();
@@ -293,10 +294,9 @@ private JavaMailSender emailSender;
             response.put("password",    null);
             return ResponseEntity.ok(response);
         }
-
         @GetMapping("/test-email")
-public ResponseEntity<?> testEmail() {
-    try {
+        public ResponseEntity<?> testEmail() {
+        try {
         MimeMessage message = emailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
         helper.setTo("talaosman180@gmail.com");
@@ -304,10 +304,10 @@ public ResponseEntity<?> testEmail() {
         helper.setText("Brevo is working on production!", false);
         emailSender.send(message);
         return ResponseEntity.ok("✅ Email sent successfully via Brevo");
-    } catch (Exception e) {
+       } catch (Exception e) {
         return ResponseEntity.status(500).body("❌ Email failed: " + e.getMessage() 
             + " | Cause: " + (e.getCause() != null ? e.getCause().getMessage() : "none"));
-    }
-}
+         }
+        }
     }
 }
