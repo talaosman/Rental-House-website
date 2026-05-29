@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -126,7 +127,7 @@ public class AuthController {
 
    
     @PostMapping("/forgot-password/send-code")
-    public ResponseEntity<?> sendResetCode(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> sendResetCode(@RequestBody Map<String, String> body) throws UnsupportedEncodingException {
         String email = body.get("email");
         if (email == null || email.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Email is required"));

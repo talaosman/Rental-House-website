@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.renthousebackend.service.VisitRequestService;
+
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -42,7 +44,7 @@ public class VisitRequestController {
             @RequestParam String visitorName,
             @RequestParam String visitorEmail,
             @RequestParam String date,
-            @RequestParam String time) {
+            @RequestParam String time) throws UnsupportedEncodingException {
 
         House house = houseRepository.findById(houseId).orElse(null);
         User user = userRepository.findById(userId).orElse(null);

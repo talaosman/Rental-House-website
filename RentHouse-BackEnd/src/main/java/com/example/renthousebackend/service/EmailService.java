@@ -3,6 +3,9 @@ package com.example.renthousebackend.service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+
+import java.io.UnsupportedEncodingException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -47,10 +50,11 @@ public class EmailService {
         }
     }
     @Async("emailTaskExecutor") 
-    public void sendHtmlEmail(String to, String subject, String htmlBody) {
+    public void sendHtmlEmail(String to, String subject, String htmlBody) throws UnsupportedEncodingException {
         MimeMessage message = emailSender.createMimeMessage();
         try {
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom(new InternetAddress("talaosman180@gmail.com", "Rental House Website"));
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlBody, true); // Enable HTML
