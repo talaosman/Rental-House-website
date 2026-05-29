@@ -19,6 +19,8 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.security.core.Authentication;
 import java.util.UUID;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.mail.javamail.MimeMessageHelper;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -33,6 +35,9 @@ public class AuthController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+private JavaMailSender emailSender;
 
     // Shared OTP store for both signup verification and password reset
     private Map<String, String> otpStore = new ConcurrentHashMap<>();
@@ -288,5 +293,21 @@ public class AuthController {
             response.put("password",    null);
             return ResponseEntity.ok(response);
         }
+
+        @GetMapping("/test-email")
+public ResponseEntity<?> testEmail() {
+    try {
+        MimeMessage message = emailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        helper.setTo("talaosman180@gmail.com");
+        helper.setSubject("RentalHub Brevo Test");
+        helper.setText("Brevo is working on production!", false);
+        emailSender.send(message);
+        return ResponseEntity.ok("✅ Email sent successfully via Brevo");
+    } catch (Exception e) {
+        return ResponseEntity.status(500).body("❌ Email failed: " + e.getMessage() 
+            + " | Cause: " + (e.getCause() != null ? e.getCause().getMessage() : "none"));
+    }
+}
     }
 }
