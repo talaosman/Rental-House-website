@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./AboutContactPage.css";
 import API from "./api";
 import { requestNotificationPermission } from "./firebase";
+import { useNavigate } from "react-router-dom";
 
 
 
