@@ -9,33 +9,58 @@ const OtpVerificationPage = () => {
   const email = localStorage.getItem("pendingEmail");
   const password = localStorage.getItem("pendingPassword");
 
-  const handleVerify = () => {
-    API.post("/api/auth/verify-otp", { email, otp })
-      .then(() => {
-        const userData = JSON.parse(localStorage.getItem("tempUserData"));
-        localStorage.setItem("userId", userData.id);
-        localStorage.setItem("authHeader", "Basic " + btoa(`${email}:${password}`));
-        localStorage.setItem("userRole", userData.role);
-        localStorage.setItem("username", userData.username);
-        localStorage.setItem("email", email);
-        localStorage.setItem("password", password);
-        localStorage.setItem("phoneNumber", userData.phoneNumber);
-        localStorage.setItem(
-          "profileImage",
-          userData.profileImage ||
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.username)}&background=random`
-        );
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.removeItem("pendingLogin");
-        localStorage.removeItem("tempUserData");
-        localStorage.removeItem("pendingEmail");
-        localStorage.removeItem("pendingPassword");
+  const saveFcmTokenToBackend = async (userId) => {
+      try {
+        console.log("🔥 Requesting FCM permission for user:", userId);
+        // eslint-disable-next-line no-undef
+        const token = await requestNotificationPermission();
+        console.log("🔥 Got token:", token);
+        if (token) {
+          const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/users/${userId}/fcm-token`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fcmToken: token })
+          });
+          const data = await res.json();
+          console.log("🔥 Backend response:", data);
+        } else {
+          console.warn("⚠️ Token is null — notification permission was denied or not granted");
+        }
+      } catch (error) {
+        console.error("⚠️ FCM error:", error);
+      }
+    };
 
-        alert("OTP Verified! Login successful.");
-        navigate("/about");
-      })
-      .catch(() => alert("Invalid OTP. Try again."));
-  };
+  const handleVerify = async () => {         // ← async
+  try {
+    await API.post("/api/auth/verify-otp", { email, otp });
+    const userData = JSON.parse(localStorage.getItem("tempUserData"));
+    localStorage.setItem("userId", userData.id);
+    localStorage.setItem("authHeader", "Basic " + btoa(`${email}:${password}`));
+    localStorage.setItem("userRole", userData.role);
+    localStorage.setItem("username", userData.username);
+    localStorage.setItem("email", email);
+    localStorage.setItem("password", password);
+    localStorage.setItem("phoneNumber", userData.phoneNumber);
+    localStorage.setItem(
+      "profileImage",
+      userData.profileImage ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.username)}&background=random`
+    );
+    localStorage.setItem("isLoggedIn", "true");
+    localStorage.removeItem("pendingLogin");
+    localStorage.removeItem("tempUserData");
+    localStorage.removeItem("pendingEmail");
+    localStorage.removeItem("pendingPassword");
+
+    await saveFcmTokenToBackend(userData.id); 
+
+    alert("OTP Verified! Login successful.");
+    navigate("/about");
+  } catch {
+    alert("Invalid OTP. Try again.");
+  }
+};
 
   const handleOtpChange = (e) => {
     const val = e.target.value.replace(/\D/g, "").slice(0, 6);
