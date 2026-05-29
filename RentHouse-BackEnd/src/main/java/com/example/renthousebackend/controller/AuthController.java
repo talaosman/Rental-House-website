@@ -44,11 +44,15 @@ public class AuthController {
     // Shared OTP store for both signup verification and password reset
     private Map<String, String> otpStore = new ConcurrentHashMap<>();
 
+    private Map<String, User> pendingUsersStore = new ConcurrentHashMap<>();
+
     @PostMapping("/send-otp")
     public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> request) {
         String email = request.get("email");
-        Optional<User> userOpt = userRepo.findByEmail(email);
-        if (userOpt.isEmpty()) {
+        // Check pending store first, then DB
+        boolean exists = pendingUsersStore.containsKey(email)
+                || userRepo.findByEmail(email).isPresent();
+        if (!exists) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
         String otp = String.valueOf(new Random().nextInt(900000) + 100000);
@@ -62,8 +66,26 @@ public class AuthController {
         String email = request.get("email");
         String code = request.get("otp");
         String expected = otpStore.get(email);
+
         if (expected != null && expected.equals(code)) {
             otpStore.remove(email);
+
+            // New signup path: user is in pending store → save to DB now
+            if (pendingUsersStore.containsKey(email)) {
+                User user = pendingUsersStore.remove(email);
+                userRepo.save(user);
+                Map<String, Object> response = new HashMap<>();
+                response.put("id", user.getId());
+                response.put("role", user.getRole());
+                response.put("email", user.getEmail());
+                response.put("password", user.getPassword());
+                response.put("username", user.getUsername());
+                response.put("phoneNumber", user.getPhoneNumber());
+                response.put("profileImage", user.getProfileImage());
+                return ResponseEntity.ok(response);
+            }
+
+            // Fallback: already in DB
             Optional<User> userOpt = userRepo.findByEmail(email);
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
@@ -77,26 +99,37 @@ public class AuthController {
                 response.put("profileImage", user.getProfileImage());
                 return ResponseEntity.ok(response);
             }
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found after OTP verification");
+
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User not found after OTP verification");
         }
+
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid OTP");
     }
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody User user) {
+        // Block if already verified in DB
         if (userRepo.findByEmail(user.getEmail()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("User already exists");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists");
+        }
+        // Block if already waiting for OTP
+        if (pendingUsersStore.containsKey(user.getEmail())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Verification email already sent. Please check your inbox.");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         if (user.getRole() == null || user.getRole().isEmpty()) {
             user.setRole("USER");
         }
-        userRepo.save(user);
+
+        // ← Store in memory only, NOT in DB yet
+        pendingUsersStore.put(user.getEmail(), user);
+
         Map<String, Object> response = new HashMap<>();
-        response.put("id", user.getId());
+        response.put("id", null);  // no DB id yet
         response.put("role", user.getRole());
         response.put("email", user.getEmail());
-        response.put("password", user.getPassword());
         response.put("username", user.getUsername());
         response.put("phoneNumber", user.getPhoneNumber());
         response.put("profileImage", user.getProfileImage());
@@ -105,7 +138,15 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User loginRequest) {
-        Optional<User> userOpt = userRepo.findByEmail(loginRequest.getEmail());
+        String email = loginRequest.getEmail();
+
+        // ← Block login if email is pending OTP verification
+        if (pendingUsersStore.containsKey(email)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Please verify your email before logging in.");
+        }
+
+        Optional<User> userOpt = userRepo.findByEmail(email);
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
@@ -124,7 +165,6 @@ public class AuthController {
         response.put("profileImage", user.getProfileImage());
         return ResponseEntity.ok(response);
     }
-
     // Separate store so reset codes don't collide with signup OTPs
     private Map<String, String> resetCodeStore = new ConcurrentHashMap<>();
 
@@ -230,15 +270,15 @@ public class AuthController {
 
     @GetMapping("/test-email")
     public ResponseEntity<?> testEmail() {
-    try {
-        emailService.sendViaBrevoApi(
-            "talaosman180@gmail.com",
-            "RentalHub Production Test",
-            "<h2>✅ Brevo HTTP API is working!</h2>"
-        );
-        return ResponseEntity.ok("✅ Request sent — check Gmail inbox and Brevo Logs");
+        try {
+            emailService.sendViaBrevoApi(
+                    "talaosman180@gmail.com",
+                    "RentalHub Production Test",
+                    "<h2>✅ Brevo HTTP API is working!</h2>"
+            );
+            return ResponseEntity.ok("✅ Request sent — check Gmail inbox and Brevo Logs");
         } catch (Exception e) {
-        return ResponseEntity.status(500).body("❌ " + e.getMessage());
+            return ResponseEntity.status(500).body("❌ " + e.getMessage());
         }
     }
 
@@ -301,6 +341,5 @@ public class AuthController {
             return ResponseEntity.ok(response);
         }
 
-      
     }
 }
