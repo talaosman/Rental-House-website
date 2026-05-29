@@ -39,10 +39,10 @@ public class VisitRequestController {
     private VisitRequestService visitRequestService;
 
     @Value("${app.backend.url}")
-private String backendUrl;
+    private String backendUrl;
 
-@Value("${app.frontend.url}")
-private String frontendUrl;
+   @Value("${app.frontend.url}")
+   private String frontendUrl;
 
     @PostMapping("/request")
     public ResponseEntity<?> createVisit(
