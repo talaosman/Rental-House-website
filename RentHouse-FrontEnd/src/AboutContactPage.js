@@ -256,7 +256,8 @@ const AboutContactPage = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [showForgot, setShowForgot] = useState(false);  // ← new
+  const [showForgot, setShowForgot] = useState(false); 
+  const navigate = useNavigate(); 
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
@@ -320,7 +321,7 @@ const AboutContactPage = () => {
             });
         })
         .catch((err) => {
-          if (err.response?.status === 409) alert("Email already exists.");
+          if (err.response?.status === 409) { alert("Email already exists."); navigate("/about"); }
           else alert("Signup failed. Try again.");
           setIsLoading(false);
         });
