@@ -257,9 +257,9 @@ const AboutContactPage = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [showForgot, setShowForgot] = useState(false); 
+  const [showForgot, setShowForgot] = useState(false);
   // eslint-disable-next-line no-undef
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
@@ -323,11 +323,15 @@ const AboutContactPage = () => {
             });
         })
         .catch((err) => {
-          if (err.response?.status === 409) { alert("Email already exists."); navigate("/about"); }
-          else alert("Signup failed. Try again.");
+          setShowModal(false);  // ← hide the spinner modal first
           setIsLoading(false);
+          if (err.response?.status === 409) {
+            alert("Email already exists.");
+            setIsSigningIn(true);  // ← switch to Sign In tab instead of navigating away
+          } else {
+            alert("Signup failed. Try again.");
+          }
         });
-
     } else {
       API.post("/api/auth/login", { email, password })
         .then(async (res) => {
@@ -364,7 +368,7 @@ const AboutContactPage = () => {
             window.location.href = "/";
           }
         })
-        .catch((err) => {   
+        .catch((err) => {
           if (err.response?.status === 403) {
             alert("Please verify your email first. Check your inbox for the OTP code.");
             localStorage.setItem("pendingEmail", email);
