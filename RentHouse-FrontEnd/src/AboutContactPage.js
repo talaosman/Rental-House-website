@@ -361,7 +361,7 @@ const AboutContactPage = () => {
             window.location.href = "/";
           }
         })
-        .catch((err) => {   // ← add err parameter
+        .catch((err) => {   
           if (err.response?.status === 403) {
             alert("Please verify your email first. Check your inbox for the OTP code.");
             localStorage.setItem("pendingEmail", email);
