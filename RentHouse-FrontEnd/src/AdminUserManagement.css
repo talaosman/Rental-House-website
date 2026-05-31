@@ -440,12 +440,56 @@
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .aumg-page { padding: 20px 14px 48px; }
-  .aumg-title { font-size: 20px; }
-  .aumg-table th, .aumg-table td { padding: 10px 12px; }
-  .td-phone, .td-fcm { display: none; }
-  .aumg-stats { grid-template-columns: repeat(2, 1fr); }
-  .aumg-controls { flex-direction: column; align-items: stretch; }
-  .aumg-search-wrap { max-width: 100%; }
-  .aumg-count { margin-left: 0; }
+  .aumg-table,
+  .aumg-table thead,
+  .aumg-table tbody,
+  .aumg-table th,
+  .aumg-table td,
+  .aumg-table tr {
+    display: block;
+  }
+
+  .aumg-table thead {
+    display: none;
+  }
+
+  .aumg-row {
+    background: white;
+    border: 1px solid #e8eef5;
+    border-radius: 12px;
+    margin: 12px;
+    padding: 12px;
+  }
+
+  .aumg-table td {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border: none;
+  }
+
+  .aumg-table td::before {
+    font-weight: 600;
+    color: #0f3460;
+  }
+
+  .td-id::before {
+    content: "ID";
+  }
+
+  .td-user::before {
+    content: "User";
+  }
+
+  .td-email::before {
+    content: "Email";
+  }
+
+  .td-phone::before {
+    content: "Phone";
+  }
+
+  .td-fcm::before {
+    content: "Notifications";
+  }
 }
