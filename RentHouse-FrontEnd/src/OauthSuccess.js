@@ -5,7 +5,7 @@ import { requestNotificationPermission } from "./firebase";
 export default function OauthSuccess() {
   const location = useLocation();
 
-   useEffect(() => {
+  useEffect(() => {
     const params = new URLSearchParams(location.search);
     const userId = params.get("userId");
     const username = params.get("username");
@@ -50,7 +50,9 @@ export default function OauthSuccess() {
     };
 
     saveFcmAndRedirect();
+    localStorage.setItem("pendingFcmSave", "true"); // ← flag it
+    window.location.href = "/";
   }, [location]);
-  
+
   return <p>Logging you in...</p>;
 }

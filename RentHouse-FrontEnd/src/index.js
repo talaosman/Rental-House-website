@@ -25,6 +25,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import OauthSuccess from './OauthSuccess.js';
 import AdminRatingsDashboard from './AdminRatingsDashboard.js';
 import OwnerDashboard from "./OwnerDashboard";
+import { requestNotificationPermission } from "./firebase";
 
 
 import { onForegroundMessage } from "./firebase";
@@ -36,6 +37,23 @@ const stripePromise = loadStripe("pk_test_51RoNCB2Ylq8U0YVR6yVwbqvqm4Dy3QO8SPHEH
 
 const App = () => {
 
+
+  useEffect(() => {
+    const shouldSaveFcm = localStorage.getItem("pendingFcmSave");
+    const userId = localStorage.getItem("userId");
+    if (shouldSaveFcm && userId) {
+      localStorage.removeItem("pendingFcmSave");
+      requestNotificationPermission().then(token => {
+        if (token) {
+          fetch(`${process.env.REACT_APP_API_URL}/api/users/${userId}/fcm-token`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fcmToken: token })
+          });
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onForegroundMessage((payload) => {
@@ -57,15 +75,15 @@ const App = () => {
         };
       }
       if ('serviceWorker' in navigator) {
-  navigator.serviceWorker
-    .register('/firebase-messaging-sw.js')
-    .then((registration) => {
-      console.log("✅ Service Worker registered:", registration);
-    })
-    .catch((err) => {
-      console.error("❌ Service Worker failed:", err);
-    });
-}
+        navigator.serviceWorker
+          .register('/firebase-messaging-sw.js')
+          .then((registration) => {
+            console.log("✅ Service Worker registered:", registration);
+          })
+          .catch((err) => {
+            console.error("❌ Service Worker failed:", err);
+          });
+      }
     });
 
     return () => unsubscribe();
@@ -107,7 +125,7 @@ const App = () => {
         <Route path="/adminRating" element={<AdminRatingsDashboard />} />
         <Route path="/oauth-success" element={<OauthSuccess />} />
         <Route path="/owner-dashboard" element={<OwnerDashboard />} />
-       
+
       </Routes>
     </Router>
   );

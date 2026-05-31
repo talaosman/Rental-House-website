@@ -7,16 +7,16 @@ import { requestNotificationPermission } from "./firebase";
 const RESEND_COOLDOWN = 60; // seconds before user can resend again
 
 const OtpVerificationPage = () => {
-  const [otp,           setOtp]           = useState("");
-  const [isVerifying,   setIsVerifying]   = useState(false);
-  const [isResending,   setIsResending]   = useState(false);
+  const [otp, setOtp] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(RESEND_COOLDOWN);
-  const [errorMsg,      setErrorMsg]      = useState("");
-  const [successMsg,    setSuccessMsg]    = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
-  const navigate  = useNavigate();
-  const email     = localStorage.getItem("pendingEmail");
-  const password  = localStorage.getItem("pendingPassword");
+  const navigate = useNavigate();
+  const email = localStorage.getItem("pendingEmail");
+  const password = localStorage.getItem("pendingPassword");
 
   // ── Cooldown countdown ────────────────────────────────────────────────────
   useEffect(() => {
@@ -60,17 +60,17 @@ const OtpVerificationPage = () => {
       const userData = response.data;
 
       // Persist session
-      localStorage.setItem("userId",       userData.id);
-      localStorage.setItem("authHeader",   "Basic " + btoa(`${email}:${password}`));
-      localStorage.setItem("userRole",     userData.role);
-      localStorage.setItem("username",     userData.username);
-      localStorage.setItem("email",        email);
-      localStorage.setItem("password",     password);
-      localStorage.setItem("phoneNumber",  userData.phoneNumber);
+      localStorage.setItem("userId", userData.id);
+      localStorage.setItem("authHeader", "Basic " + btoa(`${email}:${password}`));
+      localStorage.setItem("userRole", userData.role);
+      localStorage.setItem("username", userData.username);
+      localStorage.setItem("email", email);
+      localStorage.setItem("password", password);
+      localStorage.setItem("phoneNumber", userData.phoneNumber);
       localStorage.setItem(
         "profileImage",
         userData.profileImage ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.username)}&background=random`
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.username)}&background=random`
       );
       localStorage.setItem("isLoggedIn", "true");
       localStorage.removeItem("pendingLogin");
@@ -81,7 +81,8 @@ const OtpVerificationPage = () => {
       await saveFcmTokenToBackend(userData.id);
 
       setSuccessMsg("✅ Email verified! Redirecting…");
-      setTimeout(() => navigate("/about"), 1200);
+      await new Promise(resolve => setTimeout(resolve, 800));
+      navigate("/");
     } catch (err) {
       const msg =
         err.response?.status === 410
@@ -237,8 +238,8 @@ const OtpVerificationPage = () => {
               {isResending
                 ? "Sending…"
                 : resendCooldown > 0
-                ? `Resend in ${resendCooldown}s`
-                : "Resend Code"}
+                  ? `Resend in ${resendCooldown}s`
+                  : "Resend Code"}
             </button>
           </div>
 
