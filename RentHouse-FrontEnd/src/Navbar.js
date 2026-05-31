@@ -82,7 +82,7 @@ const Navbar = () => {
       
       <nav className={`navbar-luxury ${scrolled ? "scrolled" : ""}`}>
         <div className="navbar-container-luxury">
-          {/* Mobile Menu Toggle */}
+          
           <div className="navbar-toggle-luxury" onClick={handleMenuToggle}>
             <span className="bar-luxury"></span>
             <span className="bar-luxury"></span>
