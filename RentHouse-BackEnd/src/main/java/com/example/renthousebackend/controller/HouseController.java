@@ -35,7 +35,10 @@ import java.util.Base64;
 
 @RestController
 @RequestMapping("/api/houses")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {
+  "http://localhost:3000",
+  "https://rental-house-website-ten.vercel.app"
+})
 public class HouseController {
 
     private final HouseService houseService;

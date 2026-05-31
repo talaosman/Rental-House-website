@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/files")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "https://your-frontend.vercel.app"})
 public class FileController {
 
     @Autowired

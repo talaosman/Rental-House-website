@@ -12,6 +12,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 public interface VisitRequestRepository extends JpaRepository<VisitRequest, Long> {
+
     List<VisitRequest> findByHouse(House house);
 
     List<VisitRequest> findByHouseOwnerId(Long ownerId);
@@ -25,5 +26,10 @@ public interface VisitRequestRepository extends JpaRepository<VisitRequest, Long
     @Transactional
     @Query("DELETE FROM VisitRequest v WHERE v.house.id = :houseId")
     void deleteByHouseId(@Param("houseId") Long houseId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM VisitRequest v WHERE v.user.id = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
 
 }

@@ -20,7 +20,7 @@ import com.example.renthousebackend.repository.OfferRepository;
 
 @RestController
 @RequestMapping("/api/offers")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "https://your-frontend.vercel.app"})
 public class OfferController {
 
     @Autowired

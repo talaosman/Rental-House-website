@@ -23,7 +23,7 @@ import com.example.renthousebackend.repository.FavoriteRepository;
 
 @RestController
 @RequestMapping("/api/chat")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "https://your-frontend.vercel.app"})
 public class ChatController {
 
     @Value("${google.ai.api.key}")

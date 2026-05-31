@@ -20,7 +20,7 @@ import com.stripe.param.PaymentIntentCreateParams;
 
 import jakarta.annotation.PostConstruct;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "https://your-frontend.vercel.app"})
 @RestController
 @RequestMapping("/api/stripe")
 public class StripeController {
