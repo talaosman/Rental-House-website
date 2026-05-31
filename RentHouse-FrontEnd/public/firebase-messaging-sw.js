@@ -46,8 +46,8 @@ self.addEventListener("notificationclick", (event) => {
   if (event.action === "view" || !event.action) {
     const houseId = event.notification.data?.houseId;
     const url = houseId
-      ? `http://localhost:3000/property/${houseId}`
-      : "http://localhost:3000";
+      ? `/property/${houseId}`
+      : "/";
 
     // eslint-disable-next-line no-undef
     event.waitUntil(clients.openWindow(url));

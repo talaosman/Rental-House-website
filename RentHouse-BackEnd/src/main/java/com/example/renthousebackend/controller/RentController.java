@@ -19,7 +19,10 @@ import java.util.Collections;
 
 @RestController
 @RequestMapping("/api/rents")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {
+  "http://localhost:3000",
+  "https://rental-house-website-ten.vercel.app"
+})
 public class RentController {
 
     @Autowired
