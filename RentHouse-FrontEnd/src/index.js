@@ -26,6 +26,7 @@ import OauthSuccess from './OauthSuccess.js';
 import AdminRatingsDashboard from './AdminRatingsDashboard.js';
 import OwnerDashboard from "./OwnerDashboard";
 import { requestNotificationPermission } from "./firebase";
+import AdminUserManagement from "./AdminUserManagement";
 
 
 import { onForegroundMessage } from "./firebase";
@@ -125,6 +126,7 @@ const App = () => {
         <Route path="/adminRating" element={<AdminRatingsDashboard />} />
         <Route path="/oauth-success" element={<OauthSuccess />} />
         <Route path="/owner-dashboard" element={<OwnerDashboard />} />
+        <Route path="/admin-users" element={<AdminUserManagement />} />
 
       </Routes>
     </Router>
