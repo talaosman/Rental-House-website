@@ -79,7 +79,7 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Top Navbar */}
+      
       <nav className={`navbar-luxury ${scrolled ? "scrolled" : ""}`}>
         <div className="navbar-container-luxury">
           {/* Mobile Menu Toggle */}
