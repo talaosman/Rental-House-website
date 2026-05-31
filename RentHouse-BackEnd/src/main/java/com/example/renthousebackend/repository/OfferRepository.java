@@ -10,5 +10,7 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
    List<Offer> findByUserIdAndUsedFalse(Long userId);
 
    List<Offer> findByHouseIdAndActiveTrue(Long houseId);
+   
+   void deleteByUserId(Long userId);
 
 }

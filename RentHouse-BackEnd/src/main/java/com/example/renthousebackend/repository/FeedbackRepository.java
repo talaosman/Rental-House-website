@@ -9,4 +9,6 @@ import java.util.List;
 public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
     // Custom query methods can be added here if needed
       List<Feedback> findByUserId(Long userId);
+
+      void deleteByUserId(Long userId);
 }

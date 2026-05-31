@@ -38,4 +38,6 @@ public interface RentRepository extends JpaRepository<Rent, Long> {
         @Transactional
         @Query("DELETE FROM Rent r WHERE r.house.id = :houseId")
         void deleteByHouseId(@Param("houseId") Long houseId);
+
+        void deleteByUserId(Long userId);
 }

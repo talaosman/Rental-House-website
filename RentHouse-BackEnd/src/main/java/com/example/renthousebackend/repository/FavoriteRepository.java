@@ -24,6 +24,9 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     List<Favorite> findByUserId(Long userId);
     List<Favorite> findByPropertyId(Long propertyId);
 
+    void deleteByUserId(Long userId);
+
+
     @Modifying
     @Transactional
     @Query("DELETE FROM Favorite f WHERE f.property.id = :houseId")

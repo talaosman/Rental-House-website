@@ -8,33 +8,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
 
 import com.example.renthousebackend.entity.User;
 import com.example.renthousebackend.payload.UserUpdateRequest;
-import com.example.renthousebackend.repository.UserRepository;
+import com.example.renthousebackend.repository.*;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "https://rental-house-website-ten.vercel.app"})
 public class UserController {
 
-    @Autowired
-    private UserRepository userRepo;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private UserRepository userRepository;
-
+    @Autowired private UserRepository userRepo;
+    @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private RentRepository rentRepository;
+    @Autowired private FavoriteRepository favoriteRepository;
+    @Autowired private VisitRequestRepository visitRequestRepository;
+    @Autowired private FeedbackRepository feedbackRepository;
+    @Autowired private RatingRepository ratingRepository;
+    @Autowired private OfferRepository offerRepository;
 
     @GetMapping
     public ResponseEntity<?> getAllUsers() {
@@ -43,50 +36,32 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getUser(@PathVariable Long id) {
-        Optional<User> userOpt = userRepo.findById(id);
-
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-        }
-
-        return ResponseEntity.ok(userOpt.get());
+        return userRepo.findById(id)
+            .<ResponseEntity<?>>map(ResponseEntity::ok)
+            .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found"));
     }
 
     @PutMapping("/update")
     public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest request) {
         try {
-
             Optional<User> userOpt = userRepo.findById(request.getUserId());
-            if (userOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-            }
+            if (userOpt.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
 
             User user = userOpt.get();
-            if (request.getUsername() != null && !request.getUsername().isEmpty()) {
+            if (request.getUsername() != null && !request.getUsername().isEmpty())
                 user.setUsername(request.getUsername());
-            }
-
-            if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+            if (request.getEmail() != null && !request.getEmail().isEmpty())
                 user.setEmail(request.getEmail());
-            }
-
-            if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            if (request.getPassword() != null && !request.getPassword().isEmpty())
                 user.setPassword(passwordEncoder.encode(request.getPassword()));
-            }
-
-            if (request.getPhoneNumber() != null) {
+            if (request.getPhoneNumber() != null)
                 user.setPhoneNumber(request.getPhoneNumber());
-            }
-
-            if (request.getProfileImage() != null && !request.getProfileImage().isEmpty()) {
+            if (request.getProfileImage() != null && !request.getProfileImage().isEmpty())
                 user.setProfileImage(request.getProfileImage());
-            }
 
             userRepo.save(user);
             return ResponseEntity.ok("User updated successfully");
-
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error updating user: " + e.getMessage());
         }
@@ -94,23 +69,46 @@ public class UserController {
 
     @GetMapping("/count")
     public ResponseEntity<Map<String, Long>> getUserCount() {
-        long count = userRepo.count();
-        return ResponseEntity.ok(Collections.singletonMap("count", count));
+        return ResponseEntity.ok(Collections.singletonMap("count", userRepo.count()));
     }
-     @PostMapping("/{userId}/fcm-token")
-    public ResponseEntity<?> saveFcmToken(
-            @PathVariable Long userId,
-            @RequestBody Map<String, String> body) {
 
+    @PostMapping("/{userId}/fcm-token")
+    public ResponseEntity<?> saveFcmToken(@PathVariable Long userId,
+                                           @RequestBody Map<String, String> body) {
         String token = body.get("fcmToken");
-        if (token == null || token.isBlank()) {
+        if (token == null || token.isBlank())
             return ResponseEntity.badRequest().body("FCM token is required");
-        }
 
-        return userRepository.findById(userId).map(user -> {
+        return userRepo.findById(userId).map(user -> {
             user.setFcmToken(token);
-            userRepository.save(user);
+            userRepo.save(user);
             return ResponseEntity.ok("FCM token saved ✅");
         }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{userId}/force-delete")
+    @Transactional
+    public ResponseEntity<?> forceDeleteUser(@PathVariable Long userId) {
+        Optional<User> userOpt = userRepo.findById(userId);
+        if (userOpt.isEmpty())
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+
+        User user = userOpt.get();
+        if ("ADMIN".equals(user.getRole()))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Cannot delete admin accounts");
+
+        try {
+            try { offerRepository.deleteByUserId(userId); }        catch (Exception ignored) {}
+            try { ratingRepository.deleteByUserId(userId); }       catch (Exception ignored) {}
+            try { feedbackRepository.deleteByUserId(userId); }     catch (Exception ignored) {}
+            try { visitRequestRepository.deleteByUserId(userId); } catch (Exception ignored) {}
+            try { favoriteRepository.deleteByUserId(userId); }     catch (Exception ignored) {}
+            try { rentRepository.deleteByUserId(userId); }         catch (Exception ignored) {}
+            userRepo.deleteById(userId);
+            return ResponseEntity.ok("User deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Delete failed: " + e.getMessage());
+        }
     }
 }
