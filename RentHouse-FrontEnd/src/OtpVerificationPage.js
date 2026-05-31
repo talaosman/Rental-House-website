@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import API from "./api";
 import { useNavigate } from "react-router-dom";
 import "./OtpVerificationPage.css";
+import { requestNotificationPermission } from "./firebase";
 
 const RESEND_COOLDOWN = 60; // seconds before user can resend again
 
@@ -32,7 +33,6 @@ const OtpVerificationPage = () => {
   // ── FCM token helper ──────────────────────────────────────────────────────
   const saveFcmTokenToBackend = async (userId) => {
     try {
-      // eslint-disable-next-line no-undef
       const token = await requestNotificationPermission();
       if (token) {
         await fetch(
