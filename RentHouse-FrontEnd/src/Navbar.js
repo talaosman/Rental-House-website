@@ -23,7 +23,7 @@ const Navbar = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  // Handle scroll effect
+  
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
