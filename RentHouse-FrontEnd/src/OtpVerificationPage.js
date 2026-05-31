@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "./OtpVerificationPage.css";
 import { requestNotificationPermission } from "./firebase";
 
-const RESEND_COOLDOWN = 60; // seconds before user can resend again
+const RESEND_COOLDOWN = 60;
 
 const OtpVerificationPage = () => {
   const [otp, setOtp] = useState("");
@@ -18,21 +18,23 @@ const OtpVerificationPage = () => {
   const email = localStorage.getItem("pendingEmail");
   const password = localStorage.getItem("pendingPassword");
 
-  // ── Cooldown countdown ────────────────────────────────────────────────────
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [resendCooldown]);
 
-  // ── Redirect if no pending email ──────────────────────────────────────────
   useEffect(() => {
     if (!email) navigate("/about");
   }, [email, navigate]);
 
-  // ── FCM token helper ──────────────────────────────────────────────────────
+  // ─── KEY FIX: called INSIDE the button click handler ──────────────────────
+  // Notification.requestPermission() requires a user gesture.
+  // Calling it here (while the user actively clicked "Verify") works.
+  // Calling it after a redirect / in useEffect does NOT work.
   const saveFcmTokenToBackend = async (userId) => {
     try {
+      // This runs synchronously within the click event — browser allows it
       const token = await requestNotificationPermission();
       if (token) {
         await fetch(
@@ -43,13 +45,15 @@ const OtpVerificationPage = () => {
             body: JSON.stringify({ fcmToken: token }),
           }
         );
+        console.log("✅ FCM token saved after OTP verify");
+      } else {
+        console.warn("⚠️ FCM null — permission denied or not supported");
       }
     } catch (error) {
       console.error("FCM error:", error);
     }
   };
 
-  // ── Verify OTP ────────────────────────────────────────────────────────────
   const handleVerify = async () => {
     if (otp.length !== 6) return;
     setIsVerifying(true);
@@ -59,7 +63,6 @@ const OtpVerificationPage = () => {
       const response = await API.post("/api/auth/verify-otp", { email, otp });
       const userData = response.data;
 
-      // Persist session
       localStorage.setItem("userId", userData.id);
       localStorage.setItem("authHeader", "Basic " + btoa(`${email}:${password}`));
       localStorage.setItem("userRole", userData.role);
@@ -70,7 +73,7 @@ const OtpVerificationPage = () => {
       localStorage.setItem(
         "profileImage",
         userData.profileImage ||
-        `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.username)}&background=random`
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.username)}&background=random`
       );
       localStorage.setItem("isLoggedIn", "true");
       localStorage.removeItem("pendingLogin");
@@ -78,10 +81,11 @@ const OtpVerificationPage = () => {
       localStorage.removeItem("pendingEmail");
       localStorage.removeItem("pendingPassword");
 
+      // ← FCM called here, still within the user's click gesture chain
       await saveFcmTokenToBackend(userData.id);
 
       setSuccessMsg("✅ Email verified! Redirecting…");
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 800));
       navigate("/");
     } catch (err) {
       const msg =
@@ -95,7 +99,6 @@ const OtpVerificationPage = () => {
     }
   };
 
-  // ── Resend OTP ────────────────────────────────────────────────────────────
   const handleResend = async () => {
     if (resendCooldown > 0 || isResending) return;
     setIsResending(true);
@@ -113,8 +116,6 @@ const OtpVerificationPage = () => {
           ? "Session expired. Please sign up again."
           : err.response?.data || "Failed to resend code. Please try again.";
       setErrorMsg(msg);
-
-      // If session fully expired, send them back to sign up
       if (err.response?.status === 404) {
         setTimeout(() => navigate("/about"), 2000);
       }
@@ -136,8 +137,6 @@ const OtpVerificationPage = () => {
 
   return (
     <div className="otp-page">
-
-      {/* ── Left: Hero Panel ── */}
       <div className="otp-hero">
         <div className="otp-hero-logo">
           <div className="otp-hero-logo-mark">
@@ -161,12 +160,10 @@ const OtpVerificationPage = () => {
         </div>
       </div>
 
-      {/* ── Right: OTP Form Panel ── */}
       <div className="otp-form-panel">
         <div className="otp-container">
           <div className="otp-accent-bar" />
 
-          {/* Shield icon */}
           <div className="otp-icon-wrap">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="1.8">
@@ -176,9 +173,7 @@ const OtpVerificationPage = () => {
           </div>
 
           <h2 className="otp-title">Verify your email</h2>
-          <p className="otp-subtitle">
-            We sent a 6-digit verification code to
-          </p>
+          <p className="otp-subtitle">We sent a 6-digit verification code to</p>
 
           <div className="otp-email-chip">
             <span className="otp-email-chip-dot" />
@@ -199,26 +194,19 @@ const OtpVerificationPage = () => {
             disabled={isVerifying}
           />
 
-          {/* Progress dots */}
           <div className="otp-progress">
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <span key={i} className={`otp-dot ${i < otp.length ? "filled" : ""}`} />
             ))}
           </div>
 
-          {/* Error / success feedback */}
           {errorMsg && (
-            <div className="otp-feedback otp-feedback-error">
-              ⚠️ {errorMsg}
-            </div>
+            <div className="otp-feedback otp-feedback-error">⚠️ {errorMsg}</div>
           )}
           {successMsg && (
-            <div className="otp-feedback otp-feedback-success">
-              {successMsg}
-            </div>
+            <div className="otp-feedback otp-feedback-success">{successMsg}</div>
           )}
 
-          {/* Verify button */}
           <button
             onClick={handleVerify}
             className="otp-button"
@@ -227,7 +215,6 @@ const OtpVerificationPage = () => {
             {isVerifying ? "Verifying…" : "Verify & Continue"}
           </button>
 
-          {/* ── Resend button ── */}
           <div className="otp-resend-row">
             <span className="otp-resend-label">Didn't receive the code?</span>
             <button
@@ -238,8 +225,8 @@ const OtpVerificationPage = () => {
               {isResending
                 ? "Sending…"
                 : resendCooldown > 0
-                  ? `Resend in ${resendCooldown}s`
-                  : "Resend Code"}
+                ? `Resend in ${resendCooldown}s`
+                : "Resend Code"}
             </button>
           </div>
 
