@@ -1387,20 +1387,20 @@
   .profile-wrapper { padding: 0 24px 60px; }
   .profile-hero-content { padding: 0 24px 44px; }
 
-  /* Stack vertically on tablet */
   .profile-top-row {
     flex-direction: column;
-  }
-
-  .profile-top-row > .profile-container {
-    flex: none;
     width: 100%;
   }
 
+  .profile-top-row > .profile-container,
   .profile-top-row > .rewards-card,
-  .profile-top-row > .admin-dashboard-card {
-    flex: none;
-    width: 100%;
+  .profile-top-row > .admin-dashboard-card,
+  .profile-top-row > .owner-dashboard-card {
+    flex: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
   }
 }
 
@@ -1435,5 +1435,19 @@
 
   .admin-offer-detail-right {
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-wrapper { padding: 0 12px 60px; }
+  .profile-hero-content { padding: 0 16px 38px; }
+
+  .profile-top-row > .profile-container,
+  .profile-top-row > .rewards-card,
+  .profile-top-row > .admin-dashboard-card,
+  .profile-top-row > .owner-dashboard-card {
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: unset !important;
   }
 }
