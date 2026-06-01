@@ -119,4 +119,28 @@ public class EmailService {
             emailSender.send(message);
         } catch (Exception e) { e.printStackTrace(); }
     }
+public void sendNewOwnerAccountEmail(String toEmail, String ownerName, String tempPassword) {
+    String html = "<div style='font-family:Arial,sans-serif;max-width:480px;margin:0 auto'>"
+        + "<div style='background:#2563eb;padding:28px 32px;border-radius:12px 12px 0 0'>"
+        + "<h2 style='color:white;margin:0;font-size:22px'>🏠 Your Owner Account Is Ready</h2></div>"
+        + "<div style='background:#fff;padding:28px 32px;border:1px solid #e2e8f0;"
+        + "border-top:none;border-radius:0 0 12px 12px'>"
+        + "<p style='color:#334155;font-size:15px'>Hi " + ownerName + ",</p>"
+        + "<p style='color:#334155;font-size:15px'>A property has been listed under your name on "
+        + "<strong>RentalHub</strong>, and an owner account has been created for you so you can "
+        + "manage your listings from the Owner Dashboard.</p>"
+        + "<div style='background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;"
+        + "padding:18px 20px;margin:20px 0'>"
+        + "<p style='margin:0 0 8px;color:#334155;font-size:14px'><strong>Email:</strong> " + toEmail + "</p>"
+        + "<p style='margin:0;color:#334155;font-size:14px'><strong>Temporary password:</strong> "
+        + "<span style='font-family:monospace;font-size:16px;color:#2563eb'>" + tempPassword + "</span></p>"
+        + "</div>"
+        + "<p style='color:#dc2626;font-size:13px'>⚠️ Please log in and change your password immediately.</p>"
+        + "<hr style='border:none;border-top:1px solid #e2e8f0;margin:20px 0'>"
+        + "<p style='color:#94a3b8;font-size:12px;margin:0'>RentalHub · Sent to " + toEmail + "</p>"
+        + "</div></div>";
+
+    sendHtmlEmail(toEmail, "Your RentalHub Owner Account", html);
+}
+    
 }

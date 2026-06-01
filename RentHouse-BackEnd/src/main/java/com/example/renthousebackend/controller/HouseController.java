@@ -30,6 +30,10 @@ import com.example.renthousebackend.repository.OfferRepository;
 import com.example.renthousebackend.repository.OwnerRepository;
 import com.example.renthousebackend.service.FileService;
 import com.example.renthousebackend.service.HouseService;
+import com.example.renthousebackend.repository.UserRepository;
+import com.example.renthousebackend.entity.User;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import com.example.renthousebackend.service.EmailService;
 
 import java.util.Base64;
 
@@ -46,14 +50,22 @@ public class HouseController {
     private final OwnerRepository ownerRepository;
     private final OfferRepository offerRepository;
 
-    public HouseController(HouseService houseService, FileService fileService, OwnerRepository ownerRepository,
-            OfferRepository offerRepository) {
-        this.houseService = houseService;
-        this.fileService = fileService;
-        this.ownerRepository = ownerRepository;
-        this.offerRepository = offerRepository;
+   private final UserRepository userRepository;
+   private final PasswordEncoder passwordEncoder;
+   private final EmailService emailService;
 
-    };
+public HouseController(HouseService houseService, FileService fileService,
+        OwnerRepository ownerRepository, OfferRepository offerRepository,
+        UserRepository userRepository, PasswordEncoder passwordEncoder,
+        EmailService emailService) {
+    this.houseService = houseService;
+    this.fileService = fileService;
+    this.ownerRepository = ownerRepository;
+    this.offerRepository = offerRepository;
+    this.userRepository = userRepository;
+    this.passwordEncoder = passwordEncoder;
+    this.emailService = emailService;
+}
 
     @GetMapping
     public List<Map<String, Object>> getAllHouses() {
@@ -84,34 +96,73 @@ public class HouseController {
     }
 
     @PostMapping("/uploadBase64")
-    public House uploadBase64(@RequestBody UploadBase64Request req) throws IOException {
-        Owner owner = new Owner();
-        owner.setName(req.ownerName);
-        owner.setEmail(req.ownerEmail);
-        owner.setPhone(req.ownerPhone);
+public House uploadBase64(@RequestBody UploadBase64Request req) throws IOException {
+    Owner owner = new Owner();
+    owner.setName(req.ownerName);
+    owner.setEmail(req.ownerEmail);
+    owner.setPhone(req.ownerPhone);
 
-        House house = new House();
-        house.setTitle(req.title);
-        house.setPricePerDay(Double.parseDouble(req.pricePerDay));
-        house.setPricePerMonth(Double.parseDouble(req.pricePerMonth));
-        house.setLocation(req.location);
-        house.setNbOfBedrooms(Integer.parseInt(req.nbOfBedrooms));
-        house.setPropertyType(req.propertyType);
-        house.setDescription(req.description);
+    House house = new House();
+    house.setTitle(req.title);
+    house.setPricePerDay(Double.parseDouble(req.pricePerDay));
+    house.setPricePerMonth(Double.parseDouble(req.pricePerMonth));
+    house.setLocation(req.location);
+    house.setNbOfBedrooms(Integer.parseInt(req.nbOfBedrooms));
+    house.setPropertyType(req.propertyType);
+    house.setDescription(req.description);
+    house.setLatitude(req.latitude);
+    house.setLongitude(req.longitude);
 
-        house.setLatitude(req.latitude);
-        house.setLongitude(req.longitude);
-
-        if (req.imageData != null && !req.imageData.isEmpty()) {
-            String base64Image = req.imageData.split(",")[1];
-            byte[] imageBytes = Base64.getDecoder().decode(base64Image);
-            String savedFilename = fileService.saveFile(req.imageFilename, imageBytes);
-            house.setImage(savedFilename);
-        }
-
-        house.setOwner(owner);
-        return houseService.createHouseWithOwner(house);
+    if (req.imageData != null && !req.imageData.isEmpty()) {
+        String base64Image = req.imageData.split(",")[1];
+        byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+        String savedFilename = fileService.saveFile(req.imageFilename, imageBytes);
+        house.setImage(savedFilename);
     }
+
+    house.setOwner(owner);
+    House created = houseService.createHouseWithOwner(house);
+
+    // Provision an owner User account if one doesn't already exist
+    provisionOwnerAccount(req.ownerEmail, req.ownerName, req.ownerPhone);
+
+    return created;
+}
+
+private void provisionOwnerAccount(String email, String name, String phone) {
+    if (email == null || email.isBlank()) return;
+
+    String normalizedEmail = email.trim().toLowerCase();
+
+    // Skip if a user already exists for this email
+    if (userRepository.findByEmail(normalizedEmail).isPresent()) return;
+
+    // Generate a default password
+    String tempPassword = generateTempPassword();
+
+    User user = new User();
+    user.setUsername(name != null && !name.isBlank() ? name : normalizedEmail);
+    user.setEmail(normalizedEmail);
+    user.setPassword(passwordEncoder.encode(tempPassword));
+    user.setRole("HOUSE_OWNER");
+    user.setPhoneNumber(phone);
+    userRepository.save(user);
+
+    // Email the credentials to the new owner
+    try {
+        emailService.sendNewOwnerAccountEmail(normalizedEmail, user.getUsername(), tempPassword);
+    } catch (Exception e) {
+        e.printStackTrace(); // account is created even if email fails
+    }
+}
+
+private String generateTempPassword() {
+    String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+    StringBuilder sb = new StringBuilder();
+    java.security.SecureRandom rnd = new java.security.SecureRandom();
+    for (int i = 0; i < 10; i++) sb.append(chars.charAt(rnd.nextInt(chars.length())));
+    return sb.toString();
+}
 
     @PostMapping(consumes = { "multipart/form-data" })
     public House createHouse(
