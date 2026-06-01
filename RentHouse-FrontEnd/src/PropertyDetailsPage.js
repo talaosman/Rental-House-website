@@ -533,11 +533,13 @@ const PropertyDetailsContent = () => {
                 <span>•</span>
                 <span>{property.nbOfBedrooms} Bedrooms</span>
               </div>
-              {isUnavailable && currentRent?.endDate && (
-                <div className="availability-msg">
-                  {currentRent.startDate > todayStr()
-                    ? `Booked ${new Date(currentRent.startDate + "T12:00:00").toLocaleDateString()} → Available after ${new Date(currentRent.endDate + "T12:00:00").toLocaleDateString()}`
-                    : `Available after ${new Date(currentRent.endDate + "T12:00:00").toLocaleDateString()}`
+              {currentRent?.endDate && (
+                <div className={`availability-msg ${currentRent.future ? "availability-msg--future" : ""}`}>
+                  {currentRent.future
+                    ? `⚠️ Not available from ${new Date(currentRent.startDate + "T12:00:00").toLocaleDateString()} to ${new Date(currentRent.endDate + "T12:00:00").toLocaleDateString()} — free to book on other dates.`
+                    : currentRent.startDate > todayStr()
+                      ? `Booked ${new Date(currentRent.startDate + "T12:00:00").toLocaleDateString()} → Available after ${new Date(currentRent.endDate + "T12:00:00").toLocaleDateString()}`
+                      : `Available after ${new Date(currentRent.endDate + "T12:00:00").toLocaleDateString()}`
                   }
                 </div>
               )}
