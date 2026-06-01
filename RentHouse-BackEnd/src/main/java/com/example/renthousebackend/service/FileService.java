@@ -3,14 +3,11 @@ package com.example.renthousebackend.service;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @Service
 public class FileService {
@@ -43,14 +40,20 @@ public class FileService {
 
         return filename;
     }
-    public String saveFile(String filename, byte[] bytes) throws IOException {
+   public String saveFile(String filename, byte[] bytes) throws IOException {
     Path uploadDir = Paths.get("uploads");
     if (!Files.exists(uploadDir)) {
         Files.createDirectories(uploadDir);
     }
-    Path filePath = uploadDir.resolve(filename);
+
+    // Sanitize: prefix with timestamp + replace anything unsafe
+    String safeName = (filename == null ? "image" : filename)
+            .replaceAll("[^a-zA-Z0-9._-]", "_");
+    String finalName = System.currentTimeMillis() + "_" + safeName;
+
+    Path filePath = uploadDir.resolve(finalName);
     Files.write(filePath, bytes);
-    return filename;
+    return finalName;
 }
 
 }
