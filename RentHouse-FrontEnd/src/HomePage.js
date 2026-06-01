@@ -122,9 +122,9 @@ const HomePage = () => {
                 <div className="property-image-container">
                   <img
                     src={
-                      property.image.startsWith("http")
+                      property.image && property.image.startsWith("http")
                         ? property.image
-                        : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/uploads/${property.image}`
+                        : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${property.id}/image`
                     }
                     alt={property.title}
                     className="property-image"
@@ -137,10 +137,10 @@ const HomePage = () => {
                   </div>
                 </div>
 
-              
+
                 <div className="property-infoHome">
 
-              
+
                   <h3 className="property-name">
                     {property.title}
                   </h3>
@@ -188,7 +188,7 @@ const HomePage = () => {
         )}
       </section>
 
-    
+
       <section className="features-luxury fade-in-up">
         <div className="features-grid-luxury">
           <div className="feature-card-luxury">

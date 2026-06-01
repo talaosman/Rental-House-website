@@ -22,9 +22,9 @@ const parseSpringDate = (raw) => {
 const getStatusColor = (status) => {
   switch (status) {
     case 'available': return '#16a34a';
-    case 'rented':    return '#dc2626';
-    case 'pending':   return '#d97706';
-    default:          return '#6b7280';
+    case 'rented': return '#dc2626';
+    case 'pending': return '#d97706';
+    default: return '#6b7280';
   }
 };
 
@@ -45,10 +45,10 @@ const fetchListingStatus = async (id) => {
     if (data.available === true) return { status: 'available', availableAfter: null };
 
     // Has active lease — check if it's still valid
-    const endRaw   = data.endDate;
+    const endRaw = data.endDate;
     const startRaw = data.startDate;
-    const endDate  = parseSpringDate(endRaw);
-    const today    = todayStr();
+    const endDate = parseSpringDate(endRaw);
+    const today = todayStr();
 
     if (endDate && today <= endDate) {
       return {
@@ -67,12 +67,12 @@ const fetchListingStatus = async (id) => {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const SearchResult = () => {
-  const [allListings,        setAllListings]        = useState([]);
-  const [filteredListings,   setFilteredListings]   = useState([]);
-  const [listingStatuses,    setListingStatuses]    = useState({});   // { [id]: { status, availableAfter } }
+  const [allListings, setAllListings] = useState([]);
+  const [filteredListings, setFilteredListings] = useState([]);
+  const [listingStatuses, setListingStatuses] = useState({});   // { [id]: { status, availableAfter } }
   const [showNoResultsModal, setShowNoResultsModal] = useState(false);
-  const [loading,            setLoading]            = useState(true);
-  const [statusLoading,      setStatusLoading]      = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [statusLoading, setStatusLoading] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -93,7 +93,7 @@ const SearchResult = () => {
 
   // ── 2. Filter by query ────────────────────────────────────────────────────
   const queryParams = new URLSearchParams(location.search);
-  const query       = queryParams.get('query') || '';
+  const query = queryParams.get('query') || '';
 
   useEffect(() => {
     if (loading) return;
@@ -104,10 +104,10 @@ const SearchResult = () => {
       return;
     }
 
-    const q        = query.toLowerCase();
+    const q = query.toLowerCase();
     const filtered = allListings.filter((listing) =>
-      listing.location?.toLowerCase().includes(q)     ||
-      listing.title?.toLowerCase().includes(q)         ||
+      listing.location?.toLowerCase().includes(q) ||
+      listing.title?.toLowerCase().includes(q) ||
       listing.propertyType?.toLowerCase().includes(q)
     );
 
@@ -173,14 +173,14 @@ const SearchResult = () => {
           <p className="spinner-text">Searching properties…</p>
         </div>
 
-      /* ── Results grid ── */
+        /* ── Results grid ── */
       ) : filteredListings.length > 0 ? (
         <div className="search-grid">
           {filteredListings.map((listing) => {
-            const status        = getListingStatus(listing.id);
-            const availAfter    = getAvailableAfter(listing.id);
+            const status = getListingStatus(listing.id);
+            const availAfter = getAvailableAfter(listing.id);
             // ✅ Use same field names as SearchListings.js and PropertyDetails.js
-            const price         = listing.pricePerMonth ?? listing.price ?? null;
+            const price = listing.pricePerMonth ?? listing.price ?? null;
 
             return (
               <div
@@ -198,7 +198,7 @@ const SearchResult = () => {
                     src={
                       listing.image?.startsWith("http")
                         ? listing.image
-                        : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/uploads/${listing.image}`
+                        : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${listing.id}/image`
                     }
                     alt={listing.title}
                     className="listing-image"
@@ -212,8 +212,8 @@ const SearchResult = () => {
                   <p className="card-location">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
                       stroke="currentColor" strokeWidth="2.2">
-                      <path d="M12 22s-8-6.686-8-12a8 8 0 0 1 16 0c0 5.314-8 12-8 12z"/>
-                      <circle cx="12" cy="10" r="3"/>
+                      <path d="M12 22s-8-6.686-8-12a8 8 0 0 1 16 0c0 5.314-8 12-8 12z" />
+                      <circle cx="12" cy="10" r="3" />
                     </svg>
                     {listing.location}
                   </p>
@@ -264,7 +264,7 @@ const SearchResult = () => {
           })}
         </div>
 
-      /* ── No results modal ── */
+        /* ── No results modal ── */
       ) : (
         showNoResultsModal && (
           <div className="modal-overlay" onClick={closeModal} role="dialog" aria-modal="true">
@@ -272,8 +272,8 @@ const SearchResult = () => {
               <div className="modal-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                   stroke="#2563eb" strokeWidth="2">
-                  <circle cx="11" cy="11" r="8"/>
-                  <path d="m21 21-4.35-4.35"/>
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
                 </svg>
               </div>
               <h3>No Properties Found</h3>

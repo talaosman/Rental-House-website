@@ -143,9 +143,9 @@ const FavoritesPage = () => {
               <div className="favorite-image-container">
                 <img
                   src={
-                    property.image.startsWith("http")
+                    property.image && property.image.startsWith("http")
                       ? property.image
-                      : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/uploads/${property.image}`
+                      : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${property.id}/image`
                   }
                   alt={property.title}
                   className="favorite-image-luxury"
@@ -163,7 +163,7 @@ const FavoritesPage = () => {
                   </svg>
                 </button>
                 <div className="favorite-overlay">
-                  <button 
+                  <button
                     className="view-property-btn"
                     onClick={() => handleViewProperty(property.id)}
                   >
