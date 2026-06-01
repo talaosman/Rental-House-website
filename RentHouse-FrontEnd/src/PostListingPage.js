@@ -105,7 +105,7 @@ const PostListing = () => {
       return;
     }
 
-    setIsSubmitting(true);   // ← lock the button
+    setIsSubmitting(true);
 
     try {
       const base64Image = await toBase64(imageFile);
@@ -114,7 +114,22 @@ const PostListing = () => {
         ? `${form.ownerCountryCode} ${form.ownerPhone}`.trim()
         : "";
 
-      const payload = { /* ...unchanged... */ };
+      const payload = {
+        title: form.title,
+        pricePerDay: form.pricePerDay,
+        pricePerMonth: form.pricePerMonth,
+        location: form.location,
+        description: form.description,
+        ownerName: form.ownerName,
+        ownerEmail: form.ownerEmail,
+        ownerPhone: fullPhone,
+        nbOfBedrooms: form.nbOfBedrooms,
+        propertyType: form.propertyType,
+        imageFilename: imageFile.name,
+        imageData: base64Image,
+        latitude: parseFloat(form.latitude),
+        longitude: parseFloat(form.longitude),
+      };
 
       const listingRes = await fetch(
         `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/uploadBase64`,
@@ -130,16 +145,59 @@ const PostListing = () => {
       const data = await listingRes.json();
       setAllListings((prev) => [...prev, data]);
 
-      // ... your existing virtual-tour upload + form reset code ...
+      // ── Upload virtual tour if one was selected ──────────────
+      let tourUploadedOk = false;
+      const hadTourFile = !!tourFile;
 
-      // Tell the admin the owner was emailed credentials
+      if (tourFile && data.id) {
+        setTourUploading(true);
+        try {
+          const tourPayload = new FormData();
+          tourPayload.append("file", tourFile);
+
+          const authHeader = localStorage.getItem("authHeader");
+          const tourRes = await fetch(
+            `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${data.id}/virtual-tour`,
+            {
+              method: "PUT",
+              headers: { ...(authHeader && { Authorization: authHeader }) },
+              credentials: "include",
+              body: tourPayload,
+            }
+          );
+
+          if (!tourRes.ok) {
+            const err = await tourRes.json().catch(() => ({}));
+            throw new Error(err.error || `Tour upload failed (${tourRes.status})`);
+          }
+
+          tourUploadedOk = true;
+        } catch (tourErr) {
+          console.error("Virtual tour upload error:", tourErr);
+          tourUploadedOk = false;
+        } finally {
+          setTourUploading(false);
+        }
+      }
+
+      // ── Reset form ───────────────────────────────────────────
+      setForm({
+        title: "", pricePerDay: "", pricePerMonth: "",
+        location: "", nbOfBedrooms: "", propertyType: "",
+        ownerName: "", ownerEmail: "", ownerPhone: "",
+        ownerCountryCode: "+961",
+        description: "", latitude: "", longitude: "",
+      });
+      setImageFile(null);
+      setTourFile(null);
+      setGeocodeStatus("");
+
       if (form.ownerEmail) {
         alert(
           `Listing posted ✅\n\nAn owner account email with login credentials has been sent to ${form.ownerEmail} (if this is a new owner).`
         );
       }
 
-      // eslint-disable-next-line no-undef
       if (hadTourFile && !tourUploadedOk) {
         alert("Virtual tour failed to upload — you can retry from the Edit Property page.");
       }
@@ -148,7 +206,7 @@ const PostListing = () => {
       console.error(error);
       alert(error.message || "Failed to upload listing");
     } finally {
-      setIsSubmitting(false);   // ← always re-enable
+      setIsSubmitting(false);
     }
   };
   return (
