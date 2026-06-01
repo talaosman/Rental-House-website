@@ -53,69 +53,52 @@ public class RentController {
         }
     }
 
-    @GetMapping("/is-rented/{houseId}")
-    public ResponseEntity<Object> getCurrentRent(@PathVariable Long houseId) {
-        House house = houseRepository.findById(houseId)
-                .orElseThrow(() -> new RuntimeException("House not found"));
+   @GetMapping("/is-rented/{houseId}")
+public ResponseEntity<Object> getCurrentRent(@PathVariable Long houseId) {
+    House house = houseRepository.findById(houseId)
+            .orElseThrow(() -> new RuntimeException("House not found"));
 
-        // Check current active rent
-        Rent currentRent = rentService.getCurrentRent(house);
-        if (currentRent != null) {
-            if (!"rented".equals(house.getStatus())) {
-                house.setStatus("rented");
-                houseRepository.save(house);
-            }
-            return ResponseEntity.ok(currentRent);
-        }
-
-        // Check for future rents
-        Rent futureRent = rentService.getNextFutureRent(house);
-        if (futureRent != null) {
-            if (!"rented".equals(house.getStatus())) {
-                house.setStatus("rented");
-                houseRepository.save(house);
-            }
-            return ResponseEntity.ok(futureRent);
-        }
-
-        // ✅ House is truly available
-        // Only notify if status was previously "rented" (just became available)
-        if (!"available".equals(house.getStatus())) {
-            house.setStatus("available");
+    // Active rent covering today → genuinely rented right now
+    Rent currentRent = rentService.getCurrentRent(house);
+    if (currentRent != null) {
+        if (!"rented".equals(house.getStatus())) {
+            house.setStatus("rented");
             houseRepository.save(house);
-
-            // 🔔 Notify all users who favorited this house
-            try {
-                List<String> tokens = favoriteRepository
-                    .findFcmTokensByHouseId(houseId);
-
-                if (!tokens.isEmpty()) {
-                    notificationService.sendBatchNotification(
-                        tokens,
-                        house.getTitle(),
-                        house.getLocation(),
-                        house.getId()
-                    );
-                    System.out.println("🔔 Notified " + tokens.size()
-                        + " users — house " + houseId + " is now available");
-                }
-            } catch (Exception e) {
-                // Never let notification failure break the rent check
-                System.err.println("⚠️ Notification failed: " + e.getMessage());
-            }
         }
-
-        Rent lastRent = rentService.getLastRent(house);
-        Map<String, Object> response = new HashMap<>();
-        response.put("available", true);
-        if (lastRent != null && lastRent.getEndDate() != null) {
-            response.put("lastRent", lastRent);
-        } else {
-            response.put("message", "This property is available for rent");
-        }
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(currentRent);
     }
 
+    // No active rent → house is available now (even if future bookings exist)
+    Rent futureRent = rentService.getNextFutureRent(house);
+
+    if (!"available".equals(house.getStatus())) {
+        house.setStatus("available");
+        houseRepository.save(house);
+
+        try {
+            List<String> tokens = favoriteRepository.findFcmTokensByHouseId(houseId);
+            if (!tokens.isEmpty()) {
+                notificationService.sendBatchNotification(
+                    tokens, house.getTitle(), house.getLocation(), house.getId());
+                System.out.println("🔔 Notified " + tokens.size()
+                    + " users — house " + houseId + " is now available");
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️ Notification failed: " + e.getMessage());
+        }
+    }
+
+    Map<String, Object> response = new HashMap<>();
+    response.put("available", true);
+    if (futureRent != null) {
+        response.put("nextBooking", futureRent);
+    }
+    Rent lastRent = rentService.getLastRent(house);
+    if (lastRent != null && lastRent.getEndDate() != null) {
+        response.put("lastRent", lastRent);
+    }
+    return ResponseEntity.ok(response);
+}
     @GetMapping("/house/{houseId}")
     public List<Rent> getRentsByHouse(@PathVariable Long houseId) {
         return rentService.getRentsByHouse(houseId);

@@ -1,12 +1,11 @@
 package com.example.renthousebackend.service;
 
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.renthousebackend.entity.House;
 import com.example.renthousebackend.entity.Offer;
@@ -108,7 +107,14 @@ public class RentService {
 
         Rent savedRent = rentRepository.save(rent);
 
-        house.setStatus("rented");
+        LocalDate today = LocalDate.now();
+        boolean coversToday = !startDate.isAfter(today) && !endDate.isBefore(today);
+        if (coversToday) {
+            house.setStatus("rented");
+        } else {
+            // booking is entirely in the future — house is still free right now
+            house.setStatus("available");
+        }
         houseRepository.saveAndFlush(house);
 
         user.setPoints(user.getPoints() + 10);
