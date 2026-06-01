@@ -455,7 +455,11 @@ const PropertyDetailsContent = () => {
         <div className="image-section">
           <div className={`hero-photo ${heroView === "photo" ? "hero-active" : "hero-hidden"}`}>
             <img
-              src={property.image.startsWith("http") ? property.image : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/uploads/${property.image}`}
+              src={
+                property.image && property.image.startsWith("http")
+                  ? property.image
+                  : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${property.id}/image`
+              }
               alt={property.location}
               className="property-image"
             />

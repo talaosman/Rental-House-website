@@ -54,6 +54,7 @@ public class SecurityConfig {
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/oauth2/user").permitAll()
+                        .requestMatchers("/api/houses/**").permitAll()
                         .anyRequest().permitAll())
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(customOAuth2SuccessHandler) // inject your handler

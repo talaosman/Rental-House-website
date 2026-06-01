@@ -34,6 +34,7 @@ import com.example.renthousebackend.repository.UserRepository;
 import com.example.renthousebackend.entity.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.example.renthousebackend.service.EmailService;
+import org.springframework.http.MediaType;
 
 import java.util.Base64;
 
@@ -95,7 +96,7 @@ public HouseController(HouseService houseService, FileService fileService,
         return houseService.getHouseById(id);
     }
 
-    @PostMapping("/uploadBase64")
+   @PostMapping("/uploadBase64")
 public House uploadBase64(@RequestBody UploadBase64Request req) throws IOException {
     Owner owner = new Owner();
     owner.setName(req.ownerName);
@@ -113,17 +114,19 @@ public House uploadBase64(@RequestBody UploadBase64Request req) throws IOExcepti
     house.setLatitude(req.latitude);
     house.setLongitude(req.longitude);
 
+    // Store image bytes in the DB (survives Render restarts/deploys)
     if (req.imageData != null && !req.imageData.isEmpty()) {
-        String base64Image = req.imageData.split(",")[1];
+        String base64Image = req.imageData.contains(",")
+                ? req.imageData.split(",")[1]
+                : req.imageData;
         byte[] imageBytes = Base64.getDecoder().decode(base64Image);
-        String savedFilename = fileService.saveFile(req.imageFilename, imageBytes);
-        house.setImage(savedFilename);
+        house.setImageData(imageBytes);
+        house.setImage(req.imageFilename); // keep filename for content-type
     }
 
     house.setOwner(owner);
     House created = houseService.createHouseWithOwner(house);
 
-    // Provision an owner User account if one doesn't already exist
     provisionOwnerAccount(req.ownerEmail, req.ownerName, req.ownerPhone);
 
     return created;
@@ -275,19 +278,18 @@ private String generateTempPassword() {
             existingHouse.setLatitude(latitude);
             existingHouse.setLongitude(longitude);
 
-            if (houseData.containsKey("imageData") && houseData.get("imageData") != null) {
-                String imageData = (String) houseData.get("imageData");
-                if (!imageData.isEmpty()) {
-                    String base64Image = imageData.contains(",") ? imageData.split(",")[1] : imageData;
-                    byte[] imageBytes = Base64.getDecoder().decode(base64Image);
-                    String savedFilename = fileService.saveFile(
-                            houseData.get("imageFilename") != null
-                                    ? (String) houseData.get("imageFilename")
-                                    : "house.png",
-                            imageBytes);
-                    existingHouse.setImage(savedFilename);
-                }
-            }
+           if (houseData.containsKey("imageData") && houseData.get("imageData") != null) {
+    String imageData = (String) houseData.get("imageData");
+    if (!imageData.isEmpty()) {
+        String base64Image = imageData.contains(",") ? imageData.split(",")[1] : imageData;
+        byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+        existingHouse.setImageData(imageBytes);
+        existingHouse.setImage(
+                houseData.get("imageFilename") != null
+                        ? (String) houseData.get("imageFilename")
+                        : "house.jpg");
+    }
+}
 
             List<Owner> owners = ownerRepository.findByEmail(ownerEmail);
             Owner owner = owners.isEmpty() ? new Owner() : owners.get(0);
@@ -330,6 +332,17 @@ private String generateTempPassword() {
         long count = houseService.countAllHouses(); 
         return ResponseEntity.ok(Collections.singletonMap("count", count));
     }
+
+    @GetMapping("/{id}/image")
+public ResponseEntity<byte[]> getHouseImage(@PathVariable Long id) {
+    House house = houseService.getHouseById(id);
+    if (house == null || house.getImageData() == null) {
+        return ResponseEntity.notFound().build();
+    }
+    String name = house.getImage() != null ? house.getImage().toLowerCase() : "";
+    MediaType type = name.endsWith(".png") ? MediaType.IMAGE_PNG : MediaType.IMAGE_JPEG;
+    return ResponseEntity.ok().contentType(type).body(house.getImageData());
+}
    
     public static class UploadBase64Request {
         public String title;
