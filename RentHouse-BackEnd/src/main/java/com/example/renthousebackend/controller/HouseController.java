@@ -41,8 +41,8 @@ import java.util.Base64;
 @RestController
 @RequestMapping("/api/houses")
 @CrossOrigin(origins = {
-  "http://localhost:3000",
-  "https://rental-house-website-ten.vercel.app"
+    "http://localhost:3000",
+    "https://rental-house-website-ten.vercel.app"
 })
 public class HouseController {
 
@@ -51,22 +51,22 @@ public class HouseController {
     private final OwnerRepository ownerRepository;
     private final OfferRepository offerRepository;
 
-   private final UserRepository userRepository;
-   private final PasswordEncoder passwordEncoder;
-   private final EmailService emailService;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
-public HouseController(HouseService houseService, FileService fileService,
-        OwnerRepository ownerRepository, OfferRepository offerRepository,
-        UserRepository userRepository, PasswordEncoder passwordEncoder,
-        EmailService emailService) {
-    this.houseService = houseService;
-    this.fileService = fileService;
-    this.ownerRepository = ownerRepository;
-    this.offerRepository = offerRepository;
-    this.userRepository = userRepository;
-    this.passwordEncoder = passwordEncoder;
-    this.emailService = emailService;
-}
+    public HouseController(HouseService houseService, FileService fileService,
+            OwnerRepository ownerRepository, OfferRepository offerRepository,
+            UserRepository userRepository, PasswordEncoder passwordEncoder,
+            EmailService emailService) {
+        this.houseService = houseService;
+        this.fileService = fileService;
+        this.ownerRepository = ownerRepository;
+        this.offerRepository = offerRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
+    }
 
     @GetMapping
     public List<Map<String, Object>> getAllHouses() {
@@ -96,78 +96,84 @@ public HouseController(HouseService houseService, FileService fileService,
         return houseService.getHouseById(id);
     }
 
-   @PostMapping("/uploadBase64")
-public House uploadBase64(@RequestBody UploadBase64Request req) throws IOException {
-    Owner owner = new Owner();
-    owner.setName(req.ownerName);
-    owner.setEmail(req.ownerEmail);
-    owner.setPhone(req.ownerPhone);
+    @PostMapping("/uploadBase64")
+    public House uploadBase64(@RequestBody UploadBase64Request req) throws IOException {
+        Owner owner = new Owner();
+        owner.setName(req.ownerName);
+        owner.setEmail(req.ownerEmail);
+        owner.setPhone(req.ownerPhone);
 
-    House house = new House();
-    house.setTitle(req.title);
-    house.setPricePerDay(Double.parseDouble(req.pricePerDay));
-    house.setPricePerMonth(Double.parseDouble(req.pricePerMonth));
-    house.setLocation(req.location);
-    house.setNbOfBedrooms(Integer.parseInt(req.nbOfBedrooms));
-    house.setPropertyType(req.propertyType);
-    house.setDescription(req.description);
-    house.setLatitude(req.latitude);
-    house.setLongitude(req.longitude);
+        House house = new House();
+        house.setTitle(req.title);
+        house.setPricePerDay(Double.parseDouble(req.pricePerDay));
+        house.setPricePerMonth(Double.parseDouble(req.pricePerMonth));
+        house.setLocation(req.location);
+        house.setNbOfBedrooms(Integer.parseInt(req.nbOfBedrooms));
+        house.setPropertyType(req.propertyType);
+        house.setDescription(req.description);
+        house.setLatitude(req.latitude);
+        house.setLongitude(req.longitude);
 
-    // Store image bytes in the DB (survives Render restarts/deploys)
-    if (req.imageData != null && !req.imageData.isEmpty()) {
-        String base64Image = req.imageData.contains(",")
-                ? req.imageData.split(",")[1]
-                : req.imageData;
-        byte[] imageBytes = Base64.getDecoder().decode(base64Image);
-        house.setImageData(imageBytes);
-        house.setImage(req.imageFilename); // keep filename for content-type
+        // Store image bytes in the DB (survives Render restarts/deploys)
+        if (req.imageData != null && !req.imageData.isEmpty()) {
+            String base64Image = req.imageData.contains(",")
+                    ? req.imageData.split(",")[1]
+                    : req.imageData;
+            byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+            house.setImageData(imageBytes);
+            house.setImage(req.imageFilename); // keep filename for content-type
+        }
+
+        house.setOwner(owner);
+        House created = houseService.createHouseWithOwner(house);
+
+        provisionOwnerAccount(req.ownerEmail, req.ownerName, req.ownerPhone);
+
+        return created;
     }
 
-    house.setOwner(owner);
-    House created = houseService.createHouseWithOwner(house);
+    private void provisionOwnerAccount(String email, String name, String phone) {
+        if (email == null || email.isBlank()) {
+            return;
+        }
 
-    provisionOwnerAccount(req.ownerEmail, req.ownerName, req.ownerPhone);
+        String normalizedEmail = email.trim().toLowerCase();
 
-    return created;
-}
+        // Skip if a user already exists for this email
+        if (userRepository.findByEmail(normalizedEmail).isPresent()) {
+            return;
+        }
 
-private void provisionOwnerAccount(String email, String name, String phone) {
-    if (email == null || email.isBlank()) return;
+        // Generate a default password
+        String tempPassword = generateTempPassword();
 
-    String normalizedEmail = email.trim().toLowerCase();
+        User user = new User();
+        user.setUsername(name != null && !name.isBlank() ? name : normalizedEmail);
+        user.setEmail(normalizedEmail);
+        user.setPassword(passwordEncoder.encode(tempPassword));
+        user.setRole("HOUSE_OWNER");
+        user.setPhoneNumber(phone);
+        userRepository.save(user);
 
-    // Skip if a user already exists for this email
-    if (userRepository.findByEmail(normalizedEmail).isPresent()) return;
-
-    // Generate a default password
-    String tempPassword = generateTempPassword();
-
-    User user = new User();
-    user.setUsername(name != null && !name.isBlank() ? name : normalizedEmail);
-    user.setEmail(normalizedEmail);
-    user.setPassword(passwordEncoder.encode(tempPassword));
-    user.setRole("HOUSE_OWNER");
-    user.setPhoneNumber(phone);
-    userRepository.save(user);
-
-    // Email the credentials to the new owner
-    try {
-        emailService.sendNewOwnerAccountEmail(normalizedEmail, user.getUsername(), tempPassword);
-    } catch (Exception e) {
-        e.printStackTrace(); // account is created even if email fails
+        // Email the credentials to the new owner
+        try {
+            emailService.sendNewOwnerAccountEmail(normalizedEmail, user.getUsername(), tempPassword);
+        } catch (Exception e) {
+            e.printStackTrace(); // account is created even if email fails
+        }
     }
-}
 
-private String generateTempPassword() {
-    String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-    StringBuilder sb = new StringBuilder();
-    java.security.SecureRandom rnd = new java.security.SecureRandom();
-    for (int i = 0; i < 10; i++) sb.append(chars.charAt(rnd.nextInt(chars.length())));
-    return sb.toString();
-}
+    private String generateTempPassword() {
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+        StringBuilder sb = new StringBuilder();
+        java.security.SecureRandom rnd = new java.security.SecureRandom();
+        for (int i = 0; i < 10; i++) {
+            sb.append(chars.charAt(rnd.nextInt(chars.length())));
+        }
+        return sb.toString();
+    }
 
-    @PostMapping(consumes = { "multipart/form-data" })
+    @PostMapping(consumes = {"multipart/form-data"})
     public House createHouse(
             @RequestParam String title,
             @RequestParam String pricePerDay,
@@ -213,8 +219,9 @@ private String generateTempPassword() {
             @RequestParam(required = false, defaultValue = "false") boolean force) {
         try {
             House house = houseService.getHouseById(id);
-            if (house == null)
+            if (house == null) {
                 return ResponseEntity.notFound().build();
+            }
 
             if (!force) {
                 int relatedCount = houseService.countRelatedFavoritesAndRentals(id);
@@ -263,8 +270,9 @@ private String generateTempPassword() {
             }
 
             House existingHouse = houseService.getHouseById(id);
-            if (existingHouse == null)
+            if (existingHouse == null) {
                 return ResponseEntity.notFound().build();
+            }
 
             existingHouse.setTitle(title);
             existingHouse.setLocation(location);
@@ -278,18 +286,18 @@ private String generateTempPassword() {
             existingHouse.setLatitude(latitude);
             existingHouse.setLongitude(longitude);
 
-           if (houseData.containsKey("imageData") && houseData.get("imageData") != null) {
-    String imageData = (String) houseData.get("imageData");
-    if (!imageData.isEmpty()) {
-        String base64Image = imageData.contains(",") ? imageData.split(",")[1] : imageData;
-        byte[] imageBytes = Base64.getDecoder().decode(base64Image);
-        existingHouse.setImageData(imageBytes);
-        existingHouse.setImage(
-                houseData.get("imageFilename") != null
-                        ? (String) houseData.get("imageFilename")
-                        : "house.jpg");
-    }
-}
+            if (houseData.containsKey("imageData") && houseData.get("imageData") != null) {
+                String imageData = (String) houseData.get("imageData");
+                if (!imageData.isEmpty()) {
+                    String base64Image = imageData.contains(",") ? imageData.split(",")[1] : imageData;
+                    byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+                    existingHouse.setImageData(imageBytes);
+                    existingHouse.setImage(
+                            houseData.get("imageFilename") != null
+                            ? (String) houseData.get("imageFilename")
+                            : "house.jpg");
+                }
+            }
 
             List<Owner> owners = ownerRepository.findByEmail(ownerEmail);
             Owner owner = owners.isEmpty() ? new Owner() : owners.get(0);
@@ -329,22 +337,23 @@ private String generateTempPassword() {
 
     @GetMapping("/count")
     public ResponseEntity<Map<String, Long>> getHouseCount() {
-        long count = houseService.countAllHouses(); 
+        long count = houseService.countAllHouses();
         return ResponseEntity.ok(Collections.singletonMap("count", count));
     }
 
     @GetMapping("/{id}/image")
-public ResponseEntity<byte[]> getHouseImage(@PathVariable Long id) {
-    House house = houseService.getHouseById(id);
-    if (house == null || house.getImageData() == null) {
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<byte[]> getHouseImage(@PathVariable Long id) {
+        House house = houseService.getHouseById(id);
+        if (house == null || house.getImageData() == null) {
+            return ResponseEntity.notFound().build();
+        }
+        String name = house.getImage() != null ? house.getImage().toLowerCase() : "";
+        MediaType type = name.endsWith(".png") ? MediaType.IMAGE_PNG : MediaType.IMAGE_JPEG;
+        return ResponseEntity.ok().contentType(type).body(house.getImageData());
     }
-    String name = house.getImage() != null ? house.getImage().toLowerCase() : "";
-    MediaType type = name.endsWith(".png") ? MediaType.IMAGE_PNG : MediaType.IMAGE_JPEG;
-    return ResponseEntity.ok().contentType(type).body(house.getImageData());
-}
-   
+
     public static class UploadBase64Request {
+
         public String title;
         public String pricePerDay;
         public String pricePerMonth;

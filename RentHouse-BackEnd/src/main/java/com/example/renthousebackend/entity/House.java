@@ -14,7 +14,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Lob;
-import jakarta.persistence.Column;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
@@ -55,9 +54,9 @@ public class House {
     private Owner owner;
 
     @Lob
-@Column(columnDefinition = "LONGBLOB")
-@JsonIgnore   // don't dump raw bytes into the JSON of /api/houses/{id}
-private byte[] imageData;
+    @Column(columnDefinition = "LONGBLOB")
+    @JsonIgnore   // don't dump raw bytes into the JSON of /api/houses/{id}
+    private byte[] imageData;
 
     public House() {
     }
@@ -181,12 +180,13 @@ private byte[] imageData;
     public void setVirtualTourUrl(String virtualTourUrl) {
         this.virtualTourUrl = virtualTourUrl;
     }
-public byte[] getImageData() {
-    return imageData;
-}
 
-public void setImageData(byte[] imageData) {
-    this.imageData = imageData;
-}
-  
+    public byte[] getImageData() {
+        return imageData;
+    }
+
+    public void setImageData(byte[] imageData) {
+        this.imageData = imageData;
+    }
+
 }
