@@ -12,6 +12,7 @@ const EditHouseForm = () => {
   const [tourUploading, setTourUploading] = useState(false);
   const [tourStatus, setTourStatus] = useState(""); // "success" | "error" | ""
   const [existingTourKey, setExistingTourKey] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -126,16 +127,21 @@ const EditHouseForm = () => {
       if (!proceed) return;
     }
 
+    setIsSubmitting(true);
+
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/update/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          latitude: formData.latitude ? parseFloat(formData.latitude) : null,
-          longitude: formData.longitude ? parseFloat(formData.longitude) : null,
-        }),
-      });
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/update/${id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...formData,
+            latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+            longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+          }),
+        }
+      );
 
       if (!res.ok) throw new Error("Update failed");
       alert("House updated successfully");
@@ -143,74 +149,76 @@ const EditHouseForm = () => {
     } catch (error) {
       console.error("Error updating house:", error);
       alert("Failed to update house. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
- const handleTourUpload = async () => {
-  if (!tourFile) return;
-  setTourUploading(true);
-  setTourStatus("");
-
-  const formPayload = new FormData();
-  formPayload.append("file", tourFile);
-
-  try {
-    // Use the same authHeader your login already stores
-    const authHeader = localStorage.getItem("authHeader");
-
-    const res = await fetch(
-      `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${id}/virtual-tour`,
-      {
-        method: "PUT",
-        headers: {
-          ...(authHeader && { Authorization: authHeader }),
-        },
-        credentials: "include",   // also send session cookie as fallback
-        body: formPayload,
-      }
-    );
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `Upload failed (${res.status})`);
-    }
-
-    const data = await res.json();
-    setExistingTourKey(data.key);
-    setTourStatus("success");
-    setTourFile(null);
-  } catch (err) {
-    console.error(err);
-    setTourStatus("error");
-  } finally {
-    setTourUploading(false);
-  }
-};
-
-const handleTourDelete = async () => {
-  if (!window.confirm("Remove the 360° virtual tour from this property?")) return;
-
-  try {
-    const authHeader = localStorage.getItem("authHeader");
-
-    const res = await fetch(
-      `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${id}/virtual-tour`,
-      {
-        method: "DELETE",
-        headers: {
-          ...(authHeader && { Authorization: authHeader }),
-        },
-        credentials: "include",
-      }
-    );
-
-    if (!res.ok) throw new Error("Delete failed");
-    setExistingTourKey(null);
+  const handleTourUpload = async () => {
+    if (!tourFile) return;
+    setTourUploading(true);
     setTourStatus("");
-  } catch (err) {
-    console.error(err);
-    alert("Failed to remove virtual tour.");
-  }
-};
+
+    const formPayload = new FormData();
+    formPayload.append("file", tourFile);
+
+    try {
+      // Use the same authHeader your login already stores
+      const authHeader = localStorage.getItem("authHeader");
+
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${id}/virtual-tour`,
+        {
+          method: "PUT",
+          headers: {
+            ...(authHeader && { Authorization: authHeader }),
+          },
+          credentials: "include",   // also send session cookie as fallback
+          body: formPayload,
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Upload failed (${res.status})`);
+      }
+
+      const data = await res.json();
+      setExistingTourKey(data.key);
+      setTourStatus("success");
+      setTourFile(null);
+    } catch (err) {
+      console.error(err);
+      setTourStatus("error");
+    } finally {
+      setTourUploading(false);
+    }
+  };
+
+  const handleTourDelete = async () => {
+    if (!window.confirm("Remove the 360° virtual tour from this property?")) return;
+
+    try {
+      const authHeader = localStorage.getItem("authHeader");
+
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${id}/virtual-tour`,
+        {
+          method: "DELETE",
+          headers: {
+            ...(authHeader && { Authorization: authHeader }),
+          },
+          credentials: "include",
+        }
+      );
+
+      if (!res.ok) throw new Error("Delete failed");
+      setExistingTourKey(null);
+      setTourStatus("");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to remove virtual tour.");
+    }
+  };
 
   return (
     <div className="edit-form-container">
@@ -536,9 +544,9 @@ const handleTourDelete = async () => {
           <p className="submit-note">
             Changes will be reflected on the listing page immediately after saving.
           </p>
-          <button type="submit" className="submit-btn">
-            Save Changes
-            <span className="btn-arrow">→</span>
+          <button type="submit" className="submit-btn" disabled={isSubmitting}>
+            {isSubmitting ? "Saving…" : "Save Changes"}
+            {!isSubmitting && <span className="btn-arrow">→</span>}
           </button>
         </div>
 
