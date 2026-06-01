@@ -215,15 +215,30 @@ const PropertyDetailsContent = () => {
       const res = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/rents/is-rented/${id}`);
       if (!res.ok) { setCurrentRent(null); setIsAvailable(true); return; }
       const data = await res.json();
-      if (data.available === true) { setIsAvailable(true); setCurrentRent(null); return; }
+
+      // Available now — but there may be an upcoming booking to show
+      if (data.available === true) {
+        setIsAvailable(true);
+        if (data.nextBooking) {
+          const s = parseSpringDate(data.nextBooking.startDate);
+          const e = parseSpringDate(data.nextBooking.endDate);
+          setCurrentRent({ startDate: s, endDate: e, future: true });
+        } else {
+          setCurrentRent(null);
+        }
+        return;
+      }
+
+      // Actively rented today
       const startRaw = data.startDate;
       const endRaw = data.endDate;
-      if (startRaw && endRaw) {
-        if (isActiveLease(startRaw, endRaw)) {
-          setCurrentRent({ ...data, startDate: parseSpringDate(startRaw), endDate: parseSpringDate(endRaw) });
-          setIsAvailable(false);
-        } else { setCurrentRent(null); setIsAvailable(true); }
-      } else { setCurrentRent(null); setIsAvailable(true); }
+      if (startRaw && endRaw && isActiveLease(startRaw, endRaw)) {
+        setCurrentRent({ ...data, startDate: parseSpringDate(startRaw), endDate: parseSpringDate(endRaw), future: false });
+        setIsAvailable(false);
+      } else {
+        setCurrentRent(null);
+        setIsAvailable(true);
+      }
     } catch (err) {
       console.error("refetchRentStatus error:", err);
       setCurrentRent(null); setIsAvailable(true);
@@ -242,7 +257,7 @@ const PropertyDetailsContent = () => {
     fetchRents();
   }, [id]);
 
-  const isUnavailable = !isAvailable && currentRent != null;
+  const isUnavailable = !isAvailable && currentRent != null && !currentRent.future;
   const unavailableMessage = isUnavailable && currentRent?.endDate
     ? currentRent.startDate > todayStr()
       ? `Booked from ${new Date(currentRent.startDate + "T12:00:00").toLocaleDateString()} — available after ${new Date(currentRent.endDate + "T12:00:00").toLocaleDateString()}`
