@@ -1,0 +1,1453 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:       #0d2d52;
+  --navy-deep:  #091e38;
+  --navy-mid:   #1a4a7a;
+  --accent:     #c8a96e;
+  --accent-dim: #e8d5b0;
+  --text:       #1c2f45;
+  --muted:      #6b84a0;
+  --border:     #dde5ef;
+  --surface:    #f7f9fc;
+  --white:      #ffffff;
+  --success:    #1a6e3c;
+  --success-bg: #edfbf3;
+  --success-bdr:#a5e6c2;
+  --danger:     #b91c1c;
+  --danger-bg:  #fef2f2;
+  --danger-bdr: #fecaca;
+}
+
+/* ── Page Shell ─────────────────────────────────── */
+.profile-page {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--surface);
+  font-family: 'Outfit', sans-serif;
+  color: var(--text);
+}
+
+/* ── Hero ───────────────────────────────────────── */
+.profile-hero {
+  position: relative;
+  height: 260px;
+  background:
+    linear-gradient(to bottom, rgba(9,30,56,0.58) 0%, rgba(9,30,56,0.78) 100%),
+    url('https://images.unsplash.com/photo-1560184897-ae75f418493e?w=1600&q=80') center/cover no-repeat;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.profile-hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 70px;
+  background: linear-gradient(to bottom, transparent, var(--surface));
+  pointer-events: none;
+}
+
+.profile-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 40px 48px;
+}
+
+.profile-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.profile-hero-eyebrow::before {
+  content: '';
+  display: block;
+  width: 22px; height: 1.5px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+.profile-hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+  font-weight: 400;
+  color: var(--white);
+  line-height: 1.15;
+  letter-spacing: -0.3px;
+}
+
+/* ── Outer Wrapper ──────────────────────────────── */
+.profile-wrapper {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 40px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ── Top Row: profile card + rewards / admin dashboard ── */
+.profile-top-row {
+  display: flex;
+  flex-direction: row;
+  gap: 28px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* Profile card fixed width */
+.profile-top-row > .profile-container {
+  flex: 0 0 340px;
+  min-width: 280px;
+}
+
+/* Rewards card takes remaining space */
+.profile-top-row > .rewards-card {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Admin dashboard in top row takes remaining space */
+.profile-top-row > .admin-dashboard-card {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* ── Shared Card Shell ──────────────────────────── */
+.profile-card,
+.rewards-card,
+.admin-dashboard-card {
+  background: var(--white);
+  border-radius: 20px;
+  box-shadow:
+    0 1px 3px rgba(10,30,60,0.05),
+    0 8px 32px rgba(10,30,60,0.08);
+  overflow: hidden;
+}
+
+/* ── Profile Card ───────────────────────────────── */
+.profile-container {
+  background: var(--white);
+  border-radius: 20px;
+  box-shadow:
+    0 1px 3px rgba(10,30,60,0.05),
+    0 8px 32px rgba(10,30,60,0.08);
+  overflow: hidden;
+}
+
+/* Accent top bar */
+.profile-container::before,
+.rewards-card::before,
+.admin-dashboard-card::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, var(--navy) 0%, var(--navy-mid) 100%);
+}
+
+/* Profile Header */
+.profile-header {
+  padding: 32px 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #f4f8fd 0%, #ffffff 60%);
+  position: relative;
+}
+
+.profile-image {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--white);
+  box-shadow: 0 4px 16px rgba(13,45,82,0.2);
+  margin-bottom: 14px;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.profile-image:hover {
+  box-shadow: 0 6px 20px rgba(13,45,82,0.28);
+  transform: scale(1.03);
+}
+
+.profile-header h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--navy);
+  margin-bottom: 4px;
+}
+
+.username {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* Image edit popup */
+.image-edit-popup {
+  position: absolute;
+  top: 110px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  z-index: 10;
+  box-shadow: 0 8px 32px rgba(10,30,60,0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 220px;
+}
+
+.image-edit-popup input[type="file"] {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.image-edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.save-image-btn,
+.cancel-image-btn {
+  flex: 1;
+  padding: 8px 0;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+
+.save-image-btn   { background: var(--navy); color: var(--white); }
+.save-image-btn:hover { background: var(--navy-mid); }
+.cancel-image-btn { background: var(--surface); color: var(--text); border: 1.5px solid var(--border); }
+.cancel-image-btn:hover { background: var(--border); }
+
+/* Profile Info */
+.profile-info {
+  padding: 20px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.info-row:last-of-type { border-bottom: none; }
+
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.value input {
+  flex: 1;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  outline: none;
+  font-weight: 500;
+  padding: 0;
+}
+
+.value input.valueEdit {
+  background: var(--surface);
+  border: 1.5px solid var(--navy);
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-shadow: 0 0 0 3px rgba(13,45,82,0.06);
+}
+
+.editbtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.18s, background 0.18s;
+}
+
+.editbtn:hover { color: var(--navy); background: var(--surface); }
+
+.savebtn {
+  display: flex;
+  align-items: center;
+  color: var(--success);
+}
+
+.password-field {
+  position: relative;
+}
+
+.toggle-password-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.18s;
+}
+
+.toggle-password-btn:hover { color: var(--navy); }
+
+.logout-btn {
+  margin-top: 14px;
+  padding: 12px 0;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1.5px solid var(--danger-bdr);
+  border-radius: 50px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.18s, transform 0.15s;
+}
+
+.logout-btn:hover { background: #fee2e2; transform: translateY(-1px); }
+
+/* ── Rewards Card ───────────────────────────────── */
+.rewards-card {
+  padding: 28px 30px 26px;
+}
+
+.rewards-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.rewards-icon {
+  width: 44px; height: 44px;
+  border-radius: 11px;
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  flex-shrink: 0;
+}
+
+.rewards-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--navy);
+  margin-bottom: 3px;
+}
+
+.rewards-subtitle {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* Points display */
+.points-display {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 22px;
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+}
+
+.points-circle {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(13,45,82,0.25);
+}
+
+.points-number {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1;
+}
+
+.points-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.65);
+}
+
+.points-meta { flex: 1; }
+
+.points-rentals {
+  font-size: 13.5px;
+  color: var(--text);
+  margin-bottom: 5px;
+}
+
+.points-rentals strong { color: var(--navy); font-weight: 700; }
+
+.points-next {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.progress-track {
+  height: 6px;
+  background: var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--navy) 0%, var(--navy-mid) 100%);
+  border-radius: 10px;
+  transition: width 0.6s ease;
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* How it works */
+.rewards-how {
+  margin-bottom: 22px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #f4f8fd, #ffffff);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+}
+
+.rewards-how-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.rewards-how-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.rewards-how-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.rhli-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+/* Active Offers */
+.active-offers-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.offers-count {
+  background: var(--navy);
+  color: var(--white);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.no-offers {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--muted);
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1.5px dashed var(--border);
+}
+
+.no-offers svg { color: var(--accent); opacity: 0.6; margin-bottom: 4px; }
+.no-offers p   { font-size: 13.5px; color: var(--text); font-weight: 500; }
+.no-offers span { font-size: 12px; color: var(--muted); }
+
+.offers-loading {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.offers-spinner {
+  width: 24px; height: 24px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.offers-list { display: flex; flex-direction: column; gap: 10px; }
+
+.offer-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+}
+
+.offer-pill-left { display: flex; flex-direction: column; gap: 3px; }
+
+.offer-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.offer-detail {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.offer-expiry {
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════════════
+   ── ADMIN DASHBOARD SECTION ──────────────────────
+   ═══════════════════════════════════════════════════ */
+
+.admin-dashboard-card {
+  padding: 0;
+}
+
+.admin-dash-header {
+  padding: 28px 36px 22px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #f4f8fd 0%, #ffffff 60%);
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+}
+
+.admin-dash-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 36px;
+  width: 36px; height: 3px;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+}
+
+.admin-dash-icon {
+  width: 46px; height: 46px;
+  background: var(--navy);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  flex-shrink: 0;
+}
+
+.admin-dash-header-text h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 21px;
+  font-weight: 400;
+  color: var(--navy);
+  margin-bottom: 4px;
+  letter-spacing: -0.2px;
+}
+
+.admin-dash-header-text p {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Stats grid */
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-stat-cell {
+  padding: 24px 28px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: background 0.18s;
+}
+
+.admin-stat-cell:last-child { border-right: none; }
+.admin-stat-cell:hover { background: var(--surface); }
+
+.admin-stat-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+}
+
+.stat-icon-blue   { background: var(--navy); }
+.stat-icon-gold   { background: #b07c30; }
+.stat-icon-green  { background: #1a6e3c; }
+.stat-icon-purple { background: #6d28d9; }
+
+.admin-stat-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1;
+}
+
+.admin-stat-loading {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  height: 32px;
+}
+
+.admin-stat-loading span {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--navy);
+  animation: dotPulse 1.2s ease-in-out infinite;
+  opacity: 0.3;
+}
+
+.admin-stat-loading span:nth-child(2) { animation-delay: 0.2s; }
+.admin-stat-loading span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotPulse {
+  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+  40%           { opacity: 1;   transform: scale(1); }
+}
+
+.admin-stat-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* Admin actions */
+.admin-actions-section {
+  padding: 26px 36px 32px;
+}
+
+.admin-actions-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.admin-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.admin-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--navy);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.18s, border-color 0.18s, transform 0.15s, box-shadow 0.18s;
+}
+
+.admin-action-btn:hover {
+  background: var(--white);
+  border-color: var(--navy);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(13,45,82,0.1);
+}
+
+.admin-action-btn svg { flex-shrink: 0; color: var(--navy); }
+
+.admin-action-btn.danger {
+  color: var(--danger);
+  border-color: var(--danger-bdr);
+}
+
+.admin-action-btn.danger svg { color: var(--danger); }
+.admin-action-btn.danger:hover { background: var(--danger-bg); border-color: #fca5a5; }
+
+/* ═══════════════════════════════════════════════════
+   ── ADMIN OFFERS BY USER SECTION ─────────────────
+   ═══════════════════════════════════════════════════ */
+
+.admin-offers-section {
+  border-top: 1px solid var(--border);
+}
+
+/* Section header */
+.admin-offers-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 36px 18px;
+  background: linear-gradient(135deg, #f4f8fd 0%, #ffffff 60%);
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-offers-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-offers-icon {
+  width: 38px;
+  height: 38px;
+  background: var(--navy);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  flex-shrink: 0;
+}
+
+.admin-offers-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--navy);
+  margin-bottom: 2px;
+  letter-spacing: -0.1px;
+}
+
+.admin-offers-subtitle {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.admin-offers-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  padding: 5px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Body */
+.admin-offers-body {
+  padding: 20px 36px 28px;
+}
+
+.admin-offers-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.admin-offers-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  text-align: center;
+  background: var(--surface);
+  border: 1.5px dashed var(--border);
+  border-radius: 14px;
+  color: var(--muted);
+}
+
+.admin-offers-empty svg { opacity: 0.45; color: var(--accent); }
+.admin-offers-empty p   { font-size: 14px; color: var(--text); font-weight: 500; }
+
+/* List of user rows */
+.admin-offers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-offer-row {
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.18s;
+}
+
+.admin-offer-row:hover {
+  border-color: #b8c8dc;
+}
+
+/* Clickable user summary row */
+.admin-offer-user-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--white);
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.16s;
+}
+
+.admin-offer-user-row:hover,
+.admin-offer-user-row.open {
+  background: var(--surface);
+}
+
+.admin-offer-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+}
+
+.admin-offer-user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-offer-username {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-offer-email {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-offer-count-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--white);
+  background: var(--navy);
+  padding: 3px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.admin-offer-chevron {
+  color: var(--muted);
+  flex-shrink: 0;
+  transition: transform 0.22s ease;
+}
+
+.admin-offer-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+/* Expanded offer detail pills */
+.admin-offer-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.admin-offer-detail-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px 12px 70px;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-offer-detail-pill:last-child {
+  border-bottom: none;
+}
+
+.admin-offer-detail-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-offer-discount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.admin-offer-property {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.admin-offer-detail-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.admin-offer-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.admin-offer-status-dot.active  { background: var(--success); }
+.admin-offer-status-dot.used    { background: var(--muted); }
+
+.admin-offer-status-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.admin-offer-expiry {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+  padding-left: 8px;
+  border-left: 1px solid var(--border);
+}
+
+/* ── Owner Dashboard Widget ───────────────────────────────────── */
+.owner-dashboard-card {
+  background: var(--white);
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(10,30,60,0.05), 0 8px 32px rgba(10,30,60,0.08);
+  overflow: hidden;
+}
+
+.owner-dashboard-card::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, var(--navy) 0%, var(--navy-mid) 100%);
+}
+
+.owner-dash-header {
+  padding: 28px 36px 22px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #f4f8fd 0%, #ffffff 60%);
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+}
+
+.owner-dash-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 36px;
+  width: 36px; height: 3px;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+}
+
+.owner-dash-icon {
+  width: 46px; height: 46px;
+  background: var(--navy);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  flex-shrink: 0;
+}
+
+.owner-dash-header-text h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 21px;
+  font-weight: 400;
+  color: var(--navy);
+  margin-bottom: 4px;
+  letter-spacing: -0.2px;
+}
+
+.owner-dash-header-text p {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.owner-dash-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  color: var(--muted);
+}
+
+/* Owner Stats Grid */
+.owner-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.owner-stat-cell {
+  padding: 24px 28px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: background 0.18s;
+}
+
+.owner-stat-cell:last-child { border-right: none; }
+.owner-stat-cell:hover { background: var(--surface); }
+
+.owner-stat-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  font-size: 18px;
+}
+
+.owner-stat-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1;
+}
+
+.owner-stat-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* Owner Recent Rentals Section */
+.owner-recent-section {
+  padding: 20px 30px;
+  border-bottom: 1px solid var(--border);
+}
+
+.owner-recent-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.owner-recent-header h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--navy);
+}
+
+.owner-recent-header svg {
+  color: var(--navy);
+  font-size: 16px;
+}
+
+.owner-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.owner-recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  transition: all 0.18s;
+}
+
+.owner-recent-item:hover {
+  border-color: var(--navy-mid);
+  transform: translateX(4px);
+}
+
+.owner-recent-house {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.owner-recent-house strong {
+  font-size: 14px;
+  color: var(--navy);
+}
+
+.owner-recent-tenant {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.owner-recent-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.owner-recent-revenue {
+  font-weight: 700;
+  color: var(--success);
+}
+
+/* Owner Offers Preview */
+.owner-offers-preview {
+  padding: 20px 30px;
+  border-bottom: 1px solid var(--border);
+}
+
+.owner-offers-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.owner-offers-preview-header h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--navy);
+}
+
+.owner-offers-preview-header svg {
+  color: var(--navy);
+  font-size: 16px;
+}
+
+.owner-offers-mini-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.owner-offer-mini {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.18s;
+  overflow: hidden;
+}
+
+.owner-offer-mini:hover {
+  border-color: var(--navy-mid);
+}
+
+.owner-offer-mini-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.owner-offer-mini-discount {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+  background: rgba(13, 45, 82, 0.08);
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.owner-offer-mini-house {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.owner-offer-mini-chevron {
+  color: var(--muted);
+  transition: transform 0.22s ease;
+  flex-shrink: 0;
+}
+
+.owner-offer-mini-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+.owner-offer-mini-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px 14px 14px;
+  border-top: 1px solid var(--border);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.owner-offer-mini-status {
+  color: var(--success);
+  font-weight: 500;
+}
+
+/* Owner Actions */
+.owner-actions-section {
+  padding: 20px 30px 28px;
+}
+
+.owner-quick-action {
+  width: 100%;
+  padding: 14px;
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: 14px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.owner-quick-action:hover {
+  background: var(--navy-mid);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13, 45, 82, 0.2);
+}
+
+.profile-top-row > .owner-dashboard-card {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1100px) {
+  .owner-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .owner-stat-cell:nth-child(2) { border-right: none; }
+  .owner-stat-cell:nth-child(3) { border-top: 1px solid var(--border); }
+  .owner-stat-cell:nth-child(4) { border-top: 1px solid var(--border); border-right: none; }
+}
+
+@media (max-width: 640px) {
+  .owner-dash-header { padding: 22px 24px 18px; flex-direction: column; gap: 12px; }
+  .owner-dash-header::after { left: 24px; }
+  .owner-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .owner-stat-cell { padding: 18px 20px; }
+  .owner-recent-section { padding: 16px 20px; }
+  .owner-offers-preview { padding: 16px 20px; }
+  .owner-actions-section { padding: 16px 20px 24px; }
+  
+  .owner-recent-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .owner-recent-meta {
+    align-items: flex-start;
+  }
+}
+
+/* ── Responsive ─────────────────────────────────── */
+@media (max-width: 1100px) {
+  .admin-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .admin-stat-cell:nth-child(2) { border-right: none; }
+  .admin-stat-cell:nth-child(3) { border-top: 1px solid var(--border); }
+  .admin-stat-cell:nth-child(4) { border-top: 1px solid var(--border); border-right: none; }
+}
+
+@media (max-width: 900px) {
+  .profile-wrapper { padding: 0 24px 60px; }
+  .profile-hero-content { padding: 0 24px 44px; }
+
+  .profile-top-row {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .profile-top-row > .profile-container,
+  .profile-top-row > .rewards-card,
+  .profile-top-row > .admin-dashboard-card,
+  .profile-top-row > .owner-dashboard-card {
+    flex: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-hero { height: 220px; }
+  .profile-hero-content { padding: 0 20px 38px; }
+  .profile-wrapper { padding: 0 16px 60px; }
+  .admin-dash-header { padding: 22px 24px 18px; flex-direction: column; gap: 12px; }
+  .admin-dash-header::after { left: 24px; }
+  .admin-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .admin-stat-cell { padding: 18px 20px; }
+  .admin-actions-section { padding: 22px 24px 26px; }
+  .admin-actions-grid { grid-template-columns: 1fr; }
+
+  .admin-offers-header {
+    padding: 18px 24px 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .admin-offers-body {
+    padding: 16px 20px 22px;
+  }
+
+  .admin-offer-detail-pill {
+    padding-left: 18px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .admin-offer-detail-right {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-wrapper { padding: 0 12px 60px; }
+  .profile-hero-content { padding: 0 16px 38px; }
+
+  .profile-top-row > .profile-container,
+  .profile-top-row > .rewards-card,
+  .profile-top-row > .admin-dashboard-card,
+  .profile-top-row > .owner-dashboard-card {
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: unset !important;
+  }
+}

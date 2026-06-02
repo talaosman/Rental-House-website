@@ -1,0 +1,413 @@
+/* ═══════════════════════════════════════════════════
+   AvailabilityCalendar.css
+   Matches PropertyDetails.css tokens exactly:
+   Sora + Lora fonts, --blue, --navy, --hairline, etc.
+═══════════════════════════════════════════════════ */
+
+/* ── Container ──────────────────────────────────── */
+.avail-cal {
+  background: var(--white, #ffffff);
+  border: 1px solid var(--hairline, #e2e8f0);
+  border-radius: var(--r-lg, 20px);
+  padding: 18px 20px 16px;
+  margin-bottom: 0;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+/* Subtle top-accent stripe */
+.avail-cal::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--blue, #2563eb) 0%, #60a5fa 100%);
+  border-radius: var(--r-lg, 20px) var(--r-lg, 20px) 0 0;
+}
+
+.avail-cal--compact {
+  padding: 20px 22px 18px;
+  border-radius: var(--r-md, 14px);
+}
+
+/* ── Header ─────────────────────────────────────── */
+.avail-cal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.avail-cal__title-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.avail-cal__eyebrow {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted, #64748b);
+}
+
+.avail-cal__month-label {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--navy, #0f172a);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.avail-cal--compact .avail-cal__month-label {
+  font-size: 16px;
+}
+
+/* ── Nav buttons ────────────────────────────────── */
+.avail-cal__nav {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.avail-cal__nav-btn {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--hairline, #e2e8f0);
+  border-radius: 8px;
+  background: var(--white, #ffffff);
+  color: var(--slate, #334155);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.avail-cal__nav-btn:hover:not(:disabled) {
+  background: var(--blue-soft, #eff6ff);
+  border-color: var(--blue-border, #bfdbfe);
+  color: var(--blue, #2563eb);
+  transform: scale(1.05);
+}
+
+.avail-cal__nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Stats bar ──────────────────────────────────── */
+.avail-cal__stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding: 7px 12px;
+  background: var(--surface, #f8fafc);
+  border-radius: 8px;
+  border: 1px solid var(--hairline, #e2e8f0);
+}
+
+.avail-cal__stat {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.avail-cal__stat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.avail-cal__stat--available .avail-cal__stat-dot { background: #15803d; }
+.avail-cal__stat--booked   .avail-cal__stat-dot { background: #dc2626; }
+
+.avail-cal__stat-num {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--navy, #0f172a);
+  line-height: 1;
+}
+
+.avail-cal__stat-label {
+  font-size: 11.5px;
+  color: var(--muted, #64748b);
+  font-weight: 500;
+}
+
+/* ── Day-of-week header row ─────────────────────── */
+.avail-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.avail-cal__grid--head {
+  margin-bottom: 5px;
+}
+
+.avail-cal__day-name {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted, #64748b);
+  padding: 4px 0 6px;
+}
+
+/* ── Calendar grid cells ────────────────────────── */
+.avail-cal__grid--body {
+  gap: 3px;
+}
+
+.avail-cal__cell {
+  position: relative;
+  height: 36px;               /* fixed compact height */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: default;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.avail-cal__cell--empty {
+  background: transparent;
+}
+
+/* Available day */
+.avail-cal__cell--available {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+}
+
+.avail-cal__cell--available:hover {
+  transform: scale(1.08);
+  box-shadow: 0 2px 10px rgba(21, 128, 61, 0.25);
+  z-index: 2;
+}
+
+.avail-cal__cell--available .avail-cal__day-num {
+  color: #14532d;
+  font-weight: 600;
+}
+
+/* Booked day */
+.avail-cal__cell--booked {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+}
+
+.avail-cal__cell--booked .avail-cal__day-num {
+  color: #7f1d1d;
+  font-weight: 600;
+}
+
+/* Booked diagonal stripe overlay */
+.avail-cal__cell--booked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 3px,
+    rgba(220, 38, 38, 0.1) 3px,
+    rgba(220, 38, 38, 0.1) 4px
+  );
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+/* Past day */
+.avail-cal__cell--past {
+  background: transparent;
+  border: 1px solid transparent;
+  opacity: 0.35;
+}
+
+.avail-cal__cell--past .avail-cal__day-num {
+  color: var(--muted, #64748b);
+  font-weight: 400;
+}
+
+/* Today highlight */
+.avail-cal__cell--today {
+  ring: 2px solid var(--blue, #2563eb);
+  outline: 2px solid var(--blue, #2563eb);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+.avail-cal__cell--today.avail-cal__cell--available {
+  background: #dbeafe;
+  border-color: var(--blue, #2563eb);
+}
+
+.avail-cal__cell--today .avail-cal__day-num {
+  color: var(--blue, #2563eb) !important;
+  font-weight: 700 !important;
+}
+
+/* Today dot indicator */
+.avail-cal__today-dot {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--blue, #2563eb);
+}
+
+/* Day number text */
+.avail-cal__day-num {
+  font-family: 'Sora', system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 1;
+  user-select: none;
+  position: relative;
+  z-index: 1;
+}
+
+.avail-cal--compact .avail-cal__day-num {
+  font-size: 11px;
+}
+
+/* ── Loading state ───────────────────────────────── */
+.avail-cal__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 0;
+  color: var(--muted, #64748b);
+  font-size: 13px;
+}
+
+.avail-cal__spinner {
+  width: 28px;
+  height: 28px;
+  border: 2.5px solid var(--hairline, #e2e8f0);
+  border-top-color: var(--blue, #2563eb);
+  border-radius: 50%;
+  animation: calSpin 0.7s linear infinite;
+}
+
+@keyframes calSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Error state ────────────────────────────────── */
+.avail-cal__error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 0;
+  color: var(--red, #dc2626);
+  font-size: 13px;
+  background: #fef2f2;
+  border-radius: var(--r-sm, 8px);
+  border: 1px solid #fecaca;
+  margin: 8px 0;
+}
+
+/* ── Legend ──────────────────────────────────────── */
+.avail-cal__legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline, #e2e8f0);
+  flex-wrap: wrap;
+}
+
+.avail-cal__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  color: var(--muted, #64748b);
+  font-weight: 500;
+}
+
+.avail-cal__legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.avail-cal__legend-swatch--available {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+}
+
+.avail-cal__legend-swatch--booked {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+}
+
+.avail-cal__legend-swatch--past {
+  background: var(--surface, #f8fafc);
+  border: 1px solid var(--hairline, #e2e8f0);
+  opacity: 0.5;
+}
+
+/* ── Responsive ─────────────────────────────────── */
+@media (max-width: 480px) {
+  .avail-cal {
+    padding: 18px 14px 16px;
+    border-radius: var(--r-md, 14px);
+  }
+
+  .avail-cal__month-label {
+    font-size: 16px;
+  }
+
+  .avail-cal__day-name {
+    font-size: 9px;
+    letter-spacing: 0;
+  }
+
+  .avail-cal__day-num {
+    font-size: 10px;
+  }
+
+  .avail-cal__grid--body {
+    gap: 3px;
+  }
+
+  .avail-cal__stats {
+    gap: 14px;
+    padding: 8px 12px;
+  }
+
+  .avail-cal__stat-num {
+    font-size: 14px;
+  }
+
+  .avail-cal__legend {
+    gap: 12px;
+  }
+
+  .avail-cal__nav-btn {
+    width: 28px;
+    height: 28px;
+  }
+}

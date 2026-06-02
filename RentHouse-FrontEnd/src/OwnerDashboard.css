@@ -1,0 +1,794 @@
+/* OwnerDashboard.css — matches RentalHub luxury aesthetic */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+/* ─────────────────────────────────────────
+   Base / Loading
+───────────────────────────────────────── */
+.owner-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  color: #64748b;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.owner-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #1a1a2e;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─────────────────────────────────────────
+   Layout
+───────────────────────────────────────── */
+.owner-dashboard {
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  background: #f8f9fc;
+  padding-bottom: 60px;
+}
+
+/* ─────────────────────────────────────────
+   Header
+───────────────────────────────────────── */
+.owner-header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+  padding: 48px 40px 40px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.owner-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+.owner-header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.owner-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+}
+
+.owner-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  margin: 0 0 8px;
+  letter-spacing: -0.5px;
+}
+
+.owner-subtitle {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 15px;
+  margin: 0;
+  font-weight: 300;
+}
+
+/* ─────────────────────────────────────────
+   Stats Grid
+───────────────────────────────────────── */
+.owner-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  max-width: 1200px;
+  margin: -24px auto 32px;
+  padding: 0 40px;
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 900px) {
+  .owner-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 540px) {
+  .owner-stats-grid { grid-template-columns: 1fr; padding: 0 20px; }
+}
+
+.owner-stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  border-left: 4px solid var(--accent);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.owner-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.owner-stat-icon {
+  font-size: 28px;
+  width: 52px;
+  height: 52px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.owner-stat-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a2e;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.owner-stat-label {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* ─────────────────────────────────────────
+   Tabs
+───────────────────────────────────────── */
+.owner-tabs {
+  display: flex;
+  gap: 4px;
+  max-width: 1200px;
+  margin: 0 auto 28px;
+  padding: 0 40px;
+}
+
+.owner-tab {
+  background: transparent;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.owner-tab:hover {
+  border-color: #1a1a2e;
+  color: #1a1a2e;
+}
+
+.owner-tab.active {
+  background: #1a1a2e;
+  border-color: #1a1a2e;
+  color: white;
+}
+
+/* ─────────────────────────────────────────
+   Section wrapper
+───────────────────────────────────────── */
+.owner-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+@media (max-width: 768px) {
+  .owner-section, .owner-tabs { padding: 0 20px; }
+}
+
+/* ─────────────────────────────────────────
+   Empty state
+───────────────────────────────────────── */
+.owner-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #94a3b8;
+}
+
+.owner-empty span {
+  display: block;
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.owner-empty p { font-size: 16px; margin: 0 0 8px; color: #475569; }
+.owner-empty small { font-size: 13px; }
+
+/* ─────────────────────────────────────────
+   House Grid (Overview tab)
+───────────────────────────────────────── */
+.owner-house-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.owner-house-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.owner-house-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+
+.owner-house-img-wrap {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+}
+
+.owner-house-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s;
+}
+
+.owner-house-card:hover .owner-house-img { transform: scale(1.05); }
+
+.owner-house-status {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-house-status.rented {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.owner-house-status.available {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.owner-house-info { padding: 20px; }
+
+.owner-house-info h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px;
+  margin: 0 0 6px;
+  color: #1a1a2e;
+}
+
+.owner-house-loc {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 12px;
+}
+
+.owner-house-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #475569;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 12px;
+}
+
+.owner-house-price {
+  font-weight: 700;
+  color: #1a1a2e;
+  font-size: 15px;
+}
+
+.owner-house-footer {
+  display: flex;
+  gap: 8px;
+}
+
+.owner-rent-badge, .owner-offer-count {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.owner-rent-badge {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+.owner-offer-count {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+/* ─────────────────────────────────────────
+   Rental History list
+───────────────────────────────────────── */
+.owner-rent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.owner-rent-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  gap: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  transition: box-shadow 0.2s;
+}
+
+.owner-rent-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.1); }
+
+.owner-rent-img-wrap {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.owner-rent-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.owner-rent-details { flex: 1; min-width: 0; }
+
+.owner-rent-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+  gap: 12px;
+}
+
+.owner-rent-top h4 {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  margin: 0;
+  color: #1a1a2e;
+}
+
+.owner-rent-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.owner-rent-loc {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0 0 12px;
+}
+
+.owner-rent-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .owner-rent-meta-grid { grid-template-columns: repeat(2, 1fr); }
+  .owner-rent-card { flex-direction: column; }
+  .owner-rent-img-wrap { width: 100%; height: 140px; }
+}
+
+.owner-rent-meta-item { display: flex; flex-direction: column; gap: 2px; }
+
+.meta-label {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.meta-val {
+  font-size: 13px;
+  color: #1a1a2e;
+  font-weight: 500;
+}
+
+.meta-val.revenue {
+  color: #16a34a;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* ─────────────────────────────────────────
+   Offers section
+───────────────────────────────────────── */
+.owner-offers-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.owner-section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  color: #1a1a2e;
+  margin: 0 0 4px;
+}
+
+.owner-section-sub {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.owner-create-offer-btn {
+  background: #1a1a2e;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 22px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+
+.owner-create-offer-btn:hover { background: #0f3460; transform: translateY(-1px); }
+
+.owner-create-offer-btn.small {
+  margin-top: 16px;
+  padding: 9px 18px;
+  font-size: 13px;
+}
+
+.owner-offers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.owner-offer-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-left: 4px solid #6366f1;
+}
+
+.owner-offer-card.expired { border-left-color: #ef4444; opacity: 0.75; }
+.owner-offer-card.used { border-left-color: #f59e0b; opacity: 0.75; }
+.owner-offer-card.inactive { border-left-color: #94a3b8; opacity: 0.75; }
+
+.owner-offer-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.1); }
+
+.owner-offer-discount {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  gap: 0;
+}
+
+.owner-offer-card.expired .owner-offer-discount { background: linear-gradient(135deg, #ef4444, #f97316); }
+.owner-offer-card.used .owner-offer-discount { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+
+.discount-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.discount-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  opacity: 0.85;
+}
+
+.owner-offer-info { flex: 1; min-width: 0; }
+
+.owner-offer-house {
+  font-family: 'Playfair Display', serif;
+  font-size: 15px;
+  margin: 0 0 4px;
+  color: #1a1a2e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.owner-offer-expiry {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0 0 8px;
+}
+
+.owner-offer-status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-offer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.offer-action-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.offer-action-btn:hover { background: #f8f9fc; transform: scale(1.1); }
+.offer-action-btn.delete:hover { background: #fef2f2; border-color: #fca5a5; }
+.offer-action-btn.edit:hover { background: #eff6ff; border-color: #93c5fd; }
+
+/* ─────────────────────────────────────────
+   Modal
+───────────────────────────────────────── */
+.owner-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.owner-modal {
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.owner-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 28px 0;
+}
+
+.owner-modal-header h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  margin: 0;
+  color: #1a1a2e;
+}
+
+.owner-modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #94a3b8;
+  line-height: 1;
+  padding: 4px;
+  transition: color 0.15s;
+}
+
+.owner-modal-close:hover { color: #1a1a2e; }
+
+.owner-modal-form { padding: 24px 28px; }
+
+.owner-form-group {
+  margin-bottom: 20px;
+}
+
+.owner-form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.owner-form-input,
+.owner-form-select {
+  width: 100%;
+  padding: 11px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: #1a1a2e;
+  background: #f8f9fc;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.owner-form-input:focus,
+.owner-form-select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  background: white;
+}
+
+.owner-discount-input-wrap {
+  position: relative;
+}
+
+.owner-discount-symbol {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  font-weight: 700;
+  color: #6366f1;
+  pointer-events: none;
+}
+
+.owner-form-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.owner-form-check input[type="checkbox"] {
+  margin-top: 2px;
+  accent-color: #6366f1;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.owner-form-check label {
+  font-size: 14px;
+  color: #475569;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.owner-form-check label small {
+  display: block;
+  color: #94a3b8;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.owner-form-error {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #dc2626;
+  margin-bottom: 16px;
+}
+
+.owner-form-success {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #16a34a;
+  margin-bottom: 16px;
+}
+
+.owner-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.owner-modal-cancel {
+  background: transparent;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 11px 22px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.owner-modal-cancel:hover { border-color: #94a3b8; color: #1a1a2e; }
+
+.owner-modal-submit {
+  background: linear-gradient(135deg, #1a1a2e, #0f3460);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 28px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.owner-modal-submit:hover { opacity: 0.9; transform: translateY(-1px); }
