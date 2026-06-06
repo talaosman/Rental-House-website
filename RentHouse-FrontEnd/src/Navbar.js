@@ -193,7 +193,7 @@ const Navbar = () => {
 
           {/* Right Section - Login/Profile */}
           <div className="navbar-right-luxury">
-            {isLoggedIn && userRole !== "ADMIN" && <NotificationBell />}
+            {isLoggedIn && userRole !== "ADMIN" &&  userRole !== "HOUSE_OWNER" && <NotificationBell />}
             {!isLoggedIn ? (
               <Link to="/about" className="btn-try-now">
                 <span>Get Started</span>
