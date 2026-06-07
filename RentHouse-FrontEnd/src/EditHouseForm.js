@@ -13,6 +13,7 @@ const EditHouseForm = () => {
   const [tourStatus, setTourStatus] = useState(""); // "success" | "error" | ""
   const [existingTourKey, setExistingTourKey] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false); // ← new
 
   const [formData, setFormData] = useState({
     title: "",
@@ -57,6 +58,7 @@ const EditHouseForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    setSaveSuccess(false); // reset success if user edits again
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -108,6 +110,7 @@ const EditHouseForm = () => {
 
   const handleLocationChange = (e) => {
     const value = e.target.value;
+    setSaveSuccess(false);
     setFormData(prev => ({ ...prev, location: value }));
     clearTimeout(geocodeTimer.current);
     geocodeTimer.current = setTimeout(() => geocodeLocation(value), 800);
@@ -128,6 +131,7 @@ const EditHouseForm = () => {
     }
 
     setIsSubmitting(true);
+    setSaveSuccess(false);
 
     try {
       const res = await fetch(
@@ -144,8 +148,10 @@ const EditHouseForm = () => {
       );
 
       if (!res.ok) throw new Error("Update failed");
-      alert("House updated successfully");
-      navigate(`/property/${id}`);
+
+      // Show success state briefly, then navigate
+      setSaveSuccess(true);
+      setTimeout(() => navigate(`/property/${id}`), 1200);
     } catch (error) {
       console.error("Error updating house:", error);
       alert("Failed to update house. Please try again.");
@@ -153,6 +159,7 @@ const EditHouseForm = () => {
       setIsSubmitting(false);
     }
   };
+
   const handleTourUpload = async () => {
     if (!tourFile) return;
     setTourUploading(true);
@@ -162,7 +169,6 @@ const EditHouseForm = () => {
     formPayload.append("file", tourFile);
 
     try {
-      // Use the same authHeader your login already stores
       const authHeader = localStorage.getItem("authHeader");
 
       const res = await fetch(
@@ -172,7 +178,7 @@ const EditHouseForm = () => {
           headers: {
             ...(authHeader && { Authorization: authHeader }),
           },
-          credentials: "include",   // also send session cookie as fallback
+          credentials: "include",
           body: formPayload,
         }
       );
@@ -219,6 +225,15 @@ const EditHouseForm = () => {
       alert("Failed to remove virtual tour.");
     }
   };
+
+  // ── Derived button label & style ──────────────────────────────────────────
+  const btnLabel = isSubmitting
+    ? "Saving…"
+    : saveSuccess
+    ? "✅ Saved!"
+    : "Save Changes";
+
+  const btnDisabled = isSubmitting || saveSuccess;
 
   return (
     <div className="edit-form-container">
@@ -423,6 +438,7 @@ const EditHouseForm = () => {
             )}
           </div>
         </div>
+
         {/* ── Section · Virtual Tour ── */}
         <div className="form-section">
           <p className="section-title">360° Virtual Tour</p>
@@ -544,9 +560,18 @@ const EditHouseForm = () => {
           <p className="submit-note">
             Changes will be reflected on the listing page immediately after saving.
           </p>
-          <button type="submit" className="submit-btn" disabled={isSubmitting}>
-            {isSubmitting ? "Saving…" : "Save Changes"}
-            {!isSubmitting && <span className="btn-arrow">→</span>}
+          <button
+            type="submit"
+            className={`submit-btn${saveSuccess ? " submit-btn--success" : ""}`}
+            disabled={btnDisabled}
+          >
+            {isSubmitting && (
+              <span className="btn-spinner" aria-hidden="true" />
+            )}
+            {btnLabel}
+            {!isSubmitting && !saveSuccess && (
+              <span className="btn-arrow">→</span>
+            )}
           </button>
         </div>
 
