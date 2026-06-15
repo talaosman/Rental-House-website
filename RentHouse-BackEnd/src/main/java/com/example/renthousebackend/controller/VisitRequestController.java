@@ -41,8 +41,6 @@ public class VisitRequestController {
     @Value("${app.backend.url}")
     private String backendUrl;
 
-   @Value("${app.frontend.url}")
-   private String frontendUrl;
 
     @PostMapping("/request")
     public ResponseEntity<?> createVisit(
@@ -224,7 +222,7 @@ public class VisitRequestController {
         String icon = accepted ? "✅" : "❌";
         String status = accepted ? "Accepted" : "Rejected";
 
-       String confirmationHtml = String.format("""
+String confirmationHtml = String.format("""
     <html>
     <head>
         <title>Response Submitted</title>
@@ -236,7 +234,7 @@ public class VisitRequestController {
             .icon { font-size: 64px; margin-bottom: 16px; }
             h2 { color: %s; font-size: 28px; margin: 0 0 12px; }
             p { color: #64748b; font-size: 15px; margin: 0 0 8px; }
-            .countdown { color: #94a3b8; font-size: 13px; margin-top: 20px; }
+            .note { color: #94a3b8; font-size: 13px; margin-top: 20px; }
         </style>
     </head>
     <body>
@@ -244,23 +242,11 @@ public class VisitRequestController {
             <div class="icon">%s</div>
             <h2>Visit %s</h2>
             <p>The visitor has been notified by email.</p>
-            <p class="countdown" id="countdown">Redirecting in 3 seconds...</p>
+            <p class="note">You may close this tab and return to your inbox.</p>
         </div>
-        <script>
-            let seconds = 3;
-            const el = document.getElementById('countdown');
-            const interval = setInterval(() => {
-                seconds--;
-                el.textContent = 'Redirecting in ' + seconds + ' second' + (seconds !== 1 ? 's' : '') + '...';
-                if (seconds <= 0) {
-                    clearInterval(interval);
-                    window.location.href = '%s';
-                }
-            }, 1000);
-        </script>
     </body>
     </html>
-""", color, icon, status, frontendUrl);
+""", color, icon, status);
 
         return ResponseEntity.ok()
                 .header("Content-Type", "text/html; charset=UTF-8")
