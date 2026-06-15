@@ -341,6 +341,12 @@ public class HouseController {
         return ResponseEntity.ok(Collections.singletonMap("count", count));
     }
 
+    // Add inside HouseController, after the /count endpoint
+@GetMapping("/owners/all")
+public ResponseEntity<List<Owner>> getAllOwners() {
+    return ResponseEntity.ok(ownerRepository.findAll());
+}
+
     @GetMapping("/{id}/image")
     public ResponseEntity<byte[]> getHouseImage(@PathVariable Long id) {
         House house = houseService.getHouseById(id);
