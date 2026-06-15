@@ -391,6 +391,28 @@
   background-color: #2e7d32 !important; /* green */
   cursor: default;
 }
+
+.form-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+  color: #111827;
+  cursor: pointer;
+}
+
+.input-readonly {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 14px;
+  width: 100%;
+  font-size: 14px;
+}
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .edit-form-container {

@@ -13,7 +13,8 @@ const EditHouseForm = () => {
   const [tourStatus, setTourStatus] = useState(""); // "success" | "error" | ""
   const [existingTourKey, setExistingTourKey] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false); // ← new
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [owners, setOwners] = useState([]);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -31,6 +32,23 @@ const EditHouseForm = () => {
     longitude: "",
   });
 
+  useEffect(() => {
+    fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/owners/all`)
+      .then(res => res.json())
+      .then(data => setOwners(Array.isArray(data) ? data : []))
+      .catch(err => console.error("Failed to load owners", err));
+  }, []);
+  const handleOwnerSelect = (e) => {
+    const selected = owners.find(o => String(o.id) === e.target.value);
+    if (!selected) return;
+    setSaveSuccess(false);
+    setFormData(prev => ({
+      ...prev,
+      ownerName: selected.name || "",
+      ownerEmail: selected.email || "",
+      ownerPhone: selected.phone || "",
+    }));
+  };
   useEffect(() => {
     fetch(`${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${id}`)
       .then(res => res.json())
@@ -230,10 +248,12 @@ const EditHouseForm = () => {
   const btnLabel = isSubmitting
     ? "Saving…"
     : saveSuccess
-    ? "✅ Saved!"
-    : "Save Changes";
+      ? "✅ Saved!"
+      : "Save Changes";
 
   const btnDisabled = isSubmitting || saveSuccess;
+
+
 
   return (
     <div className="edit-form-container">
@@ -514,47 +534,33 @@ const EditHouseForm = () => {
           <p className="section-title">Owner Information</p>
 
           <div className="form-group">
-            <label htmlFor="ownerName">Full Name</label>
-            <input
-              id="ownerName"
-              name="ownerName"
-              type="text"
-              value={formData.ownerName}
-              onChange={handleChange}
-              placeholder="Owner's full name"
-              required
-            />
+            <label htmlFor="ownerSelect">Select Owner</label>
+            <select
+              id="ownerSelect"
+              className="form-select"
+              onChange={handleOwnerSelect}
+              value={owners.find(o => o.email === formData.ownerEmail)?.id || ""}
+            >
+              <option value="" disabled>— Choose an existing owner —</option>
+              {owners.map(o => (
+                <option key={o.id} value={o.id}>
+                  {o.name} · {o.email}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="ownerEmail">Email Address</label>
-              <input
-                id="ownerEmail"
-                name="ownerEmail"
-                type="email"
-                value={formData.ownerEmail}
-                onChange={handleChange}
-                placeholder="owner@example.com"
-                required
-              />
+              <label>Email Address</label>
+              <input type="email" value={formData.ownerEmail} readOnly className="input-readonly" />
             </div>
-
             <div className="form-group">
-              <label htmlFor="ownerPhone">Phone Number</label>
-              <input
-                id="ownerPhone"
-                name="ownerPhone"
-                type="text"
-                value={formData.ownerPhone}
-                onChange={handleChange}
-                placeholder="+1 555 000 0000"
-                required
-              />
+              <label>Phone Number</label>
+              <input type="text" value={formData.ownerPhone} readOnly className="input-readonly" />
             </div>
           </div>
         </div>
-
         {/* ── Submit ── */}
         <div className="submit-section">
           <p className="submit-note">
