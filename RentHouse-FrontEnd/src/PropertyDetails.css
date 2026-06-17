@@ -921,6 +921,40 @@ body {
   box-shadow: var(--sh-btn);
 }
 
+.eta-wrapper { margin-top: 12px; }
+
+.eta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #1a3c6e;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.eta-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.eta-result {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+.eta-time { font-weight: 700; color: #1a6e3c; }
+.eta-distance { color: #64748b; }
+.eta-approx-tag {
+  font-size: 12px;
+  background: #fff3cd;
+  color: #856404;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+.eta-error { margin-top: 8px; color: #dc2626; font-size: 14px; }
 
 /* ═══════════════════════════════════════════════════
    RESPONSIVE

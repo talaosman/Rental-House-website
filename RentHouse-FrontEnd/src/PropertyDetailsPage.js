@@ -55,6 +55,30 @@ const todayStr = () => {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 };
 
+// Straight-line distance in km, used only as a fallback when routing fails
+const haversineDistanceKm = (lat1, lon1, lat2, lon2) => {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+const formatDuration = (totalMinutes) => {
+  const mins = Math.round(totalMinutes);
+  if (mins < 1) return "< 1 min";
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m > 0 ? `${h} hr ${m} min` : `${h} hr`;
+};
+
+const formatDistanceKm = (km) =>
+  km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
+
 const isActiveLease = (startRaw, endRaw) => {
   const today = todayStr();
   const end = parseSpringDate(endRaw);
@@ -141,6 +165,9 @@ const PropertyDetailsContent = () => {
   const [heroView, setHeroView] = useState("photo");
   const [offer, setOffer] = useState(null);
   const [currency, setCurrency] = useState("USD");
+  const [etaInfo, setEtaInfo] = useState(null);   // { durationText, distanceText, mode: 'route' | 'approx' }
+  const [etaLoading, setEtaLoading] = useState(false);
+  const [etaError, setEtaError] = useState("");
 
   const currencyRates = { USD: 1, EUR: 0.92, GBP: 0.78 };
 
@@ -429,6 +456,69 @@ const PropertyDetailsContent = () => {
     setTimeout(() => navigate("/schedule"), 1500);
   };
 
+  const handleGetLiveETA = () => {
+    setEtaError("");
+    setEtaInfo(null);
+
+    if (!property?.latitude || !property?.longitude) {
+      setEtaError("This listing has no saved GPS coordinates, so ETA can't be calculated.");
+      return;
+    }
+    if (!navigator.geolocation) {
+      setEtaError("Geolocation isn't supported by your browser.");
+      return;
+    }
+
+    setEtaLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude: userLat, longitude: userLng } = position.coords;
+        const houseLat = parseFloat(property.latitude);
+        const houseLng = parseFloat(property.longitude);
+
+        try {
+          // Real road-based route, free, no API key needed
+          const url = `https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${houseLng},${houseLat}?overview=false`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error("Routing service unavailable");
+          const data = await res.json();
+
+          if (data.code === "Ok" && data.routes?.length) {
+            const route = data.routes[0];
+            setEtaInfo({
+              durationText: formatDuration(route.duration / 60),
+              distanceText: formatDistanceKm(route.distance / 1000),
+              mode: "route",
+            });
+          } else {
+            throw new Error("No route found");
+          }
+        } catch (err) {
+          // Fallback: straight-line distance, assume ~40 km/h average urban driving speed
+          const distanceKm = haversineDistanceKm(userLat, userLng, houseLat, houseLng);
+          setEtaInfo({
+            durationText: formatDuration((distanceKm / 40) * 60),
+            distanceText: formatDistanceKm(distanceKm),
+            mode: "approx",
+          });
+        } finally {
+          setEtaLoading(false);
+        }
+      },
+      (error) => {
+        setEtaLoading(false);
+        const messages = {
+          1: "Location permission denied. Please allow location access and try again.",
+          2: "Your location couldn't be determined right now.",
+          3: "Getting your location timed out. Please try again.",
+        };
+        setEtaError(messages[error.code] || "Failed to get your location.");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
   const toggleFavorite = async () => {
     if (!userId) { setModalMessage("You must be logged in to manage favorites."); setShowLoginModal(true); return; }
     if (!property) return;
@@ -594,6 +684,28 @@ const PropertyDetailsContent = () => {
             <h2><FaMapMarkerAlt className="section-icon" /> Location</h2>
             <p className="location-address">{property.location}</p>
             <GoogleMapsButton latitude={property.latitude} longitude={property.longitude} location={property.location} />
+            <div className="eta-wrapper">
+              <button className="eta-btn" onClick={handleGetLiveETA} disabled={etaLoading}>
+                {etaLoading ? "📍 Locating..." : "📍 Get ETA from My Location"}
+              </button>
+
+              {etaError && <p className="eta-error">{etaError}</p>}
+
+              {etaInfo && (
+                <div className="eta-result">
+                  <span className="eta-time">🕒 {etaInfo.durationText}</span>
+                  <span className="eta-distance">({etaInfo.distanceText})</span>
+                  {etaInfo.mode === "approx" && (
+                    <span
+                      className="eta-approx-tag"
+                      title="No road data available — this is a straight-line estimate"
+                    >
+                      ~ estimate
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* About */}
