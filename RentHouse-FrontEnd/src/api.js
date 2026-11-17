@@ -1,4 +1,5 @@
 // src/api.js
+import "./mock/mockBackend"; // must load first: installs the demo (seeded) backend
 import axios from "axios";
 
 const API = axios.create({

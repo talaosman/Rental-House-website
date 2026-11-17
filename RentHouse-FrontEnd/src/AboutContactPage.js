@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
 import "./AboutContactPage.css";
 import API from "./api";
+import { IS_DEMO } from "./mock/mockBackend";
+import { DEMO_ACCOUNTS } from "./mock/seedData";
+
+const oauthLogin = (provider) => {
+  if (IS_DEMO) {
+    alert("Social login needs the real backend. In demo mode, please sign in with a demo account.");
+    return;
+  }
+  window.location.href = `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/oauth2/authorization/${provider}`;
+};
 import { requestNotificationPermission } from "./firebase";
 import { useNavigate } from "react-router-dom";
 
@@ -113,6 +123,7 @@ const ForgotPasswordModal = ({ onClose }) => {
             <p className="fp-sub">
               We sent a 6-digit code to <strong>{email}</strong>.<br />
               Enter it below — it expires in 15 minutes.
+              {IS_DEMO && <><br /><strong>Demo mode:</strong> enter any 6 digits (e.g. 123456).</>}
             </p>
             {error && <div className="fp-error">{error}</div>}
             <form onSubmit={handleVerifyCode} className="fp-form">
@@ -449,6 +460,13 @@ const AboutContactPage = () => {
             {isSigningIn ? "Welcome back" : "Create account"}
           </h3>
           <p className="form-message">{formMessage}</p>
+          {IS_DEMO && isSigningIn && (
+            <p className="form-message" style={{ fontSize: "0.8rem" }}>
+              <strong>Demo accounts:</strong> {DEMO_ACCOUNTS.user.email} / {DEMO_ACCOUNTS.user.password} ·{" "}
+              {DEMO_ACCOUNTS.owner.email} / {DEMO_ACCOUNTS.owner.password} ·{" "}
+              {DEMO_ACCOUNTS.admin.email} / {DEMO_ACCOUNTS.admin.password}
+            </p>
+          )}
 
           <form onSubmit={handleSubmit} className="form">
 
@@ -513,14 +531,14 @@ const AboutContactPage = () => {
             <div className="oauth-divider"><span>or continue with</span></div>
             <button
               type="button" className="oauth-btn google"
-              onClick={() => window.location.href = `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/oauth2/authorization/google`}
+              onClick={() => oauthLogin("google")}
             >
               <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="oauth-icon" />
               Continue with Google
             </button>
             <button
               type="button" className="oauth-btn github"
-              onClick={() => window.location.href = `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/oauth2/authorization/github`}
+              onClick={() => oauthLogin("github")}
             >
               <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="GitHub" className="oauth-icon" />
               Continue with GitHub

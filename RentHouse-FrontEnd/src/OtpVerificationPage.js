@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import API from "./api";
+import { IS_DEMO } from "./mock/mockBackend";
 import { useNavigate } from "react-router-dom";
 import "./OtpVerificationPage.css";
 import { requestNotificationPermission } from "./firebase";
@@ -179,6 +180,10 @@ const OtpVerificationPage = () => {
             <span className="otp-email-chip-dot" />
             {maskedEmail}
           </div>
+
+          {IS_DEMO && (
+            <p className="otp-subtitle"><strong>Demo mode:</strong> no email is sent — enter any 6 digits (e.g. 123456).</p>
+          )}
 
           <label className="otp-input-label">Verification code</label>
           <input

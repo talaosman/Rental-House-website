@@ -1,3 +1,4 @@
+import './mock/mockBackend'; // must stay first: installs the demo (seeded) backend
 import React, { useEffect } from 'react';
 import reportWebVitals from './reportWebVitals';
 import { createRoot } from 'react-dom/client';

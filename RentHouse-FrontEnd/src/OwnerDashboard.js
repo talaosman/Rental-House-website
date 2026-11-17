@@ -205,7 +205,7 @@ const OwnerDashboard = () => {
                   <div className="owner-house-img-wrap">
                     <img
                       src={
-                        house.image?.startsWith("http")
+                        house.image?.match(/^(https?:|data:|blob:)/)
                           ? house.image
                           : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${house.id}/image`
                       }
@@ -257,7 +257,7 @@ const OwnerDashboard = () => {
                   <div className="owner-rent-img-wrap">
                     <img
                       src={
-                        rent.houseImage?.startsWith("http")
+                        rent.houseImage?.match(/^(https?:|data:|blob:)/)
                           ? rent.houseImage
                           : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${rent.houseId}/image`
                       }

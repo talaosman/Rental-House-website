@@ -122,7 +122,7 @@ const HomePage = () => {
                 <div className="property-image-container">
                   <img
                     src={
-                      property.image && property.image.startsWith("http")
+                      property.image && property.image.match(/^(https?:|data:|blob:)/)
                         ? property.image
                         : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${property.id}/image`
                     }
