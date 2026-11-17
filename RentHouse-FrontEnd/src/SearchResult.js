@@ -196,7 +196,7 @@ const SearchResult = () => {
                 <div className="card-image-wrap">
                   <img
                     src={
-                      listing.image?.startsWith("http")
+                      listing.image?.match(/^(https?:|data:|blob:)/)
                         ? listing.image
                         : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${listing.id}/image`
                     }

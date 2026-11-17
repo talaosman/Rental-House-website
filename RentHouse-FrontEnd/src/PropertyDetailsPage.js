@@ -336,7 +336,7 @@ const PropertyDetailsContent = () => {
             items: [{ price: Math.round(totalAmount * 100) }],
           }),
         });
-        if (!res.ok) throw new Error(`Server error (${res.status})`);
+        if (!res.ok) throw new Error((await res.text().catch(() => "")) || `Server error (${res.status})`);
         const clientSecret = await res.text();
         if (!clientSecret || clientSecret.length < 10) throw new Error("Invalid payment session.");
         const result = await stripe.confirmCardPayment(clientSecret, {
@@ -561,7 +561,7 @@ const PropertyDetailsContent = () => {
           <div className={`hero-photo ${heroView === "photo" ? "hero-active" : "hero-hidden"}`}>
             <img
               src={
-                property.image && property.image.startsWith("http")
+                property.image && property.image.match(/^(https?:|data:|blob:)/)
                   ? property.image
                   : `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/houses/${property.id}/image`
               }
