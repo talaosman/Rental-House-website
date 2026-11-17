@@ -15,7 +15,7 @@ const API_BASES = [process.env.REACT_APP_API_URL, "http://localhost:5000"]
   .filter(Boolean)
   .map((b) => b.replace(/\/+$/, ""));
 
-const DB_KEY = "renthouse_mock_db_v1";
+const DB_KEY = "renthouse_mock_db_v2"; // bump to reseed browsers holding older demo data
 const LATENCY_MS = 150;
 
 /* ───────────────────────────── Persistence ───────────────────────────── */
@@ -460,7 +460,10 @@ route("GET", "/api/houses/:id/virtual-tour-url", ({ params }) => {
 });
 route("GET", "/api/houses/:id/virtual-tour-image", async ({ params }) => {
   const blob = await getTour(Number(params.id));
-  return blob ? { status: 200, body: blob, type: blob.type || "image/jpeg" } : empty(404);
+  if (blob) return { status: 200, body: blob, type: blob.type || "image/jpeg" };
+  // Seeded tours are static files shipped in public/tours
+  const url = findHouse(params.id)?.virtualTourUrl;
+  return url?.startsWith("/tours/") ? { status: 302, redirect: window.location.origin + url } : empty(404);
 });
 route("GET", "/api/houses/:id", ({ params }) => {
   const h = findHouse(params.id);

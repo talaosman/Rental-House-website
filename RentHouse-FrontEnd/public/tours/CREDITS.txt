@@ -1,0 +1,6 @@
+360° panoramas from Poly Haven (https://polyhaven.com), licensed CC0 (public domain).
+  loft-bedroom.jpg          <- hotel_room
+  suburban-living-room.jpg  <- lebombo
+  family-home-lounge.jpg    <- kiara_interior
+  townhouse-hall.jpg        <- entrance_hall
+  glass-house-bathroom.jpg  <- modern_bathroom
