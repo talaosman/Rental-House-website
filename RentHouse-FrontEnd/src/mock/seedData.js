@@ -62,6 +62,16 @@ export function buildSeed() {
       "Historic townhouse with original details, updated bathrooms and a private patio in a tree-lined neighborhood."),
   ];
 
+  // 360° virtual tours (CC0 panoramas in public/tours, see CREDITS.txt there)
+  const tours = {
+    1: "/tours/family-home-lounge.jpg",
+    2: "/tours/loft-bedroom.jpg",
+    5: "/tours/suburban-living-room.jpg",
+    8: "/tours/glass-house-bathroom.jpg",
+    12: "/tours/townhouse-hall.jpg",
+  };
+  houses.forEach((house) => { house.virtualTourUrl = tours[house.id] || null; });
+
   // Rents: some past, one active today (house 3), one upcoming (house 2)
   const rents = [
     { id: 1, houseId: 3, userId: 4, startDate: fromToday(-120), endDate: fromToday(-91), totalPrice: 4800 },
