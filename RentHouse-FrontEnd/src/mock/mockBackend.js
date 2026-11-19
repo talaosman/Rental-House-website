@@ -320,6 +320,27 @@ route("POST", "/api/auth/login", ({ body }) => {
   if (!user || user.password !== body.password) return text("Invalid credentials", 401);
   return json(authUserJson(user, { message: "Sign in successful" }));
 });
+// Social login (identity already verified by Firebase in the browser):
+// find the account by email or create a USER account, like the backend's OAuth handler.
+route("POST", "/api/auth/oauth-login", ({ body }) => {
+  const email = String(body.email || "").trim().toLowerCase();
+  if (!email) return text("Email is required", 400);
+  const d = getDb();
+  let user = findUserByEmail(email);
+  if (!user) {
+    user = {
+      id: nextId(d.users), username: body.username || email.split("@")[0], email,
+      password: Math.random().toString(36).slice(2, 12), phoneNumber: "", role: "USER",
+      points: 0, profileImage: body.profileImage || null,
+    };
+    d.users.push(user);
+  } else if (!user.profileImage && body.profileImage) {
+    user.profileImage = body.profileImage;
+  }
+  delete pendingSignups[email];
+  saveDb();
+  return json(authUserJson(user, { message: "Sign in successful" }));
+});
 route("POST", "/api/auth/forgot-password/send-code", () => json({ message: "Reset code sent to your email." }));
 route("POST", "/api/auth/forgot-password/verify-code", ({ body }) =>
   /^\d{6}$/.test(String(body.code || "")) ? json({ verified: true }) : json({ error: "Invalid code" }, 401));
