@@ -3,15 +3,7 @@ import "./AboutContactPage.css";
 import API from "./api";
 import { IS_DEMO } from "./mock/mockBackend";
 import { DEMO_ACCOUNTS } from "./mock/seedData";
-
-const oauthLogin = (provider) => {
-  if (IS_DEMO) {
-    alert("Social login needs the real backend. In demo mode, please sign in with a demo account.");
-    return;
-  }
-  window.location.href = `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/oauth2/authorization/${provider}`;
-};
-import { requestNotificationPermission } from "./firebase";
+import { requestNotificationPermission, signInWithSocial } from "./firebase";
 import { useNavigate } from "react-router-dom";
 
 
@@ -297,6 +289,72 @@ const AboutContactPage = () => {
       console.error("⚠️ FCM error:", error);
     }
   };
+  // Store the session and redirect by role (used by email and social login)
+  const finishLogin = async (data, loginEmail, loginPassword) => {
+    const { id, role, username, phoneNumber: ph, profileImage } = data;
+    localStorage.setItem("userId", id);
+    localStorage.setItem("authHeader", "Basic " + btoa(`${loginEmail}:${loginPassword}`));
+    localStorage.setItem("userRole", role);
+    localStorage.setItem("username", username);
+    localStorage.setItem("email", loginEmail);
+    localStorage.setItem("password", loginPassword);
+    localStorage.setItem("phoneNumber", ph || "");
+    localStorage.setItem("profileImage", profileImage ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=random`);
+    localStorage.setItem("isLoggedIn", "true");
+    await saveFcmTokenToBackend(id);
+
+    const roleLower = (role || "").toLowerCase().trim();
+
+    if (roleLower === "admin") {
+      window.location.href = "/search";
+    } else if (roleLower === "house_owner") {
+      try {
+        const ownerRes = await fetch(
+          `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/owner/resolve?userId=${id}`
+        );
+        if (ownerRes.ok) {
+          const ownerData = await ownerRes.json();
+          localStorage.setItem("ownerId", ownerData.ownerId);
+          localStorage.setItem("ownerName", ownerData.ownerName);
+        }
+      } catch { /* continue anyway */ }
+      window.location.href = "/owner-dashboard";
+    } else {
+      window.location.href = "/";
+    }
+  };
+
+  const oauthLogin = async (provider) => {
+    if (!IS_DEMO) {
+      // Real backend handles the Spring OAuth2 flow and redirects to /oauth-success
+      window.location.href = `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/oauth2/authorization/${provider}`;
+      return;
+    }
+    const label = provider === "github" ? "GitHub" : "Google";
+    try {
+      setIsLoading(true);
+      const profile = await signInWithSocial(provider);
+      const res = await API.post("/api/auth/oauth-login", profile);
+      await finishLogin(res.data, res.data.email, res.data.password);
+    } catch (err) {
+      setIsLoading(false);
+      const messages = {
+        "auth/popup-closed-by-user": null,
+        "auth/cancelled-popup-request": null,
+        "auth/popup-blocked": "The sign-in popup was blocked. Please allow popups for this site and try again.",
+        "auth/operation-not-allowed": `${label} sign-in is not enabled yet in the Firebase console.`,
+        "auth/unauthorized-domain": "This website's domain is not authorized for sign-in in the Firebase console.",
+        "auth/account-exists-with-different-credential":
+          "An account with this email already exists using another sign-in method. Please use that one.",
+        "app/no-email": `Your ${label} account has no email we can read. Make your email public or use another sign-in method.`,
+      };
+      const msg = err.code in messages ? messages[err.code] : `${label} sign-in failed: ${err.message}`;
+      if (msg) alert(msg);
+      console.error(`${label} sign-in error:`, err);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -345,40 +403,7 @@ const AboutContactPage = () => {
         });
     } else {
       API.post("/api/auth/login", { email, password })
-        .then(async (res) => {
-          const { id, role, username, phoneNumber: ph, profileImage } = res.data;
-          localStorage.setItem("userId", id);
-          localStorage.setItem("authHeader", "Basic " + btoa(`${email}:${password}`));
-          localStorage.setItem("userRole", role);
-          localStorage.setItem("username", username);
-          localStorage.setItem("email", email);
-          localStorage.setItem("password", password);
-          localStorage.setItem("phoneNumber", ph);
-          localStorage.setItem("profileImage", profileImage ||
-            `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=random`);
-          localStorage.setItem("isLoggedIn", "true");
-          await saveFcmTokenToBackend(id)
-
-          const roleLower = (role || "").toLowerCase().trim();
-
-          if (roleLower === "admin") {
-            window.location.href = "/search";
-          } else if (roleLower === "house_owner") {
-            try {
-              const ownerRes = await fetch(
-                `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/owner/resolve?userId=${id}`
-              );
-              if (ownerRes.ok) {
-                const ownerData = await ownerRes.json();
-                localStorage.setItem("ownerId", ownerData.ownerId);
-                localStorage.setItem("ownerName", ownerData.ownerName);
-              }
-            } catch { /* continue anyway */ }
-            window.location.href = "/owner-dashboard";
-          } else {
-            window.location.href = "/";
-          }
-        })
+        .then((res) => finishLogin(res.data, email, password))
         .catch((err) => {
           if (err.response?.status === 403) {
             alert("Please verify your email first. Check your inbox for the OTP code.");
@@ -531,14 +556,14 @@ const AboutContactPage = () => {
             <div className="oauth-divider"><span>or continue with</span></div>
             <button
               type="button" className="oauth-btn google"
-              onClick={() => oauthLogin("google")}
+              disabled={isLoading} onClick={() => oauthLogin("google")}
             >
               <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="oauth-icon" />
               Continue with Google
             </button>
             <button
               type="button" className="oauth-btn github"
-              onClick={() => oauthLogin("github")}
+              disabled={isLoading} onClick={() => oauthLogin("github")}
             >
               <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="GitHub" className="oauth-icon" />
               Continue with GitHub
